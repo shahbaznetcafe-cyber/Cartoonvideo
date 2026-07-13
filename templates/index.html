@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🎬 SBZ AI Video Studio</title>
 <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icons/favicon.svg') }}?v=20260713-phase1">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/studio.css') }}?v=20260713-phase1">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/studio.css') }}?v=20260714-phase3">
 </head>
 <body>
 {% macro icon(name) -%}
@@ -123,42 +123,66 @@
 
       <section class="create-step-panel active" data-step-panel="1" aria-labelledby="createViewTitle">
         <div class="card script-workspace" id="scriptCard">
-          <div class="section-heading"><div><span class="eyebrow">Step 1</span><h2>Write or generate your script</h2></div><span class="status-pill neutral">Urdu · Roman Urdu · English</span></div>
-          <textarea id="script" class="script-editor" placeholder="Tamatar: Main sehatmand hoon.&#10;Aam: Main meetha hoon, sab mujhe pasand karte hain."></textarea>
-          <div class="editor-meta"><span>Character name se dialogue shuru karein.</span><span id="scriptCount">0 words · 0 lines</span></div>
-          <div class="secondary-actions">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="analyzeScript()">Analyze</button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="improveScript()">Improve</button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="genPackage()">YouTube Package</button>
+          <div class="section-heading script-heading"><div><span class="eyebrow">Step 1</span><h2>Create your script</h2><p class="section-copy">Khud likhein ya AI se structured story banwayein.</p></div></div>
+          <div class="script-mode-tabs" id="scriptModeTabs" role="tablist" aria-label="Script creation mode">
+            <button type="button" class="script-mode-tab active" data-script-mode="write" role="tab" aria-selected="true" aria-controls="scriptWritePanel">{{ icon('script') }} <span><strong>Write Script</strong><small>Manual editor</small></span></button>
+            <button type="button" class="script-mode-tab" data-script-mode="ai" role="tab" aria-selected="false" aria-controls="scriptAIPanel">{{ icon('sparkles') }} <span><strong>Generate with AI</strong><small>Idea, series or template</small></span></button>
           </div>
-          <div id="scriptFeedback" class="feedback-region"></div>
-          <div id="pkgPanel" class="package-region"></div>
 
-          <div class="divlabel">Generate with AI</div>
-          <div class="tabs" id="scriptTabs" role="tablist" aria-label="AI script modes">
-            <button type="button" class="tab on" data-t="quick">Quick Idea</button>
-            <button type="button" class="tab" data-t="longform">Long-form</button>
-          </div>
-          <div class="tabpanel" data-t="quick">
-            <label for="ffIdea">Your idea</label>
-            <textarea id="ffIdea" class="idea-editor" placeholder="Jungle mein sher aur bandar ki dosti, comedy — bandar hamesha shararat karta hai"></textarea>
-            <p class="hint">Language, genre, duration aur Pro quality right inspector mein available hain.</p>
-            <button type="button" class="btn btn-secondary btn-sm" id="ffGenBtn" onclick="genFreeform()">Generate Script</button>
-            <div id="ffMsg" class="feedback-region"></div>
-          </div>
-          <div class="tabpanel hidden" data-t="longform">
-            <label for="lfIdea">Long story idea</label>
-            <textarea id="lfIdea" class="idea-editor" placeholder="Ek gaon ka chhota hero jo sukhe ke waqt sab ke liye paani dhoondta hai"></textarea>
-            <div class="row form-row">
-              <div><label for="lfGenre">Genre</label><select id="lfGenre"><option value="auto">Auto</option><option value="comedy">Comedy</option><option value="moral">Moral</option><option value="adventure">Adventure</option><option value="emotional">Emotional</option><option value="mystery">Mystery</option><option value="educational">Educational</option></select></div>
-              <div><label for="lfLang">Language</label><select id="lfLang"><option value="roman_urdu">Roman Urdu</option><option value="urdu">Urdu</option><option value="english">English</option></select></div>
+          <section class="script-mode-panel active" id="scriptWritePanel" data-script-mode-panel="write" role="tabpanel">
+            <div class="editor-toolbar"><div><span class="editor-status-dot"></span><span id="scriptLanguageIndicator">Roman Urdu</span></div><span>Editable output</span></div>
+            <textarea id="script" class="script-editor" spellcheck="true" placeholder="Tamatar: Main sehatmand hoon.&#10;Aam: Main meetha hoon, sab mujhe pasand karte hain."></textarea>
+            <div class="editor-meta"><span>Character name se dialogue shuru karein, jaise “Tamatar: ...”</span><span id="scriptCount">0 words · 0 lines</span></div>
+            <div class="secondary-actions" aria-label="Script tools">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="analyzeScript()">Analyze</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="improveScript()">Improve</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="genPackage()">YouTube Package</button>
             </div>
-            <label>Video length</label>
-            <div class="seg" id="lfMinSeg"><button type="button" data-v="3min">~3 min<small>4 scenes</small></button><button type="button" data-v="5min" class="on">~5 min<small>6 scenes</small></button><button type="button" data-v="8min">~8 min<small>8 scenes</small></button></div>
-            <p class="hint">Outline aur scenes pehle plan honge; generation 20–40 seconds le sakti hai.</p>
-            <button type="button" class="btn btn-secondary btn-sm" id="lfGenBtn" onclick="genLongform()">Generate Long Story</button>
-            <div id="lfMsg" class="feedback-region"></div><div id="lfOutline" class="feedback-region"></div>
-          </div>
+            <div id="scriptFeedback" class="feedback-region" aria-live="polite"></div>
+            <div id="pkgPanel" class="package-region"></div>
+          </section>
+
+          <section class="script-mode-panel" id="scriptAIPanel" data-script-mode-panel="ai" role="tabpanel" hidden>
+            <div class="ai-generator-header"><div><span class="eyebrow">AI Script Studio</span><h3>Choose how to start</h3></div><span class="status-pill neutral">Output remains editable</span></div>
+            <div class="tabs ai-generator-tabs" id="scriptTabs" role="tablist" aria-label="AI script generators">
+              <button type="button" class="tab on" data-t="quick" role="tab" aria-selected="true">Quick Idea</button>
+              <button type="button" class="tab" data-t="longform" role="tab" aria-selected="false">Long-form</button>
+              <button type="button" class="tab" data-t="series" role="tab" aria-selected="false">Series</button>
+              <button type="button" class="tab" data-t="templates" role="tab" aria-selected="false">Templates</button>
+            </div>
+            <div class="tabpanel ai-generator-panel" data-t="quick" role="tabpanel">
+              <div class="generator-intro"><strong>Turn a simple idea into a ready script</strong><span>Fast story generation using the language, genre and duration in the inspector.</span></div>
+              <label for="ffIdea">Your idea</label>
+              <textarea id="ffIdea" class="idea-editor" placeholder="Jungle mein sher aur bandar ki dosti, comedy — bandar hamesha shararat karta hai"></textarea>
+              <p class="hint">Language, genre, duration aur Pro quality right inspector mein available hain.</p>
+              <button type="button" class="btn btn-secondary btn-sm" id="ffGenBtn" onclick="genFreeform()">Generate Script</button>
+              <div id="ffMsg" class="feedback-region" aria-live="polite"></div>
+            </div>
+            <div class="tabpanel ai-generator-panel hidden" data-t="longform" role="tabpanel">
+              <div class="generator-intro"><strong>Plan a coherent multi-scene story</strong><span>AI outline banata hai, phir har scene ko complete script mein expand karta hai.</span></div>
+              <label for="lfIdea">Long story idea</label>
+              <textarea id="lfIdea" class="idea-editor" placeholder="Ek gaon ka chhota hero jo sukhe ke waqt sab ke liye paani dhoondta hai"></textarea>
+              <div class="row form-row">
+                <div><label for="lfGenre">Genre</label><select id="lfGenre"><option value="auto">Auto</option><option value="comedy">Comedy</option><option value="moral">Moral</option><option value="adventure">Adventure</option><option value="emotional">Emotional</option><option value="mystery">Mystery</option><option value="educational">Educational</option></select></div>
+                <div><label for="lfLang">Language</label><select id="lfLang"><option value="roman_urdu">Roman Urdu</option><option value="urdu">Urdu</option><option value="english">English</option></select></div>
+              </div>
+              <label>Video length</label>
+              <div class="seg" id="lfMinSeg"><button type="button" data-v="3min">~3 min<small>4 scenes</small></button><button type="button" data-v="5min" class="on">~5 min<small>6 scenes</small></button><button type="button" data-v="8min">~8 min<small>8 scenes</small></button></div>
+              <p class="hint">Outline aur scenes pehle plan honge; generation 20–40 seconds le sakti hai.</p>
+              <button type="button" class="btn btn-secondary btn-sm" id="lfGenBtn" onclick="genLongform()">Generate Long Story</button>
+              <div id="lfMsg" class="feedback-region" aria-live="polite"></div><div id="lfOutline" class="feedback-region"></div>
+            </div>
+            <div class="tabpanel ai-generator-panel hidden" data-t="series" role="tabpanel">
+              <div class="generator-intro"><strong>Continue a recurring story</strong><span>Saved cast aur previous episodes ki continuity ke saath next episode banayein.</span></div>
+              <div class="row form-row"><select id="serSel" onchange="selectSeries(this.value)"><option value="">Select series</option></select><button type="button" class="btn btn-secondary btn-sm" onclick="toggleNewSeries()">New Series</button></div>
+              <div id="newSeriesBox" class="hidden nested-panel"><input type="text" id="serName" placeholder="Series name"><textarea id="serPremise" class="compact-textarea" placeholder="Series premise"></textarea><div class="row form-row"><select id="serGenre"><option value="auto">Auto genre</option><option value="comedy">Comedy</option><option value="moral">Moral</option><option value="adventure">Adventure</option><option value="educational">Educational</option><option value="emotional">Emotional</option></select><select id="serLang"><option value="roman_urdu">Roman Urdu</option><option value="urdu">Urdu</option><option value="english">English</option></select></div><label>Cast</label><div id="serCast" class="chip-list"></div><button type="button" class="btn btn-secondary btn-sm" onclick="createSeries()">Create Series</button></div>
+              <div id="epBox" class="hidden nested-panel"><div id="serInfo" class="section-copy"></div><div id="epHistory" class="history-list"></div><label for="epIdea">Episode idea</label><input type="text" id="epIdea" placeholder="Khali = story naturally continue"><label>Length</label><div class="seg" id="epLenSeg"><button type="button" data-v="short">Short</button><button type="button" data-v="medium" class="on">Medium</button><button type="button" data-v="long">Long</button><button type="button" data-v="3min">~3m</button><button type="button" data-v="5min">~5m</button></div><button type="button" class="btn btn-secondary btn-sm" id="epGenBtn" onclick="genEpisode()">Generate Next Episode</button><div id="epMsg" class="feedback-region" aria-live="polite"></div></div>
+            </div>
+            <div class="tabpanel ai-generator-panel hidden" data-t="templates" role="tabpanel">
+              <div class="generator-intro"><strong>Start from a proven story structure</strong><span>Template, topic aur cast choose karein; final script editor mein editable rahega.</span></div>
+              <div id="tplGrid" class="template-grid"></div><div id="tplPanel" class="hidden template-config"><div class="selection-title">Selected: <strong id="tplName"></strong></div><label for="tplTopic">Topic / idea</label><input type="text" id="tplTopic" placeholder="Jhoot bolne ka anjaam"><label>Characters <span class="muted-inline">(minimum 2)</span></label><div id="tplChars" class="template-character-grid"></div><div class="row form-row"><div><label>Length</label><div class="seg" id="tplLenSeg"><button type="button" data-v="short">Short</button><button type="button" data-v="medium" class="on">Medium</button><button type="button" data-v="long">Long</button></div></div><div><label for="tplLang">Language</label><select id="tplLang"><option value="roman_urdu">Roman Urdu</option><option value="urdu">Urdu</option><option value="english">English</option></select></div></div><button type="button" class="btn btn-secondary btn-sm" id="tplGenBtn" onclick="genFromTemplate()">Generate Script</button><div id="tplMsg" class="feedback-region" aria-live="polite"></div></div>
+            </div>
+          </section>
         </div>
         <div class="workflow-actions"><span></span><button type="button" class="btn btn-primary" onclick="setCreateStep(2)">Continue to Cast &amp; Scenes <span aria-hidden="true">→</span></button></div>
       </section>
@@ -214,7 +238,7 @@
       <div class="view-header"><div><span class="eyebrow">Library</span><h1>Characters</h1><p>Recurring cast aur episode continuity manage karein.</p></div></div>
       <div class="two-column-content">
         <div class="card"><div class="section-heading"><div><span class="eyebrow">Reusable cast</span><h2>My Characters</h2></div></div><div class="row form-row"><input type="text" id="chName" placeholder="Name, e.g. Raju"><select id="chGender"><option value="male">Male</option><option value="female">Female</option><option value="child">Child</option></select></div><input type="text" id="chTrait" placeholder="Personality"><input type="text" id="chPhrase" placeholder="Catchphrase (optional)"><button type="button" class="btn btn-secondary btn-sm" onclick="addChar()">Add Character</button><div id="charList" class="chip-list"></div></div>
-        <div class="card"><div class="section-heading"><div><span class="eyebrow">Continuity</span><h2>Series &amp; Episodes</h2></div></div><div class="row form-row"><select id="serSel" onchange="selectSeries(this.value)"><option value="">Select series</option></select><button type="button" class="btn btn-secondary btn-sm" onclick="toggleNewSeries()">New Series</button></div><div id="newSeriesBox" class="hidden nested-panel"><input type="text" id="serName" placeholder="Series name"><textarea id="serPremise" class="compact-textarea" placeholder="Series premise"></textarea><div class="row form-row"><select id="serGenre"><option value="auto">Auto genre</option><option value="comedy">Comedy</option><option value="moral">Moral</option><option value="adventure">Adventure</option><option value="educational">Educational</option><option value="emotional">Emotional</option></select><select id="serLang"><option value="roman_urdu">Roman Urdu</option><option value="urdu">Urdu</option><option value="english">English</option></select></div><label>Cast</label><div id="serCast" class="chip-list"></div><button type="button" class="btn btn-primary btn-sm" onclick="createSeries()">Create Series</button></div><div id="epBox" class="hidden nested-panel"><div id="serInfo" class="section-copy"></div><div id="epHistory" class="history-list"></div><label for="epIdea">Episode idea</label><input type="text" id="epIdea" placeholder="Khali = story naturally continue"><label>Length</label><div class="seg" id="epLenSeg"><button type="button" data-v="short">Short</button><button type="button" data-v="medium" class="on">Medium</button><button type="button" data-v="long">Long</button><button type="button" data-v="3min">~3m</button><button type="button" data-v="5min">~5m</button></div><button type="button" class="btn btn-primary btn-sm" id="epGenBtn" onclick="genEpisode()">Generate Next Episode</button><div id="epMsg" class="feedback-region"></div></div></div>
+        <div class="card generator-launch-card"><span class="guidance-icon">{{ icon('sparkles') }}</span><div><span class="eyebrow">Series continuity</span><h2>Write the next episode</h2><p>Saved characters aur previous episodes ko AI Script Studio ke Series generator mein use karein.</p><button type="button" class="btn btn-secondary" onclick="openAIGenerator('series')">Open Series Generator</button></div></div>
       </div>
     </section>
 
@@ -225,7 +249,7 @@
 
     <section class="studio-view" id="view-templates" data-view-panel="templates">
       <div class="view-header"><div><span class="eyebrow">Story starters</span><h1>Templates</h1><p>Proven story structures ko apne topic aur cast ke saath generate karein.</p></div></div>
-      <div class="card"><div id="tplGrid" class="template-grid"></div><div id="tplPanel" class="hidden template-config"><div class="selection-title">Selected: <strong id="tplName"></strong></div><label for="tplTopic">Topic / idea</label><input type="text" id="tplTopic" placeholder="Jhoot bolne ka anjaam"><label>Characters <span class="muted-inline">(minimum 2)</span></label><div id="tplChars" class="template-character-grid"></div><div class="row form-row"><div><label>Length</label><div class="seg" id="tplLenSeg"><button type="button" data-v="short">Short</button><button type="button" data-v="medium" class="on">Medium</button><button type="button" data-v="long">Long</button></div></div><div><label for="tplLang">Language</label><select id="tplLang"><option value="roman_urdu">Roman Urdu</option><option value="urdu">Urdu</option><option value="english">English</option></select></div></div><button type="button" class="btn btn-primary btn-sm" id="tplGenBtn" onclick="genFromTemplate()">Generate Script</button><div id="tplMsg" class="feedback-region"></div></div></div>
+      <div class="card template-launch"><div class="empty-state large"><span>{{ icon('templates') }}</span><div><h2>Templates now live inside Script Studio</h2><p>Manual editor ko clutter-free rakhne ke liye template form Generate with AI ke focused tab mein available hai.</p><button type="button" class="btn btn-primary" onclick="openAIGenerator('templates')">Browse Story Templates</button></div></div></div>
     </section>
 
     <section class="studio-view" id="view-assets" data-view-panel="assets">
@@ -267,6 +291,12 @@
 
 <div class="inspector-backdrop" id="inspectorBackdrop" onclick="toggleInspector(false)"></div>
 
-<script src="{{ url_for('static', filename='js/studio.js') }}?v=20260713-phase1"></script>
+<div class="studio-toast hidden" id="generationToast" role="status" aria-live="polite" aria-atomic="true">
+  <span class="toast-icon">{{ icon('sparkles') }}</span>
+  <div class="toast-copy"><strong>Script ready</strong><span id="generationToastMessage">AI script editor mein add ho gaya.</span></div>
+  <div class="toast-actions"><button type="button" class="text-button" id="undoGeneratedScriptBtn" onclick="undoGeneratedScript()">Undo</button><button type="button" class="icon-button" id="keepGeneratedScriptBtn" onclick="acceptGeneratedScript()" aria-label="Dismiss notification">{{ icon('close') }}</button></div>
+</div>
+
+<script src="{{ url_for('static', filename='js/studio.js') }}?v=20260714-phase3"></script>
 </body>
 </html>

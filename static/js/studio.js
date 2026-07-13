@@ -117,15 +117,53 @@ async function load(){
 
 // Script card ke tabs (Idea se / Long-Form / Characters / Template) — ek waqt ek panel
 function initScriptTabs(){
-  const tabs=document.querySelectorAll('#scriptTabs .tab');
-  const panels=document.querySelectorAll('#scriptCard .tabpanel');
-  tabs.forEach(t=>t.addEventListener('click',()=>{
-    tabs.forEach(x=>{x.classList.remove('on');x.setAttribute('aria-selected','false');});
-    t.classList.add('on'); t.setAttribute('aria-selected','true');
-    const k=t.dataset.t;
-    panels.forEach(p=>p.classList.toggle('hidden', p.dataset.t!==k));
-    scheduleWorkspaceAutosave();
-  }));
+  document.querySelectorAll('#scriptModeTabs [data-script-mode]').forEach(tab=>{
+    tab.addEventListener('click',()=>selectScriptMode(tab.dataset.scriptMode));
+  });
+  document.querySelectorAll('#scriptTabs [data-t]').forEach(tab=>{
+    tab.addEventListener('click',()=>selectAIGenerator(tab.dataset.t));
+  });
+}
+
+function selectScriptMode(mode,persist=true){
+  mode=mode==='ai'?'ai':'write';
+  STUDIO_UI.scriptMode=mode;
+  document.querySelectorAll('#scriptModeTabs [data-script-mode]').forEach(tab=>{
+    const active=tab.dataset.scriptMode===mode;
+    tab.classList.toggle('active',active);
+    tab.setAttribute('aria-selected',String(active));
+  });
+  document.querySelectorAll('#scriptCard [data-script-mode-panel]').forEach(panel=>{
+    const active=panel.dataset.scriptModePanel===mode;
+    panel.classList.toggle('active',active);
+    panel.hidden=!active;
+  });
+  if(mode==='ai') selectAIGenerator(STUDIO_UI.aiTab||'quick',false);
+  if(persist) scheduleWorkspaceAutosave();
+}
+
+function selectAIGenerator(tab,persist=true){
+  const allowed=['quick','longform','series','templates'];
+  tab=allowed.includes(tab)?tab:'quick';
+  STUDIO_UI.aiTab=tab;
+  document.querySelectorAll('#scriptTabs [data-t]').forEach(button=>{
+    const active=button.dataset.t===tab;
+    button.classList.toggle('on',active);
+    button.setAttribute('aria-selected',String(active));
+  });
+  document.querySelectorAll('#scriptAIPanel .tabpanel[data-t]').forEach(panel=>{
+    panel.classList.toggle('hidden',panel.dataset.t!==tab);
+  });
+  if(persist) scheduleWorkspaceAutosave();
+}
+
+function openAIGenerator(tab='quick'){
+  showStudioView('create',false);
+  setCreateStep(1,false);
+  selectScriptMode('ai',false);
+  selectAIGenerator(tab,false);
+  document.getElementById('scriptCard')?.scrollIntoView({behavior:'smooth',block:'start'});
+  scheduleWorkspaceAutosave();
 }
 
 let TPL_SEL=null, TPLS=[], CHARS=[], CHAR_SEL=new Set();
@@ -179,9 +217,8 @@ async function genFromTemplate(){
       headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
     if(j.error){ msg.innerHTML='<span class="err">'+j.error+'</span>'; }
     else{
-      document.getElementById('script').value=j.script;
+      replaceScriptWithGenerated(j.script,TPL_SEL?.name_en||'Template story','Template');
       msg.innerHTML='<span style="color:var(--green)">✅ Script ready — upar Script box mein aa gaya. Edit kar sakte ho, phir Generate Video.</span>';
-      focusGeneratedScript(TPL_SEL?.name_en||'Template story');
     }
   }catch(e){ msg.innerHTML='<span class="err">Fail: '+e+'</span>'; }
   btn.disabled=false; btn.textContent='Generate Script';
@@ -203,13 +240,12 @@ async function genFreeform(){
       headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
     if(j.error){ msg.innerHTML='<span class="err">'+j.error+'</span>'; }
     else{
-      document.getElementById('script').value=j.script||'';
+      replaceScriptWithGenerated(j.script||'',j.title||'AI story','Quick Idea');
       const cast=(j.cast||[]).join(', ');
       msg.innerHTML='<span style="color:var(--green)">✅ '+(j.title?('“'+j.title+'” '):'')
         +'</span><span style="color:var(--muted)">'
         +(j.genre?('['+j.genre+'] '):'')+(cast?('· '+cast):'')
         +' — Script box mein aa gaya. Edit karke Generate.</span>';
-      focusGeneratedScript(j.title||'AI story');
     }
   }catch(e){ msg.innerHTML='<span class="err">Fail: '+e+'</span>'; }
   btn.disabled=false; btn.textContent='Generate Script';
@@ -232,7 +268,7 @@ async function genLongform(){
       headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
     if(j.error){ msg.innerHTML='<span class="err">'+j.error+'</span>'; }
     else{
-      document.getElementById('script').value=j.script||'';
+      replaceScriptWithGenerated(j.script||'',j.title||'Long-form story','Long-form');
       const cast=(j.cast||[]).join(', ');
       msg.innerHTML='<span style="color:var(--green)">✅ '+(j.title?('“'+j.title+'” '):'')
         +'</span><span style="color:var(--muted)">'+(j.genre?('['+j.genre+'] '):'')
@@ -244,7 +280,6 @@ async function genLongform(){
           +' Scenes:</div>'+j.scenes.map((s,i)=>'<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,.06)"><b style="color:var(--green)">'
           +(i+1)+'. '+(s.location||'')+'</b> <span style="color:var(--muted)">— '+(s.goal||'')+'</span></div>').join('');
       }
-      focusGeneratedScript(j.title||'Long-form story');
     }
   }catch(e){ msg.innerHTML='<span class="err">Fail: '+e+'</span>'; }
   btn.disabled=false; btn.textContent='Generate Long Story';
@@ -337,12 +372,11 @@ async function genEpisode(){
       body:JSON.stringify({idea:document.getElementById('epIdea').value, length:segVal('epLenSeg')||'medium'})})).json();
     if(j.error){ msg.innerHTML='<span class="err">'+j.error+'</span>'; }
     else{
-      document.getElementById('script').value=j.script||'';
+      replaceScriptWithGenerated(j.script||'',j.title||CUR_SERIES.name,'Series episode');
       msg.innerHTML='<span style="color:var(--green)">✅ Episode '+j.episode_num+': “'+j.title+'”</span>'
         +'<div style="color:var(--muted);margin-top:3px">'+(j.summary||'')+'</div>';
       document.getElementById('epIdea').value='';
       await selectSeries(CUR_SERIES.id);  // history refresh
-      focusGeneratedScript(j.title||CUR_SERIES.name);
     }
   }catch(e){ msg.innerHTML='<span class="err">Fail: '+e+'</span>'; }
   btn.disabled=false;
@@ -362,8 +396,8 @@ function segVal(id){const e=document.querySelector('#'+id+' button.on');return e
 // coordinates existing DOM controls, views, and workflow state.
 const STUDIO_SESSION_KEY='sbz-studio-session-v2';
 const STUDIO_STEP_TITLES=['','Script setup','Cast & scene focus','Style & audio','Render setup'];
-let STUDIO_UI={view:'dashboard',step:1,projectName:'Untitled video'};
-let WORKSPACE_INITIALIZED=false, AUTOSAVE_TIMER=null;
+let STUDIO_UI={view:'dashboard',step:1,projectName:'Untitled video',scriptMode:'write',aiTab:'quick'};
+let WORKSPACE_INITIALIZED=false, AUTOSAVE_TIMER=null, GENERATED_SCRIPT_UNDO=null, TOAST_TIMER=null;
 
 function setAutosaveState(state,label){
   const el=document.getElementById('autosaveStatus');
@@ -381,7 +415,8 @@ function workspaceSnapshot(){
   });
   const segments={};
   document.querySelectorAll('.seg[id]').forEach(seg=>{segments[seg.id]=segVal(seg.id);});
-  return {view:STUDIO_UI.view,step:STUDIO_UI.step,projectName:STUDIO_UI.projectName,fields,segments};
+  return {view:STUDIO_UI.view,step:STUDIO_UI.step,projectName:STUDIO_UI.projectName,
+    scriptMode:STUDIO_UI.scriptMode,aiTab:STUDIO_UI.aiTab,fields,segments};
 }
 
 function saveWorkspaceDraft(){
@@ -417,6 +452,8 @@ function restoreWorkspaceDraft(){
     STUDIO_UI.view=draft.view||'dashboard';
     STUDIO_UI.step=Math.min(4,Math.max(1,Number(draft.step)||1));
     STUDIO_UI.projectName=draft.projectName||'Untitled video';
+    STUDIO_UI.scriptMode=draft.scriptMode==='ai'?'ai':'write';
+    STUDIO_UI.aiTab=['quick','longform','series','templates'].includes(draft.aiTab)?draft.aiTab:'quick';
     return draft;
   }catch(e){ return null; }
 }
@@ -493,7 +530,18 @@ function updateScriptCount(){
   const value=document.getElementById('script')?.value||'';
   const words=(value.trim().match(/\S+/g)||[]).length;
   const lines=value?value.split(/\r?\n/).filter(line=>line.trim()).length:0;
-  const out=document.getElementById('scriptCount'); if(out) out.textContent=`${words} words · ${lines} lines`;
+  updateScriptLanguageIndicator(value);
+  const out=document.getElementById('scriptCount');
+  if(out) out.textContent=`${words} ${words===1?'word':'words'} · ${lines} ${lines===1?'line':'lines'}`;
+}
+
+function updateScriptLanguageIndicator(value=''){
+  const out=document.getElementById('scriptLanguageIndicator'); if(!out) return;
+  if(/[\u0600-\u06ff]/.test(value)) out.textContent='Urdu';
+  else{
+    const selected=document.getElementById('ffLang')?.value||'roman_urdu';
+    out.textContent=selected==='english'?'English':'Roman Urdu';
+  }
 }
 
 function renderWorkflowSummary(){
@@ -523,8 +571,43 @@ function setCurrentProject(name){
 function focusGeneratedScript(title){
   if(title) setCurrentProject(title);
   showStudioView('create',false); setCreateStep(1,false); updateScriptCount();
+  selectScriptMode('write',false);
   document.getElementById('script')?.scrollIntoView({behavior:'smooth',block:'center'});
   scheduleWorkspaceAutosave();
+}
+
+function replaceScriptWithGenerated(script,title,source='AI'){
+  const editor=document.getElementById('script'); if(!editor) return;
+  GENERATED_SCRIPT_UNDO={text:editor.value,projectName:STUDIO_UI.projectName};
+  editor.value=script||'';
+  focusGeneratedScript(title);
+  showGenerationToast(`${source} script editor mein ready hai. Aap isay edit ya undo kar sakte hain.`,true);
+}
+
+function showGenerationToast(message,allowUndo=false){
+  const toast=document.getElementById('generationToast'); if(!toast) return;
+  const copy=document.getElementById('generationToastMessage'); if(copy) copy.textContent=message;
+  const undo=document.getElementById('undoGeneratedScriptBtn'); if(undo) undo.classList.toggle('hidden',!allowUndo);
+  toast.classList.remove('hidden');
+  clearTimeout(TOAST_TIMER);
+  TOAST_TIMER=setTimeout(()=>acceptGeneratedScript(),allowUndo?12000:5000);
+}
+
+function undoGeneratedScript(){
+  if(!GENERATED_SCRIPT_UNDO){acceptGeneratedScript();return;}
+  const editor=document.getElementById('script');
+  if(editor) editor.value=GENERATED_SCRIPT_UNDO.text;
+  setCurrentProject(GENERATED_SCRIPT_UNDO.projectName);
+  GENERATED_SCRIPT_UNDO=null;
+  updateScriptCount(); scheduleWorkspaceAutosave();
+  const toast=document.getElementById('generationToast'); if(toast) toast.classList.add('hidden');
+  editor?.focus();
+}
+
+function acceptGeneratedScript(){
+  GENERATED_SCRIPT_UNDO=null;
+  clearTimeout(TOAST_TIMER);
+  document.getElementById('generationToast')?.classList.add('hidden');
 }
 
 function populateCastInspector(plan){
@@ -579,6 +662,9 @@ function initStudioWorkspace(){
   restoreWorkspaceDraft();
   WORKSPACE_INITIALIZED=true;
   document.getElementById('currentProjectName').textContent=STUDIO_UI.projectName;
+  selectScriptMode(STUDIO_UI.scriptMode,false);
+  selectAIGenerator(STUDIO_UI.aiTab,false);
+  document.getElementById('ffLang')?.addEventListener('change',()=>updateScriptLanguageIndicator(document.getElementById('script')?.value||''));
   syncVoiceProviderUI(); updateScriptCount(); renderWorkflowSummary();
   showStudioView(STUDIO_UI.view,false);
   setAutosaveState('saved','Session saved');

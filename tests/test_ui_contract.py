@@ -86,6 +86,12 @@ PHASE_TWO_IDS = {
     "castInspectorAction", "castInspectorBackground",
 }
 
+PHASE_THREE_IDS = {
+    "scriptModeTabs", "scriptWritePanel", "scriptAIPanel",
+    "scriptLanguageIndicator", "generationToast", "generationToastMessage",
+    "undoGeneratedScriptBtn", "keepGeneratedScriptBtn",
+}
+
 
 class UIContractTests(unittest.TestCase):
     @classmethod
@@ -98,7 +104,7 @@ class UIContractTests(unittest.TestCase):
         self.assertIn("url_for('static', filename='css/studio.css')", self.template)
         self.assertIn("url_for('static', filename='js/studio.js')", self.template)
         self.assertIn("url_for('static', filename='icons/favicon.svg')", self.template)
-        self.assertIn("?v=20260713-phase1", self.template)
+        self.assertIn("?v=20260714-phase3", self.template)
         self.assertIsNone(re.search(r"<style\b", self.template, re.IGNORECASE))
         self.assertIsNone(re.search(
             r"<script(?![^>]*\bsrc=)[^>]*>", self.template, re.IGNORECASE))
@@ -162,6 +168,32 @@ class UIContractTests(unittest.TestCase):
         ):
             self.assertRegex(self.js, rf"function\s+{function}\s*\(")
 
+    def test_phase_three_script_modes_and_ai_generators_are_contractual(self):
+        ids = set(re.findall(r'\bid=["\']([^"\']+)["\']', self.template))
+        self.assertTrue(PHASE_THREE_IDS.issubset(ids),
+                        f"Missing Phase 3 IDs: {sorted(PHASE_THREE_IDS - ids)}")
+        self.assertEqual(
+            re.findall(r'\bdata-script-mode=["\']([^"\']+)["\']', self.template),
+            ["write", "ai"],
+        )
+        self.assertEqual(
+            set(re.findall(r'<button[^>]+\bdata-t=["\']([^"\']+)', self.template)),
+            {"quick", "longform", "series", "templates"},
+        )
+        self.assertEqual(
+            set(re.findall(r'<div[^>]+class=["\'][^"\']*tabpanel[^"\']*["\'][^>]+\bdata-t=["\']([^"\']+)', self.template)),
+            {"quick", "longform", "series", "templates"},
+        )
+        for function in (
+            "selectScriptMode", "selectAIGenerator", "openAIGenerator",
+            "replaceScriptWithGenerated", "showGenerationToast",
+            "undoGeneratedScript", "acceptGeneratedScript",
+            "updateScriptLanguageIndicator",
+        ):
+            self.assertRegex(self.js, rf"function\s+{function}\s*\(")
+        self.assertIn("scriptMode:STUDIO_UI.scriptMode", self.js)
+        self.assertIn("aiTab:STUDIO_UI.aiTab", self.js)
+
     def test_local_svg_sprite_is_valid_and_uses_current_color(self):
         source = ICONS.read_text(encoding="utf-8")
         root = ET.fromstring(source)
@@ -180,8 +212,8 @@ class UIContractTests(unittest.TestCase):
         try:
             self.assertEqual(page.status_code, 200)
             html = page.get_data(as_text=True)
-            self.assertIn("/static/css/studio.css?v=20260713-phase1", html)
-            self.assertIn("/static/js/studio.js?v=20260713-phase1", html)
+            self.assertIn("/static/css/studio.css?v=20260714-phase3", html)
+            self.assertIn("/static/js/studio.js?v=20260714-phase3", html)
         finally:
             page.close()
         for asset in (
