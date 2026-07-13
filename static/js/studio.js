@@ -5,7 +5,7 @@ function escHtml(value){
   return String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 function uiIcon(name){
-  return `<svg class="icon" aria-hidden="true"><use href="/static/icons/icons.svg?v=20260714-phase5#icon-${name}"></use></svg>`;
+  return `<svg class="icon" aria-hidden="true"><use href="/static/icons/icons.svg?v=20260714-phase6#icon-${name}"></use></svg>`;
 }
 function elevenVoiceLabel(voice){
   const labels=voice.labels||{};
@@ -403,6 +403,7 @@ const STUDIO_SESSION_KEY='sbz-studio-session-v2';
 const STUDIO_STEP_TITLES=['','Script setup','Cast & scene focus','Style & audio','Render setup'];
 let STUDIO_UI={view:'dashboard',step:1,projectName:'Untitled video',scriptMode:'write',aiTab:'quick'};
 let WORKSPACE_INITIALIZED=false, AUTOSAVE_TIMER=null, GENERATED_SCRIPT_UNDO=null, TOAST_TIMER=null, ADVANCED_RETURN_FOCUS=null;
+let GENERATION_STARTED_AT=0, ELAPSED_TIMER=null, RENDER_ESTIMATE_TOKEN=0, CURRENT_RESULT_PROJECT='';
 
 function setAutosaveState(state,label){
   const el=document.getElementById('autosaveStatus');
@@ -593,12 +594,71 @@ function renderWorkflowSummary(){
   set('renderCharacterCount',PLAN?.characters?.length??PLAN?.parsed?.characters?.length??'—');
   set('renderQuality',quality);
   set('renderEngineSummary',engine==='blender'?'Blender':'Three.js');
+  set('renderProjectTitle',STUDIO_UI.projectName||'Untitled video');
+  set('renderFormatSummary',`${aspectLabels[aspect]||aspect} · ${quality}`);
+  set('renderVoiceSummary',tts==='elevenlabs'?'ElevenLabs':'Edge TTS');
+  set('renderCaptionSummary',document.getElementById('cap_enabled')?.checked?'Enabled':'Optional');
+  const metrics=getRenderMetrics();
+  set('renderSceneCount',metrics.scenes);
+  set('renderCharacterCount',metrics.characters);
+  set('renderEstimatedDuration',formatRenderDuration(metrics.duration));
+  const hasScript=(document.getElementById('script')?.value.trim().length||0)>=10;
+  const direct=document.getElementById('genBtn'), primary=document.getElementById('pvGenBtn');
+  if(direct) direct.disabled=!hasScript;
+  if(primary) primary.disabled=!hasScript;
+  if(STUDIO_UI.step===4) updateRenderEstimate(metrics);
   syncAdvancedSettingsUI();
+}
+
+function getRenderMetrics(){
+  const script=document.getElementById('script')?.value.trim()||'';
+  const planScenes=PLAN?.scenes||PLAN?.parsed?.scenes||[];
+  const planCharacters=PLAN?.characters||PLAN?.parsed?.characters||[];
+  const sceneCards=[...document.querySelectorAll('#pvScenes .pvScene')];
+  const scenes=sceneCards.length||planScenes.length||Math.max(1,(script.match(/^\s*\[?scene\b/gim)||[]).length);
+  const lines=sceneCards.length?document.querySelectorAll('#pvScenes .pvLine').length:
+    planScenes.reduce((total,scene)=>total+(scene.lines||[]).length,0)||script.split(/\r?\n/).filter(line=>line.includes(':')).length||1;
+  const speakerNames=new Set(script.split(/\r?\n/).map(line=>(line.match(/^\s*([^:\n]{1,40}):/)||[])[1]).filter(Boolean));
+  const characters=planCharacters.length||Math.max(1,speakerNames.size);
+  let duration=0;
+  sceneCards.forEach(scene=>{
+    const raw=String(scene.dataset.duration||'');
+    const value=parseFloat(raw)||0;
+    duration+=/min/i.test(raw)?value*60:value;
+  });
+  if(!duration){
+    const words=(script.match(/\S+/g)||[]).length;
+    duration=Math.max(5,Math.round(words/2.2+lines*.45));
+  }
+  return {scenes,lines,characters,duration};
+}
+
+function formatRenderDuration(seconds){
+  const total=Math.max(0,Math.round(Number(seconds)||0));
+  const minutes=Math.floor(total/60), remaining=total%60;
+  return minutes?`${minutes}m ${String(remaining).padStart(2,'0')}s`:`${remaining}s`;
+}
+
+async function updateRenderEstimate(metrics=getRenderMetrics()){
+  const token=++RENDER_ESTIMATE_TOKEN;
+  const out=document.getElementById('renderEstimatedCost'), detail=document.getElementById('costEst');
+  if(out) out.textContent='Calculating…';
+  try{
+    const response=await fetch('/api/cost',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scenes:metrics.scenes,lines:metrics.lines,chars:metrics.characters,render_mode:segVal('modeSeg')||'draft'})});
+    const cost=await response.json(); if(token!==RENDER_ESTIMATE_TOKEN) return;
+    if(out) out.textContent=`$${Number(cost.total||0).toFixed(2)}`;
+    if(detail) detail.textContent=`Estimate includes story, ${metrics.scenes} backgrounds, ${metrics.characters} characters${Number(cost.ai_video||0)>0?' and AI video clips':''}.`;
+  }catch(error){
+    if(token!==RENDER_ESTIMATE_TOKEN) return;
+    if(out) out.textContent='Unavailable';
+    if(detail) detail.textContent='Cost estimate will not affect generation.';
+  }
 }
 
 function setCurrentProject(name){
   STUDIO_UI.projectName=name||'Untitled video';
   const el=document.getElementById('currentProjectName'); if(el) el.textContent=STUDIO_UI.projectName;
+  const renderTitle=document.getElementById('renderProjectTitle'); if(renderTitle) renderTitle.textContent=STUDIO_UI.projectName;
   scheduleWorkspaceAutosave();
 }
 
@@ -897,7 +957,38 @@ function setStages(active,i,total,msg,fin){
     if(fin||si<ai){li.classList.add('done');}
     else if(si===ai){li.classList.add('active'); m.textContent=(total>1?`${i}/${total} `:'')+(msg||'');}
   });
+  const within=total>0?Math.min(1,Math.max(0,Number(i||0)/Number(total))):0;
+  const percent=fin?100:Math.max(0,Math.min(99,Math.round(((Math.max(0,ai)+within)/ORDER.length)*100)));
+  const bar=document.getElementById('overallProgress'), fill=document.getElementById('overallProgressFill');
+  if(bar) bar.setAttribute('aria-valuenow',String(percent));
+  if(fill) fill.style.width=`${percent}%`;
+  const label=document.getElementById('overallProgressLabel'); if(label) label.textContent=`${percent}% complete`;
+  const titles={story:'Analyzing your story',voice:'Creating voices and lip-sync',asset:'Preparing scenes and characters',render:'Compositing the final video'};
+  const stage=document.getElementById('generationStage'); if(stage) stage.textContent=fin?'Finalizing your video':(titles[active]||'Preparing your video');
+  const clip=document.getElementById('generationClip'); if(clip) clip.textContent=msg||(fin?'Render complete. Preparing playback.':'Working safely in the background.');
 }
+
+function setGenerationExperience(state){
+  const ready=document.getElementById('renderReadyExperience');
+  const progress=document.getElementById('progressCard');
+  const result=document.getElementById('resultCard');
+  ready?.classList.toggle('hidden',state!=='ready');
+  progress?.classList.toggle('hidden',state!=='progress');
+  result?.classList.toggle('hidden',state!=='result');
+}
+
+function startGenerationClock(resetClock=true){
+  if(resetClock||!GENERATION_STARTED_AT) GENERATION_STARTED_AT=Date.now();
+  clearInterval(ELAPSED_TIMER);
+  const tick=()=>{
+    const elapsed=Math.max(0,Math.floor((Date.now()-GENERATION_STARTED_AT)/1000));
+    const out=document.getElementById('generationElapsed');
+    if(out) out.textContent=`${String(Math.floor(elapsed/60)).padStart(2,'0')}:${String(elapsed%60).padStart(2,'0')}`;
+  };
+  tick(); ELAPSED_TIMER=setInterval(tick,1000);
+}
+
+function stopGenerationClock(){ clearInterval(ELAPSED_TIMER); ELAPSED_TIMER=null; }
 
 const EMOTIONS=['neutral','happy','sad','angry','excited','scared','confused','thinking','surprised'];
 let PLAN=null;
@@ -1118,6 +1209,14 @@ async function confirmGenerate(){
   startJob(collectEditedParsed());
 }
 
+async function generatePreferred(){
+  if(PLAN){
+    if(!validatePreviewPlan(true)) return;
+    return startJob(collectEditedParsed());
+  }
+  return startJob(null);
+}
+
 function showPreviewError(message){
   const error=document.getElementById('previewError');
   error.textContent=message; error.classList.remove('hidden');
@@ -1192,7 +1291,7 @@ async function openProject(name){
 }
 function playProject(name){
   showStudioView('create',false); setCreateStep(4,false); setCurrentProject(name);
-  document.getElementById('resultCard').classList.remove('hidden');
+  CURRENT_RESULT_PROJECT=name; setGenerationExperience('result');
   document.getElementById('rTitle').textContent=name;
   document.getElementById('rVideo').src='/projects/'+name+'/final.mp4?t='+Date.now();
   document.getElementById('rDownload').href='/projects/'+name+'/final.mp4';
@@ -1207,7 +1306,7 @@ async function delProject(name,ev){
 async function resumeProject(name){
   showStudioView('create',false); setCreateStep(4,false); setCurrentProject(name);
   const btn=document.getElementById('genBtn'); if(btn) btn.disabled=true;
-  document.getElementById('progressCard').classList.remove('hidden');
+  setGenerationExperience('progress'); startGenerationClock();
   document.getElementById('resumeCard').classList.add('hidden');
   setStages('story',0,1,'Resume ho raha...');
   const r=await (await fetch('/api/resume/'+name,{method:'POST'})).json();
@@ -1226,8 +1325,8 @@ async function startJob(parsed){
   showStudioView('create',false); setCreateStep(4,false);
   const btn=document.getElementById('genBtn');
   btn.disabled=true;
-  document.getElementById('progressCard').classList.remove('hidden');
-  document.getElementById('resultCard').classList.add('hidden');
+  document.getElementById('pvGenBtn').disabled=true;
+  setGenerationExperience('progress'); startGenerationClock();
   document.getElementById('errMsg').classList.add('hidden');
   setStages('story',0,1,'');
   const body={script,settings:collectSettings()};
@@ -1244,8 +1343,8 @@ function _resetStop(){ const b=document.getElementById('stopBtn'); if(b){b.disab
 async function poll(id){
   const j=await (await fetch('/api/status/'+id)).json();
   if(j.state==='running') setStages(j.stage,j.i,j.total,j.message);
-  else if(j.state==='done'){clearInterval(polling);setStages('render',1,1,'',true);showResult(j.result);checkResumable();loadProjectsList();}
-  else if(j.state==='stopped'){clearInterval(polling);reset();document.getElementById('progressCard').classList.add('hidden');
+  else if(j.state==='done'){clearInterval(polling);stopGenerationClock();setStages('render',1,1,'',true);showResult(j.result);checkResumable();loadProjectsList();}
+  else if(j.state==='stopped'){clearInterval(polling);stopGenerationClock();reset();setGenerationExperience('ready');
     const fb=document.getElementById('scriptFeedback'); if(fb)fb.innerHTML='<span style="color:#f59e0b">⏹ Generation ruk gaya — jitna bana wo safe. 📁 My Projects se ▶ Resume kar sakte.</span>';
     checkResumable();loadProjectsList();}
   else if(j.state==='error'){clearInterval(polling);showErr(j.error||'error');checkResumable();}
@@ -1253,18 +1352,66 @@ async function poll(id){
 
 function showResult(res){
   showStudioView('create',false); setCreateStep(4,false);
-  document.getElementById('resultCard').classList.remove('hidden');
+  setGenerationExperience('result');
   document.getElementById('rTitle').textContent=res.title||'Video Ready';
   setCurrentProject(res.title||STUDIO_UI.projectName);
+  CURRENT_RESULT_PROJECT=String(res.video_rel||'').split('/')[0]||STUDIO_UI.projectName;
   document.getElementById('rVideo').src='/projects/'+res.video_rel+'?t='+Date.now();
   document.getElementById('rDownload').href='/projects/'+res.video_rel;
   reset();
 }
-function showErr(m){const e=document.getElementById('errMsg');e.textContent='❌ '+m;e.classList.remove('hidden');reset();}
+function showErr(m){stopGenerationClock();const e=document.getElementById('errMsg');e.textContent=m;e.classList.remove('hidden');reset();}
 function reset(){
-  const b=document.getElementById('genBtn');b.disabled=false;b.textContent='Direct Generate';
+  const b=document.getElementById('genBtn');b.disabled=false;b.textContent='Generate directly from script';
   const pb=document.getElementById('previewBtn');pb.disabled=false;pb.textContent='Build Cast & Scene Plan';
-  const pg=document.getElementById('pvGenBtn');if(pg)pg.disabled=!PLAN;
+  const pg=document.getElementById('pvGenBtn');if(pg)pg.disabled=(document.getElementById('script')?.value.trim().length||0)<10;
+}
+
+async function openProjectFolder(){
+  const name=CURRENT_RESULT_PROJECT||STUDIO_UI.projectName; if(!name) return;
+  const button=document.getElementById('openProjectFolderBtn'); button.disabled=true;
+  try{
+    const response=await fetch('/api/project/'+encodeURIComponent(name)+'/open-folder',{method:'POST'});
+    const result=await response.json();
+    if(!response.ok||result.error) throw new Error(result.error||'Folder could not be opened');
+    showGenerationToast('Project folder Windows Explorer mein open ho gaya.',false);
+  }catch(error){showGenerationToast(error.message,false);}
+  button.disabled=false;
+}
+
+function toggleExportOptions(force){
+  const panel=document.getElementById('exportOptionsPanel'), button=document.getElementById('exportOptionsButton');
+  const open=typeof force==='boolean'?force:panel.classList.contains('hidden');
+  panel.classList.toggle('hidden',!open); button.setAttribute('aria-expanded',String(open));
+}
+
+async function exportProject(){
+  const name=CURRENT_RESULT_PROJECT||STUDIO_UI.projectName;
+  const want=[];
+  if(document.getElementById('exportSrt').checked) want.push('srt');
+  if(document.getElementById('exportAudio').checked) want.push('audio');
+  if(document.getElementById('exportThumbnail').checked) want.push('thumbnail');
+  if(document.getElementById('exportSeo').checked) want.push('seo');
+  const button=document.getElementById('exportBtn'), out=document.getElementById('exportResult');
+  button.disabled=true; out.textContent='Creating export package…';
+  try{
+    const response=await fetch('/api/export/'+encodeURIComponent(name),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({want})});
+    const result=await response.json(); if(!response.ok||result.error) throw new Error(result.error||'Export failed');
+    const files=Object.entries(result).filter(([,value])=>value).map(([key,value])=>key==='seo'?'<span>SEO package ready</span>':`<a href="/projects/${escHtml(value)}" download>${escHtml(key.toUpperCase())}</a>`).join('');
+    out.innerHTML=files?`<div class="export-result-links">${files}</div>`:'Export completed.';
+  }catch(error){out.innerHTML=`<span class="err">${escHtml(error.message)}</span>`;}
+  button.disabled=false;
+}
+
+function createAnotherVideo(){
+  stopGenerationClock(); CURRENT_RESULT_PROJECT=''; PLAN=null;
+  const script=document.getElementById('script'); if(script) script.value='';
+  document.getElementById('rVideo')?.removeAttribute('src');
+  document.getElementById('previewCard')?.classList.add('hidden');
+  document.getElementById('castEmptyState')?.classList.remove('hidden');
+  setCurrentProject('Untitled video'); setGenerationExperience('ready');
+  toggleExportOptions(false); updateScriptCount(); renderWorkflowSummary();
+  setCreateStep(1); document.getElementById('script')?.focus();
 }
 
 async function testRunware(){

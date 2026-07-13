@@ -43,7 +43,7 @@ REQUIRED_ENDPOINT_MARKERS = {
     "/api/costumes", "/api/accessories", "/api/held", "/api/preview",
     "/api/resumable", "/api/projects", "/api/project/", "/api/resume/",
     "/api/generate", "/api/status/", "/api/stop/", "/api/test-runware",
-    "/projects/",
+    "/api/cost", "/api/export/", "/api/project/", "/open-folder", "/projects/",
 }
 
 REQUIRED_FUNCTIONS = {
@@ -107,6 +107,17 @@ PHASE_FIVE_IDS = {
     "advancedProviderDetails", "musicVolumeValue",
 }
 
+PHASE_SIX_IDS = {
+    "renderReadyExperience", "renderPreviewSurface", "renderProjectTitle",
+    "renderEstimatedDuration", "renderEstimatedCost", "renderFormatSummary",
+    "renderVoiceSummary", "renderCaptionSummary", "generationStage",
+    "generationClip", "generationResumeStatus", "overallProgress",
+    "overallProgressFill", "overallProgressLabel", "generationElapsed",
+    "openProjectFolderBtn", "exportOptionsButton", "exportOptionsPanel",
+    "exportSrt", "exportAudio", "exportThumbnail", "exportSeo", "exportBtn",
+    "exportResult",
+}
+
 
 class UIContractTests(unittest.TestCase):
     @classmethod
@@ -119,7 +130,7 @@ class UIContractTests(unittest.TestCase):
         self.assertIn("url_for('static', filename='css/studio.css')", self.template)
         self.assertIn("url_for('static', filename='js/studio.js')", self.template)
         self.assertIn("url_for('static', filename='icons/favicon.svg')", self.template)
-        self.assertIn("?v=20260714-phase5", self.template)
+        self.assertIn("?v=20260714-phase6", self.template)
         self.assertIsNone(re.search(r"<style\b", self.template, re.IGNORECASE))
         self.assertIsNone(re.search(
             r"<script(?![^>]*\bsrc=)[^>]*>", self.template, re.IGNORECASE))
@@ -259,6 +270,23 @@ class UIContractTests(unittest.TestCase):
         self.assertIn("advanced-settings-open", self.css)
         self.assertGreaterEqual(self.template.count("data-advanced-settings-trigger"), 4)
 
+    def test_phase_six_render_experience_keeps_generation_and_export_flows(self):
+        ids = set(re.findall(r'\bid=["\']([^"\']+)["\']', self.template))
+        self.assertTrue(PHASE_SIX_IDS.issubset(ids),
+                        f"Missing Phase 6 IDs: {sorted(PHASE_SIX_IDS - ids)}")
+        for function in (
+            "getRenderMetrics", "formatRenderDuration", "updateRenderEstimate",
+            "setGenerationExperience", "startGenerationClock",
+            "stopGenerationClock", "generatePreferred", "openProjectFolder",
+            "toggleExportOptions", "exportProject", "createAnotherVideo",
+        ):
+            self.assertRegex(self.js, rf"function\s+{function}\s*\(")
+        self.assertIn("/api/cost", self.js)
+        self.assertIn("/api/export/", self.js)
+        self.assertIn("/open-folder", self.js)
+        self.assertIn("aspect-ratio:16/9", self.css)
+        self.assertIn("role=\"progressbar\"", self.template)
+
     def test_local_svg_sprite_is_valid_and_uses_current_color(self):
         source = ICONS.read_text(encoding="utf-8")
         root = ET.fromstring(source)
@@ -277,8 +305,8 @@ class UIContractTests(unittest.TestCase):
         try:
             self.assertEqual(page.status_code, 200)
             html = page.get_data(as_text=True)
-            self.assertIn("/static/css/studio.css?v=20260714-phase5", html)
-            self.assertIn("/static/js/studio.js?v=20260714-phase5", html)
+            self.assertIn("/static/css/studio.css?v=20260714-phase6", html)
+            self.assertIn("/static/js/studio.js?v=20260714-phase6", html)
         finally:
             page.close()
         for asset in (

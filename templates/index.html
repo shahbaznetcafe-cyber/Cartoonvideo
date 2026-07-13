@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🎬 SBZ AI Video Studio</title>
 <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icons/favicon.svg') }}?v=20260713-phase1">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/studio.css') }}?v=20260714-phase5">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/studio.css') }}?v=20260714-phase6">
 </head>
 <body>
 {% macro icon(name) -%}
-<svg class="icon" aria-hidden="true"><use href="{{ url_for('static', filename='icons/icons.svg') }}?v=20260714-phase5#icon-{{ name }}"></use></svg>
+<svg class="icon" aria-hidden="true"><use href="{{ url_for('static', filename='icons/icons.svg') }}?v=20260714-phase6#icon-{{ name }}"></use></svg>
 {%- endmacro %}
 
 <header class="appbar">
@@ -221,22 +221,34 @@
       </section>
 
       <section class="create-step-panel" data-step-panel="4">
-        <div class="card render-card" id="genCard">
-          <div class="render-surface"><span>{{ icon('preview') }}</span><strong>Preview workspace</strong><small>Final video aur generation progress yahan appear hogi.</small></div>
-          <div class="section-heading render-heading"><div><span class="eyebrow">Step 4</span><h2>Ready to render</h2></div><span class="status-pill success">Settings complete</span></div>
-          <div class="render-summary">
-            <div><span>Scenes</span><strong id="renderSceneCount">—</strong></div><div><span>Characters</span><strong id="renderCharacterCount">—</strong></div><div><span>Quality</span><strong id="renderQuality">1080p</strong></div><div><span>Engine</span><strong id="renderEngineSummary">Three.js</strong></div>
+        <div class="render-ready-layout" id="renderReadyExperience">
+          <div class="card render-preview-card" id="genCard">
+            <div class="render-preview-surface" id="renderPreviewSurface"><div class="preview-safe-frame"><span>{{ icon('preview') }}</span><strong>16:9 video preview</strong><small>Your rendered video will appear here</small></div></div>
+            <div class="render-preview-caption"><span>Output preview</span><span id="renderFormatSummary">Landscape · 1080p</span></div>
           </div>
-          <div class="render-actions"><button type="button" class="btn btn-secondary" id="genBtn" onclick="generate()">Direct Generate</button><button type="button" class="btn btn-primary" id="pvGenBtn" onclick="confirmGenerate()" disabled>Generate Edited Plan</button></div>
-          <div class="cost" id="costEst"></div>
+          <aside class="card render-checkout-card" aria-labelledby="renderProjectTitle">
+            <div class="render-checkout-heading"><span class="eyebrow">Ready to render</span><h2 id="renderProjectTitle">Untitled video</h2><p>Review the final setup before generation.</p></div>
+            <div class="render-facts"><div><span>Scenes</span><strong id="renderSceneCount">—</strong></div><div><span>Characters</span><strong id="renderCharacterCount">—</strong></div><div><span>Estimated duration</span><strong id="renderEstimatedDuration">—</strong></div><div><span>Estimated cost</span><strong id="renderEstimatedCost">Calculating…</strong></div></div>
+            <div class="render-spec-list"><div><span>Quality</span><strong id="renderQuality">1080p</strong></div><div><span>Render engine</span><strong id="renderEngineSummary">Three.js</strong></div><div><span>Voice</span><strong id="renderVoiceSummary">Edge TTS</strong></div><div><span>Subtitles</span><strong id="renderCaptionSummary">Optional</strong></div></div>
+            <div class="render-primary-actions"><button type="button" class="btn btn-primary" id="pvGenBtn" onclick="generatePreferred()">{{ icon('render') }} Generate Video</button><button type="button" class="btn btn-secondary" id="genBtn" onclick="generate()">Generate directly from script</button></div>
+            <button type="button" class="text-button render-edit-action" onclick="setCreateStep(3)">← Back and edit settings</button>
+            <div class="cost" id="costEst" aria-live="polite"></div>
+          </aside>
         </div>
         <div class="card hidden progress-experience" id="progressCard" aria-live="polite">
-          <div class="section-heading"><div><span class="eyebrow">Rendering</span><h2>Video generation in progress</h2></div><span class="status-pill warning">Cached safely</span></div>
-          <ul class="steps" id="steps"><li data-s="story"><span class="sdot"></span> Story analyze <span class="msg"></span></li><li data-s="voice"><span class="sdot"></span> Voices <span class="msg"></span></li><li data-s="asset"><span class="sdot"></span> Backgrounds + Characters <span class="msg"></span></li><li data-s="render"><span class="sdot"></span> Compositing + Render <span class="msg"></span></li></ul>
-          <button type="button" class="btn btn-danger btn-sm" id="stopBtn" onclick="stopJob()">Stop Generation</button><p class="hint">Completed work safe rahega aur baad mein Resume ho sakta hai.</p><p class="err hidden" id="errMsg" aria-live="assertive"></p>
+          <div class="generation-progress-header"><div><span class="eyebrow">Rendering in progress</span><h2 id="generationStage">Preparing your video</h2><p id="generationClip">Analyzing the story and project settings.</p></div><span class="status-pill warning" id="generationResumeStatus">Safe resume enabled</span></div>
+          <div class="overall-progress" role="progressbar" aria-label="Overall render progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="overallProgress"><span id="overallProgressFill"></span></div>
+          <div class="progress-meta"><span id="overallProgressLabel">0% complete</span><span>Elapsed <strong id="generationElapsed">00:00</strong></span></div>
+          <ul class="steps generation-steps" id="steps"><li data-s="story"><span class="sdot"></span><span>Story analysis</span><span class="msg"></span></li><li data-s="voice"><span class="sdot"></span><span>Voices &amp; lip-sync</span><span class="msg"></span></li><li data-s="asset"><span class="sdot"></span><span>Backgrounds &amp; characters</span><span class="msg"></span></li><li data-s="render"><span class="sdot"></span><span>Compositing &amp; final render</span><span class="msg"></span></li></ul>
+          <div class="generation-safety"><span>{{ icon('folder') }}</span><div><strong>Completed work is cached</strong><small>If generation stops, resume it later from Projects.</small></div></div>
+          <div class="progress-actions"><button type="button" class="btn btn-danger" id="stopBtn" onclick="stopJob()">{{ icon('stop') }} Stop Generation</button></div><p class="err hidden" id="errMsg" aria-live="assertive"></p>
         </div>
-        <div class="card hidden" id="resultCard"><div class="section-heading"><div><span class="eyebrow">Complete</span><h2 id="rTitle">Video Ready</h2></div><span class="status-pill success">MP4 ready</span></div><video id="rVideo" controls></video><a class="btn btn-primary download-action" id="rDownload" download>Download MP4</a></div>
-        <div class="workflow-actions"><button type="button" class="btn btn-secondary" onclick="setCreateStep(3)">← Back to Style</button><span></span></div>
+        <div class="card hidden result-experience" id="resultCard">
+          <div class="result-heading"><div><span class="result-success-icon">{{ icon('play') }}</span><div><span class="eyebrow success-text">Render complete</span><h2 id="rTitle">Video Ready</h2><p>Your MP4 is ready to review and export.</p></div></div><span class="status-pill success">MP4 ready</span></div>
+          <div class="result-video-frame"><video id="rVideo" controls></video></div>
+          <div class="result-actions"><a class="btn btn-primary" id="rDownload" download>{{ icon('download') }} Download MP4</a><button type="button" class="btn btn-secondary" id="openProjectFolderBtn" onclick="openProjectFolder()">{{ icon('folder') }} Open project folder</button><button type="button" class="btn btn-secondary" id="exportOptionsButton" aria-expanded="false" aria-controls="exportOptionsPanel" onclick="toggleExportOptions()">Export options</button><button type="button" class="btn btn-secondary" onclick="createAnotherVideo()">Create another video</button></div>
+          <div class="export-options-panel hidden" id="exportOptionsPanel"><div><span class="eyebrow">Additional files</span><h3>Export package</h3></div><div class="export-option-grid"><label class="chk"><input type="checkbox" id="exportSrt" checked> Subtitle file (SRT)</label><label class="chk"><input type="checkbox" id="exportAudio" checked> Master audio</label><label class="chk"><input type="checkbox" id="exportThumbnail" checked> Thumbnail</label><label class="chk"><input type="checkbox" id="exportSeo" checked> SEO package</label></div><button type="button" class="btn btn-secondary" id="exportBtn" onclick="exportProject()">Create export package</button><div id="exportResult" class="feedback-region" aria-live="polite"></div></div>
+        </div>
       </section>
     </section>
 
@@ -317,6 +329,6 @@
   <div class="toast-actions"><button type="button" class="text-button" id="undoGeneratedScriptBtn" onclick="undoGeneratedScript()">Undo</button><button type="button" class="icon-button" id="keepGeneratedScriptBtn" onclick="acceptGeneratedScript()" aria-label="Dismiss notification">{{ icon('close') }}</button></div>
 </div>
 
-<script src="{{ url_for('static', filename='js/studio.js') }}?v=20260714-phase5"></script>
+<script src="{{ url_for('static', filename='js/studio.js') }}?v=20260714-phase6"></script>
 </body>
 </html>

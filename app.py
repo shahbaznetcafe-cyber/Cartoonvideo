@@ -204,6 +204,25 @@ def api_project_detail(name):
                     "video_rel": name + "/final.mp4" if has_video else None})
 
 
+@app.route("/api/project/<name>/open-folder", methods=["POST"])
+def api_open_project_folder(name):
+    """Open a validated local project directory in Windows Explorer."""
+    import os
+    if name != os.path.basename(name):
+        return jsonify({"error": "Project name invalid hai"}), 400
+    project_dir = os.path.abspath(os.path.join(config.PROJECTS_DIR, name))
+    projects_root = os.path.abspath(config.PROJECTS_DIR)
+    if os.path.commonpath([projects_root, project_dir]) != projects_root:
+        return jsonify({"error": "Project path invalid hai"}), 400
+    if not os.path.isdir(project_dir):
+        return jsonify({"error": "Project folder nahi mila"}), 404
+    try:
+        os.startfile(project_dir)
+    except (AttributeError, OSError) as exc:
+        return jsonify({"error": f"Folder open nahi hua: {exc}"}), 500
+    return jsonify({"ok": True})
+
+
 @app.route("/api/stop/<job_id>", methods=["POST"])
 def api_stop(job_id):
     """Chalti hui generation STOP karo — abhi wala Blender line kill, loop ruk jaye.
