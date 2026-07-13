@@ -82,6 +82,10 @@ VOICE_VOLUME = os.getenv("VOICE_VOLUME", "+0%")
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "runware")     # runware|huggingface|groq|gemini|openai|openrouter|together
 IMAGE_PROVIDER = os.getenv("IMAGE_PROVIDER", "runware")  # runware|fal|replicate
 TTS_PROVIDER = os.getenv("TTS_PROVIDER", "edge")         # edge|elevenlabs|fish
+ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "").strip()
+# Eleven v3 supports Urdu and expressive character/audiobook delivery.  Keep the
+# environment override for accounts that deliberately use another model.
+ELEVENLABS_MODEL = os.getenv("ELEVENLABS_MODEL", "eleven_v3").strip() or "eleven_v3"
 # HuggingFace InferenceClient model (HF_TOKEN .env mein daalein)
 HF_MODEL = os.getenv("HF_MODEL", "meta-llama/Meta-Llama-3-8B-Instruct")
 # fallback chains (provider fail/no-key ho to agla)

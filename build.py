@@ -44,6 +44,7 @@ def apply_settings(s):
         "fast_preview": ("FAST_PREVIEW", bool), "gpu": ("GPU_ENCODE", str),
         "music_volume": ("MUSIC_VOLUME", float), "vignette": ("VIGNETTE", bool),
         "voice_volume": ("VOICE_VOLUME", str), "tts_provider": ("TTS_PROVIDER", str),
+        "elevenlabs_voice_id": ("ELEVENLABS_VOICE_ID", str),
         "llm_provider": ("LLM_PROVIDER", str), "image_provider": ("IMAGE_PROVIDER", str),
         "render_workers": ("RENDER_WORKERS", int), "story_mode": ("STORY_MODE", str),
         "multi_char": ("BLENDER3D_MULTI", bool), "render_engine": ("RENDER_ENGINE", str),

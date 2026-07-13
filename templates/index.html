@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🎬 SBZ AI Video Studio</title>
 <style>
-  :root{--bg:#0c0f15;--panel:#141922;--panel2:#1a212c;--bd:#252d3a;--accent:#3b82f6;
+:root{--bg:#0c0f15;--panel:#141922;--panel2:#1a212c;--bd:#252d3a;--accent:#3b82f6;
         --accent2:#2563eb;--green:#22c55e;--red:#ef4444;--text:#e8eef6;--muted:#8b97a8;}
   *{box-sizing:border-box;}
   body{margin:0;font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);font-size:14px;}
@@ -428,14 +428,25 @@
     <details class="acc" open>
       <summary>🎤 Voice &amp; Audio</summary>
       <div class="accbody">
-      <label>Urdu Accent (lehja)</label>
-      <select id="urdu_accent">
-        <option value="pakistani">🇵🇰 Pakistani (Asad / Uzma)</option>
-        <option value="indian">🇮🇳 Indian (Salman / Gul)</option>
-      </select>
-      <div class="hint" style="margin-bottom:8px">Indian ya Pakistani Urdu voices (edge-tts, free). Har character ko gender ke hisab se voice milti.</div>
       <label>TTS provider</label>
       <select id="tts_provider"><option value="edge">edge-tts (free)</option><option value="elevenlabs">ElevenLabs</option></select>
+      <div id="edge_voice_group">
+        <label>Urdu Accent (lehja)</label>
+        <select id="urdu_accent">
+          <option value="pakistani">🇵🇰 Pakistani (Asad / Uzma)</option>
+          <option value="indian">🇮🇳 Indian (Salman / Gul)</option>
+        </select>
+        <div class="hint" style="margin-bottom:8px">Indian ya Pakistani Urdu voices (edge-tts, free). Har character ko gender ke hisab se voice milti.</div>
+      </div>
+      <div id="eleven_voice_group" class="hidden">
+        <label>ElevenLabs Children / Story Voice</label>
+        <select id="elevenlabs_voice_id" disabled>
+          <option value="">ElevenLabs voices load ho rahi hain...</option>
+        </select>
+        <div id="eleven_voice_status" class="hint" style="margin-bottom:6px">Account voices load hongi.</div>
+        <button type="button" id="refresh_eleven_voices" style="padding:6px 10px;font-size:11px;margin-bottom:8px">↻ Refresh ElevenLabs voices</button>
+        <div class="hint">⭐ Children, young, narrator, storytelling, animation aur expressive labels wali voices pehle. Urdu stories ke liye Eleven v3 use hota hai.</div>
+      </div>
       <div class="row">
         <div><label>Voice volume</label><input type="text" id="voice_volume" value="+0%"></div>
         <div><label>Music vol</label><input type="number" id="music_volume" value="0.12" step="0.01" min="0" max="1"></div>
@@ -458,9 +469,63 @@
 
 <script>
 let polling=null, OPTS=null, CUR_JOB=null, CHAR_CAPS={};
+let ELEVEN_VOICES_LOADED=false;
 const ORDER=['story','voice','asset','render'];
 function escHtml(value){
   return String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function elevenVoiceLabel(voice){
+  const labels=voice.labels||{};
+  const traits=[labels.gender,labels.age,labels.accent,labels['use case']||labels.use_case]
+    .filter(Boolean).slice(0,3);
+  return `${voice.recommended?'⭐ ':''}${voice.name}${traits.length?' · '+traits.join(' · '):''}`;
+}
+async function loadElevenLabsVoices(force=false){
+  if(ELEVEN_VOICES_LOADED && !force) return;
+  const sel=document.getElementById('elevenlabs_voice_id');
+  const status=document.getElementById('eleven_voice_status');
+  sel.disabled=true;
+  status.textContent='ElevenLabs account voices load ho rahi hain...';
+  try{
+    const response=await fetch('/api/voices/elevenlabs'+(force?'?refresh=1':''));
+    const data=await response.json();
+    if(!response.ok || !data.available) throw new Error(data.error||'voices load nahi huin');
+    sel.innerHTML='';
+    const recommended=(data.voices||[]).filter(v=>v.recommended);
+    const others=(data.voices||[]).filter(v=>!v.recommended);
+    const addGroup=(label,voices)=>{
+      if(!voices.length) return;
+      const group=document.createElement('optgroup'); group.label=label;
+      voices.forEach(voice=>{
+        const option=document.createElement('option'); option.value=voice.voice_id;
+        option.textContent=elevenVoiceLabel(voice);
+        option.title=voice.description||''; group.appendChild(option);
+      });
+      sel.appendChild(group);
+    };
+    addGroup('⭐ Children & Storytelling — Recommended',recommended);
+    addGroup('All ElevenLabs account voices',others);
+    if(!data.voices || !data.voices.length){
+      const option=document.createElement('option'); option.value='';
+      option.textContent='Account mein koi voice available nahi'; sel.appendChild(option);
+    }
+    const configured=(OPTS.defaults&&OPTS.defaults.elevenlabs_voice_id)||data.selected||'';
+    if(configured && [...sel.options].some(option=>option.value===configured)) sel.value=configured;
+    else if(data.selected) sel.value=data.selected;
+    sel.disabled=!(data.voices&&data.voices.length);
+    status.textContent=`${data.voices.length} voices · ${data.recommended_count} children/story recommended · Model: ${data.model}`;
+    ELEVEN_VOICES_LOADED=true;
+  }catch(error){
+    sel.innerHTML='<option value="">ElevenLabs voices unavailable</option>';
+    status.textContent='⚠️ '+error.message;
+    sel.disabled=true; ELEVEN_VOICES_LOADED=false;
+  }
+}
+function syncVoiceProviderUI(){
+  const provider=document.getElementById('tts_provider').value;
+  document.getElementById('edge_voice_group').classList.toggle('hidden',provider!=='edge');
+  document.getElementById('eleven_voice_group').classList.toggle('hidden',provider!=='elevenlabs');
+  if(provider==='elevenlabs') loadElevenLabsVoices();
 }
 function capabilityMarkup(cap){
   if(!cap) return '<span class="capBadge bad">NOT VALIDATED</span>';
@@ -503,6 +568,11 @@ async function load(){
   document.getElementById('provStatus').textContent=
     `LLM:${p.llm.join('/')} · IMG:${p.image.join('/')} · TTS:${p.tts.join('/')}`;
   if(OPTS.defaults && OPTS.defaults.urdu_accent){ const ua=document.getElementById('urdu_accent'); if(ua) ua.value=OPTS.defaults.urdu_accent; }
+  const tts=document.getElementById('tts_provider');
+  if(OPTS.defaults && OPTS.defaults.tts_provider) tts.value=OPTS.defaults.tts_provider;
+  tts.addEventListener('change',syncVoiceProviderUI);
+  document.getElementById('refresh_eleven_voices').addEventListener('click',()=>loadElevenLabsVoices(true));
+  syncVoiceProviderUI();
   if(OPTS.defaults && OPTS.defaults.render_engine){ const re=document.getElementById('render_engine'); if(re) re.value=OPTS.defaults.render_engine; }
   if(OPTS.defaults){
     document.getElementById('cap_enabled').checked=!!OPTS.defaults.subtitles_on;
@@ -757,6 +827,7 @@ document.querySelectorAll('.seg').forEach(seg=>{
 function segVal(id){const e=document.querySelector('#'+id+' button.on');return e?e.dataset.v:null;}
 
 function collectSettings(){
+  const ttsProvider=document.getElementById('tts_provider').value;
   return {
     style: document.getElementById('style').value,
     aspect: segVal('aspectSeg'),
@@ -773,8 +844,9 @@ function collectSettings(){
     subtitles_on: document.getElementById('cap_enabled').checked,
     intro_on: document.getElementById('intro_on').checked,
     outro_on: true,
-    tts_provider: document.getElementById('tts_provider').value,
-    urdu_accent: document.getElementById('urdu_accent').value,
+    tts_provider: ttsProvider,
+    urdu_accent: ttsProvider==='edge' ? document.getElementById('urdu_accent').value : '',
+    elevenlabs_voice_id: ttsProvider==='elevenlabs' ? document.getElementById('elevenlabs_voice_id').value : '',
     voice_volume: document.getElementById('voice_volume').value,
     music_volume: document.getElementById('music_volume').value,
     captions: {

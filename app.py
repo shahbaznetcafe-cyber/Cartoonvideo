@@ -104,12 +104,26 @@ def api_options():
             "aspect": config.ASPECT, "fps": config.FPS,
             "motion_preset": config.MOTION_PRESET, "render_mode": config.RENDER_MODE,
             "captions": config.CAPTIONS, "urdu_accent": config.URDU_ACCENT,
+            "tts_provider": getattr(config, "TTS_PROVIDER", "edge"),
+            "elevenlabs_voice_id": getattr(config, "ELEVENLABS_VOICE_ID", ""),
+            "elevenlabs_model": getattr(config, "ELEVENLABS_MODEL", "eleven_v3"),
             "render_engine": getattr(config, "RENDER_ENGINE", "threejs"),
             "subtitles_on": getattr(config, "SUBTITLES_ON", True),
             "intro_on": getattr(config, "INTRO_ON", False),
             "outro_on": getattr(config, "OUTRO_ON", True),
         },
     })
+
+
+@app.route("/api/voices/elevenlabs")
+def api_elevenlabs_voices():
+    """Sanitized, story-ranked voices available to the configured account."""
+    try:
+        force = request.args.get("refresh") == "1"
+        return jsonify(providers.elevenlabs_voice_options(force=force))
+    except Exception as exc:
+        return jsonify({"available": False, "voices": [],
+                        "error": str(exc)[:240]}), 503
 
 
 @app.route("/api/characters3d/validation")

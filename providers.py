@@ -6,6 +6,7 @@ Sirf woh providers chalenge jinki key hai (Runware + edge abhi mojood).
 """
 import asyncio
 import os
+import re
 import time
 
 import requests
@@ -239,8 +240,102 @@ def _eleven_key():
 
 
 def _eleven_voice():
-    # default: Sarah (multilingual). Change: ELEVENLABS_VOICE_ID
-    return _key("ELEVENLABS_VOICE_ID") or "EXAVITQu4vr4xnSDxMaL"
+    # Sarah remains the backwards-compatible fallback when no UI/env selection exists.
+    return (getattr(config, "ELEVENLABS_VOICE_ID", "") or
+            _key("ELEVENLABS_VOICE_ID") or "EXAVITQu4vr4xnSDxMaL")
+
+
+_ELEVEN_VOICE_CACHE = {"at": 0.0, "payload": None}
+_STORY_VOICE_TERMS = {
+    "child": 16, "children": 16, "kid": 16, "young": 10, "teen": 6,
+    "storyteller": 15, "storytelling": 15, "narrator": 12, "narration": 12,
+    "audiobook": 10, "story": 5, "animation": 4, "cartoon": 5,
+    "playful": 6, "friendly": 4, "warm": 3, "expressive": 5,
+    "bright": 4, "energetic": 3, "soft": 3, "gentle": 4,
+    # These can be useful character voices, but are poor defaults for young viewers.
+    "fierce": -10, "warrior": -12, "villain": -12, "horror": -14,
+    "scary": -12, "seductive": -12, "husky": -5, "deep": -4,
+}
+
+
+def _story_voice_score(voice):
+    labels = voice.get("labels") or {}
+    text = " ".join([
+        str(voice.get("name") or ""), str(voice.get("description") or ""),
+        str(voice.get("category") or ""),
+        *[f"{key} {value}" for key, value in labels.items()],
+    ]).lower()
+    return sum(weight for term, weight in _STORY_VOICE_TERMS.items() if term in text)
+
+
+def _format_elevenlabs_voices(voices):
+    """Sanitize and rank account voices, putting children/story voices first."""
+    result = []
+    for raw in voices or []:
+        voice_id = str(raw.get("voice_id") or "").strip()
+        name = str(raw.get("name") or "").strip()
+        if not voice_id or not name:
+            continue
+        labels = {str(k): str(v) for k, v in (raw.get("labels") or {}).items()
+                  if v not in (None, "")}
+        score = _story_voice_score(raw)
+        result.append({
+            "voice_id": voice_id,
+            "name": name,
+            "category": str(raw.get("category") or ""),
+            "description": str(raw.get("description") or "")[:240],
+            "labels": labels,
+            "story_score": score,
+            "recommended": score >= 8,
+        })
+    result.sort(key=lambda voice: (
+        not voice["recommended"], -voice["story_score"], voice["name"].casefold()))
+    return result
+
+
+def elevenlabs_voice_options(force=False):
+    """Return voices available to the configured ElevenLabs account.
+
+    The official v2 endpoint supports 100 voices per page.  Results are cached for
+    five minutes so opening the settings panel does not repeatedly spend API calls.
+    """
+    key = _eleven_key()
+    if not key:
+        raise RuntimeError("ElevenLabs API key configured nahi hai")
+    now = time.monotonic()
+    cached = _ELEVEN_VOICE_CACHE.get("payload")
+    if not force and cached and now - _ELEVEN_VOICE_CACHE.get("at", 0) < 300:
+        return cached
+
+    voices, token = [], None
+    for _page in range(5):
+        params = {"page_size": 100, "include_total_count": "true",
+                  "sort": "name", "sort_direction": "asc"}
+        if token:
+            params["next_page_token"] = token
+        response = requests.get(
+            "https://api.elevenlabs.io/v2/voices",
+            headers={"xi-api-key": key}, params=params, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+        voices.extend(data.get("voices") or [])
+        token = data.get("next_page_token")
+        if not data.get("has_more") or not token:
+            break
+
+    ranked = _format_elevenlabs_voices(voices)
+    configured = _eleven_voice()
+    ids = {voice["voice_id"] for voice in ranked}
+    selected = configured if configured in ids else (ranked[0]["voice_id"] if ranked else "")
+    payload = {
+        "available": True,
+        "voices": ranked,
+        "recommended_count": sum(1 for voice in ranked if voice["recommended"]),
+        "selected": selected,
+        "model": getattr(config, "ELEVENLABS_MODEL", "eleven_v3"),
+    }
+    _ELEVEN_VOICE_CACHE.update(at=now, payload=payload)
+    return payload
 
 
 def _tts_eleven_av():
@@ -248,11 +343,15 @@ def _tts_eleven_av():
 
 
 def _tts_eleven(text, voice, out_path, rate, pitch, volume):
+    # Edge voice names must never leak into the ElevenLabs URL.  A per-character
+    # ElevenLabs ID may override the global UI selection when one is supplied.
+    voice_id = (voice if re.fullmatch(r"[A-Za-z0-9]{20,64}", str(voice or ""))
+                else _eleven_voice())
     r = requests.post(
-        f"https://api.elevenlabs.io/v1/text-to-speech/{_eleven_voice()}",
+        f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
         headers={"xi-api-key": _eleven_key(), "Content-Type": "application/json"},
         json={"text": text,
-              "model_id": os.getenv("ELEVENLABS_MODEL", "eleven_multilingual_v2")},
+              "model_id": getattr(config, "ELEVENLABS_MODEL", "eleven_v3")},
         timeout=120)
     r.raise_for_status()
     with open(out_path, "wb") as f:
