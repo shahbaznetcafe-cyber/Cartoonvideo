@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎬 SBZ AI Video Studio</title>
+<style>
+  :root{--bg:#0c0f15;--panel:#141922;--panel2:#1a212c;--bd:#252d3a;--accent:#3b82f6;
+        --accent2:#2563eb;--green:#22c55e;--red:#ef4444;--text:#e8eef6;--muted:#8b97a8;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);font-size:14px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 22px;
+          background:var(--panel);border-bottom:1px solid var(--bd);}
+  .topbar h1{font-size:19px;margin:0;}
+  .topbar .sub{color:var(--muted);font-size:12px;}
+  .status{display:flex;gap:16px;font-size:12px;align-items:center;}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;}
+  .layout{display:grid;grid-template-columns:210px 1fr 380px;gap:0;height:calc(100vh - 56px);}
+  .nav{background:var(--panel);border-right:1px solid var(--bd);padding:18px 12px;}
+  .nav h3{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:0 0 12px 8px;}
+  .nav a{display:block;padding:11px 14px;border-radius:9px;color:var(--muted);text-decoration:none;margin-bottom:4px;cursor:pointer;}
+  .nav a.active{background:var(--accent);color:#fff;}
+  .nav a:hover:not(.active){background:var(--panel2);color:var(--text);}
+  .mid,.right{padding:20px;overflow-y:auto;}
+  .right{background:var(--panel);border-left:1px solid var(--bd);}
+  .card{background:var(--panel);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:16px;}
+  .right .card{background:var(--panel2);}
+  .card h3{margin:0 0 14px;font-size:14px;display:flex;align-items:center;gap:8px;}
+  label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px;}
+  textarea,select,input[type=text],input[type=number]{width:100%;padding:10px 12px;border-radius:8px;
+    border:1px solid var(--bd);background:#0e1218;color:var(--text);font-size:13px;outline:none;}
+  textarea{min-height:150px;resize:vertical;line-height:1.8;}
+  textarea:focus,select:focus,input:focus{border-color:var(--accent);}
+  .btn{padding:13px;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;width:100%;color:#fff;}
+  .btn-primary{background:var(--accent);} .btn-primary:hover{background:var(--accent2);}
+  .btn-green{background:var(--green);color:#06240f;}
+  .btn-sm{padding:7px 12px;font-size:12px;width:auto;border-radius:7px;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .tplChip{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;
+    color:#fff;padding:8px 4px;cursor:pointer;text-align:center;display:flex;flex-direction:column;
+    align-items:center;gap:3px;transition:.15s;}
+  .tplChip:hover{background:rgba(255,255,255,.11);border-color:var(--accent);}
+  .tplChip.on{background:var(--accent);border-color:var(--accent);}
+  .pvRow{display:flex;align-items:center;gap:8px;padding:6px;border:1px solid rgba(255,255,255,.08);border-radius:8px;margin-bottom:5px;}
+  .pvAv{width:34px;height:34px;border-radius:7px;object-fit:cover;object-position:top;background:#0e1218;}
+  .pvScene{border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px;margin-bottom:7px;}
+  .pvScene input,.pvScene select{padding:6px 7px;font-size:12px;}
+  .row{display:flex;gap:10px;} .row>*{flex:1;}
+  .inline{display:flex;gap:8px;align-items:center;}
+  .chk{display:flex;align-items:center;gap:9px;margin:10px 0;cursor:pointer;font-size:13px;color:var(--text);}
+  .chk input{width:16px;height:16px;}
+  .seg{display:flex;gap:6px;} .seg button{flex:1;padding:9px;border:1px solid var(--bd);background:#0e1218;
+    color:var(--muted);border-radius:7px;cursor:pointer;font-size:12px;}
+  .seg button.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .steps{list-style:none;padding:0;margin:0;}
+  .steps li{padding:10px 12px;border-radius:8px;margin-bottom:6px;font-size:13px;color:var(--muted);
+    display:flex;align-items:center;gap:10px;background:var(--panel2);}
+  .steps li.active{color:var(--text);background:#1f2937;} .steps li.done{color:var(--green);}
+  .sdot{width:9px;height:9px;border-radius:50%;background:var(--bd);flex:none;}
+  .active .sdot{background:var(--accent);animation:p 1s infinite;} .done .sdot{background:var(--green);}
+  @keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+  .msg{margin-left:auto;font-size:11px;}
+  video{width:100%;border-radius:10px;background:#000;margin-top:8px;}
+  .hint{font-size:11px;color:var(--muted);margin-top:6px;}
+  .err{color:var(--red);font-size:13px;white-space:pre-wrap;}
+  .hidden{display:none;}
+  .color-row{display:flex;align-items:center;gap:8px;} .color-row input[type=color]{width:42px;height:32px;padding:2px;border-radius:6px;border:1px solid var(--bd);background:#0e1218;}
+  .cost{font-size:12px;color:var(--green);}
+  ::-webkit-scrollbar{width:9px;} ::-webkit-scrollbar-thumb{background:var(--bd);border-radius:5px;}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--bd);margin:4px 0 14px;flex-wrap:wrap;}
+  .tab{background:none;border:none;color:var(--muted);padding:8px 11px;cursor:pointer;font-size:12px;
+    border-radius:7px 7px 0 0;border-bottom:2px solid transparent;margin-bottom:-1px;}
+  .tab:hover{color:var(--text);} .tab.on{color:var(--text);border-bottom-color:var(--accent);background:var(--panel2);}
+  .tabpanel{animation:fade .15s;} @keyframes fade{from{opacity:0}to{opacity:1}}
+  .divlabel{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:11px;text-transform:uppercase;
+    letter-spacing:1px;margin:16px 0 10px;}
+  .divlabel::before,.divlabel::after{content:'';flex:1;height:1px;background:var(--bd);}
+  details.acc{background:var(--panel2);border:1px solid var(--bd);border-radius:10px;margin-bottom:10px;}
+  details.acc>summary{list-style:none;cursor:pointer;padding:12px 14px;font-size:13px;display:flex;
+    align-items:center;gap:8px;user-select:none;}
+  details.acc>summary::-webkit-details-marker{display:none;}
+  details.acc>summary::after{content:'▾';margin-left:auto;color:var(--muted);transition:.2s;}
+  details.acc[open]>summary::after{transform:rotate(180deg);}
+  details.acc[open]>summary{border-bottom:1px solid var(--bd);}
+  details.acc .accbody{padding:14px;}
+  details.acc .accbody label:first-child{margin-top:0;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div><h1>🎬 SBZ AI Video Studio <span class="sub">v1.0</span></h1>
+       <div class="sub">Multi-character AI video generator</div></div>
+  <div class="status">
+    <span><span class="dot"></span>Engine: Ready</span>
+    <span id="provStatus" class="sub"></span>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- LEFT NAV -->
+  <nav class="nav">
+    <h3>Navigation</h3>
+    <a class="active">🎬 Video Generator</a>
+    <a onclick="document.getElementById('scriptCard').scrollIntoView({behavior:'smooth'})">✍️ Script banao</a>
+    <a onclick="document.getElementById('genCard').scrollIntoView({behavior:'smooth'})">🚀 Generate</a>
+    <a onclick="document.getElementById('projCardTop').scrollIntoView({behavior:'smooth'})">📁 My Projects</a>
+  </nav>
+
+  <!-- MIDDLE: controls -->
+  <div class="mid">
+    <div class="card hidden" id="resumeCard" style="border:1px solid #f59e0b;background:rgba(245,158,11,.08)">
+      <h3 style="color:#f59e0b">🔄 Adhoore Projects (resume ho sakte)</h3>
+      <div class="hint" style="margin-bottom:8px">Software band/crash hua tha? Ye projects wahin se complete honge — voices/backgrounds/clips dobara nahi banenge.</div>
+      <div id="resumeList"></div>
+    </div>
+
+    <div class="card" id="projCardTop">
+      <h3>📁 My Projects <span id="projCount" class="sub" style="font-size:12px;color:var(--muted)"></span>
+        <button class="btn btn-sm" style="float:right" onclick="toggleProjects()">📂 Kholo / Chhupao</button></h3>
+      <div id="projList" class="hidden" style="margin-top:8px;max-height:280px;overflow-y:auto"></div>
+    </div>
+
+    <div class="card" id="scriptCard">
+      <h3>✍️ Script banao</h3>
+      <textarea id="script" placeholder="Tamatar: Main sehatmand hoon.&#10;Aam: Main meetha hoon, sab mujhe pasand karte hain."></textarea>
+      <div class="hint">Tip: Urdu / Roman Urdu / English. Character ke naam se shuru karein (e.g. tamatar, aam, bhindi).</div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn btn-primary btn-sm" onclick="analyzeScript()">🔍 Analyze</button>
+        <button class="btn btn-green btn-sm" onclick="improveScript()">✨ Improve</button>
+        <button class="btn btn-sm" style="background:#7c3aed;color:#fff" onclick="genPackage()">📦 YouTube Package</button>
+      </div>
+      <div id="scriptFeedback" style="margin-top:8px;font-size:12px"></div>
+      <div id="pkgPanel" style="margin-top:10px"></div>
+
+      <div class="divlabel">Ya AI se likhwao</div>
+      <div class="tabs" id="scriptTabs">
+        <button class="tab on" data-t="quick">⚡ Idea se</button>
+        <button class="tab" data-t="longform">🎬 Long-Form</button>
+        <button class="tab" data-t="series">🎭 Characters</button>
+        <button class="tab" data-t="template">📚 Template</button>
+      </div>
+
+      <div class="tabpanel" data-t="quick">
+      <label>Aapka idea</label>
+      <textarea id="ffIdea" style="min-height:60px" placeholder="e.g. Jungle mein sher aur bandar ki dosti, comedy — bandar hamesha shararat karta hai"></textarea>
+      <div class="row" style="margin-top:8px">
+        <div style="flex:1"><label>Genre</label>
+          <select id="ffGenre">
+            <option value="auto">Auto (AI decide)</option>
+            <option value="comedy">Comedy</option>
+            <option value="moral">Moral / Sabak</option>
+            <option value="educational">Educational</option>
+            <option value="emotional">Emotional</option>
+            <option value="adventure">Adventure</option>
+            <option value="mystery">Mystery</option>
+            <option value="rhyme">Rhyme / Geet</option>
+          </select>
+        </div>
+        <div style="flex:1"><label>Zubaan</label>
+          <select id="ffLang"><option value="roman_urdu">Roman Urdu</option><option value="urdu">Urdu</option><option value="english">English</option></select>
+        </div>
+      </div>
+      <label style="margin-top:8px;display:block">Length</label>
+      <div class="seg" id="ffLenSeg">
+        <button data-v="short">Short<br><span style="font-size:9px;opacity:.7">~30s</span></button>
+        <button data-v="medium" class="on">Medium<br><span style="font-size:9px;opacity:.7">~60s</span></button>
+        <button data-v="long">Long<br><span style="font-size:9px;opacity:.7">~2m</span></button>
+      </div>
+      <div class="hint" style="margin-top:6px">Characters khali chhoro to AI khud idea ke mutabiq cast chunega. Script upar box mein aa jayega.</div>
+      <label style="display:flex;align-items:center;gap:7px;margin-top:8px;cursor:pointer;font-size:13px">
+        <input type="checkbox" id="ffPro" checked style="width:auto">
+        <span>⭐ <b>Pro quality</b> — multi-pass (plan → draft → polish, hook variants). Behtar par thoda dheema (~6s).</span>
+      </label>
+      <button class="btn btn-green btn-sm" style="margin-top:8px" id="ffGenBtn" onclick="genFreeform()">⚡ Script Banao</button>
+      <div id="ffMsg" style="margin-top:8px;font-size:12px"></div>
+      </div>
+
+      <div class="tabpanel hidden" data-t="longform">
+      <label>Aapka idea</label>
+      <textarea id="lfIdea" style="min-height:60px" placeholder="e.g. Ek gaon ka chhota heero jo sukhe ke waqt sab ke liye paani dhoondta hai"></textarea>
+      <div class="row" style="margin-top:8px">
+        <div style="flex:1"><label>Genre</label>
+          <select id="lfGenre">
+            <option value="auto">Auto (AI decide)</option>
+            <option value="comedy">Comedy</option>
+            <option value="moral">Moral / Sabak</option>
+            <option value="adventure">Adventure</option>
+            <option value="emotional">Emotional</option>
+            <option value="mystery">Mystery</option>
+            <option value="educational">Educational</option>
+          </select>
+        </div>
+        <div style="flex:1"><label>Zubaan</label>
+          <select id="lfLang"><option value="roman_urdu">Roman Urdu</option><option value="urdu">Urdu</option><option value="english">English</option></select>
+        </div>
+      </div>
+      <label style="margin-top:8px;display:block">Video length</label>
+      <div class="seg" id="lfMinSeg">
+        <button data-v="3min">~3 min<br><span style="font-size:9px;opacity:.7">4 scenes</span></button>
+        <button data-v="5min" class="on">~5 min<br><span style="font-size:9px;opacity:.7">6 scenes</span></button>
+        <button data-v="8min">~8 min<br><span style="font-size:9px;opacity:.7">8 scenes</span></button>
+      </div>
+      <div class="hint" style="margin-top:6px">AI pehle poori kahani ka outline (acts/scenes) banata hai, phir har scene alag likhta hai — coherent lambi kahani. Thoda waqt lega (~20–40s).</div>
+      <button class="btn btn-green btn-sm" style="margin-top:10px" id="lfGenBtn" onclick="genLongform()">🎬 Story Likho</button>
+      <div id="lfMsg" style="margin-top:8px;font-size:12px"></div>
+      <div id="lfOutline" style="margin-top:8px;font-size:12px"></div>
+      </div>
+
+      <div class="tabpanel hidden" data-t="series">
+      <!-- My recurring characters -->
+      <div style="font-weight:700;margin-bottom:4px">👤 My Characters</div>
+      <div class="row">
+        <input type="text" id="chName" placeholder="Naam (e.g. Raju)" style="flex:1">
+        <select id="chGender" style="flex:0 0 90px"><option value="male">Male</option><option value="female">Female</option><option value="child">Child</option></select>
+      </div>
+      <input type="text" id="chTrait" placeholder="Personality (e.g. bahadur, jaldbaaz gaon ka ladka)" style="margin-top:5px">
+      <input type="text" id="chPhrase" placeholder="Catchphrase (optional, e.g. 'Chalo shuru!')" style="margin-top:5px">
+      <button class="btn btn-sm" style="margin-top:6px" onclick="addChar()">➕ Add Character</button>
+      <div id="charList" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px"></div>
+
+      <!-- Series -->
+      <div style="font-weight:700;margin:12px 0 4px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">📺 Series</div>
+      <div class="row">
+        <select id="serSel" style="flex:1" onchange="selectSeries(this.value)"><option value="">— Select series —</option></select>
+        <button class="btn btn-sm" onclick="toggleNewSeries()">＋ New</button>
+      </div>
+      <div id="newSeriesBox" class="hidden" style="margin-top:8px;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px">
+        <input type="text" id="serName" placeholder="Series naam (e.g. Gaon Ke Heroes)">
+        <textarea id="serPremise" style="min-height:44px;margin-top:5px" placeholder="Premise (e.g. Ek gaon ke bachche har episode koi masla hal karte hain)"></textarea>
+        <div class="row" style="margin-top:5px">
+          <select id="serGenre" style="flex:1"><option value="auto">Auto genre</option><option value="comedy">Comedy</option><option value="moral">Moral</option><option value="adventure">Adventure</option><option value="educational">Educational</option><option value="emotional">Emotional</option></select>
+          <select id="serLang" style="flex:1"><option value="roman_urdu">Roman Urdu</option><option value="urdu">Urdu</option><option value="english">English</option></select>
+        </div>
+        <div style="font-size:12px;margin-top:6px">Cast chuno:</div>
+        <div id="serCast" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px"></div>
+        <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="createSeries()">✅ Create Series</button>
+      </div>
+
+      <!-- Next episode -->
+      <div id="epBox" class="hidden" style="margin-top:10px">
+        <div id="serInfo" style="font-size:12px;color:var(--muted);margin-bottom:6px"></div>
+        <div id="epHistory" style="font-size:12px;margin-bottom:6px"></div>
+        <label>Iss episode ka idea (khali = kahani natural aage badhao)</label>
+        <input type="text" id="epIdea" placeholder="e.g. gaon mein bijli chali gayi">
+        <label style="margin-top:6px;display:block">Length</label>
+        <div class="seg" id="epLenSeg">
+          <button data-v="short">Short</button>
+          <button data-v="medium" class="on">Medium</button>
+          <button data-v="long">Long</button>
+          <button data-v="3min">~3m</button>
+          <button data-v="5min">~5m</button>
+        </div>
+        <button class="btn btn-green btn-sm" style="margin-top:8px" id="epGenBtn" onclick="genEpisode()">🎬 Generate Next Episode</button>
+        <div id="epMsg" style="margin-top:8px;font-size:12px"></div>
+      </div>
+      </div>
+
+      <div class="tabpanel hidden" data-t="template">
+      <div id="tplGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px"></div>
+      <div id="tplPanel" class="hidden" style="border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
+        <div style="font-size:13px;margin-bottom:6px">Chuna: <b id="tplName" style="color:var(--green)"></b></div>
+        <label>Topic / idea (khali chhoro to auto)</label>
+        <input type="text" id="tplTopic" placeholder="e.g. jhoot bolne ka anjaam">
+
+        <label style="margin-top:8px;display:block">Characters <span style="color:var(--muted);font-weight:400">(kam az kam 2 chuno)</span></label>
+        <div id="tplChars" style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px"></div>
+
+        <div class="row" style="margin-top:8px">
+          <div><label>Length</label>
+            <div class="seg" id="tplLenSeg">
+              <button data-v="short">Short<br><span style="font-size:9px;opacity:.7">~30s</span></button>
+              <button data-v="medium" class="on">Medium<br><span style="font-size:9px;opacity:.7">~60s</span></button>
+              <button data-v="long">Long<br><span style="font-size:9px;opacity:.7">~2m</span></button>
+            </div>
+          </div>
+          <div><label>Zubaan</label>
+            <select id="tplLang"><option value="roman_urdu">Roman Urdu</option><option value="urdu">Urdu</option><option value="english">English</option></select></div>
+        </div>
+        <button class="btn btn-primary btn-sm" style="margin-top:10px" id="tplGenBtn" onclick="genFromTemplate()">✍️ Script Likho</button>
+        <div id="tplMsg" class="hint"></div>
+      </div>
+      </div>
+
+    </div>
+
+    <div class="card" id="genCard">
+      <h3>🎬 Generation</h3>
+      <label>Story Mode</label>
+      <div class="seg" id="storySeg">
+        <button data-v="blender3d" class="on">🧊 3D Characters</button>
+        <button data-v="puppet">🎭 Puppet (2D)</button>
+        <button data-v="cinematic">🎬 Cinematic Scenes</button>
+      </div>
+      <div class="hint" style="margin-bottom:10px">🧊 <b>3D Characters</b> = asli Blender 3D rigged characters (Panda, Robo, Hero...) — body rig + jaw lip-sync + gestures. Puppet = 2D image characters. Cinematic = har scene ek mukammal AI image.</div>
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer">
+        <input type="checkbox" id="multiChar" checked style="width:auto">
+        <span>👥 <b>Multi-character</b> — ek scene ke saare characters (max 3) ek saath frame mein (bolne wala lip-sync, baaki idle). <span style="color:var(--muted)">Sirf 3D mode.</span></span>
+      </label>
+      <label>Render Engine</label>
+      <select id="render_engine" style="margin-bottom:6px">
+        <option value="threejs">⚡ Three.js (headless Chrome) — ~35x tez</option>
+        <option value="blender">🧊 Blender (Eevee) — dheema, Blender install chahiye</option>
+      </select>
+      <div class="hint" style="margin-bottom:10px">⚡ <b>Three.js</b> = wohi rigged 3D characters, magar Chrome WebGL se render (~60ms/frame vs Blender ~2-3s). 1-min video ~90 sec mein. Chrome hona zaroori. <span style="color:var(--muted)">Sirf 3D mode.</span></div>
+      <button class="btn btn-primary" id="previewBtn" onclick="preview()">👁️ Preview &amp; Edit</button>
+      <button class="btn btn-green btn-sm" style="margin-top:8px" id="genBtn" onclick="generate()">🚀 Direct Generate (skip preview)</button>
+      <div class="cost" id="costEst" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card hidden" id="previewCard">
+      <h3>👁️ Preview — <span id="pvTitle" style="color:var(--green)"></span></h3>
+      <div class="hint">Video banne se pehle sab kuch dekho aur edit karo. Phir "Confirm & Generate".</div>
+      <div style="font-weight:700;margin:10px 0 4px">🎭 Characters</div>
+      <div id="pvChars"></div>
+      <div style="font-weight:700;margin:12px 0 4px">🎬 Scenes &amp; Dialogue</div>
+      <div id="pvScenes"></div>
+      <button class="btn btn-primary" style="margin-top:12px" id="pvGenBtn" onclick="confirmGenerate()">🚀 Confirm &amp; Generate Video</button>
+    </div>
+
+    <div class="card hidden" id="progressCard">
+      <h3>⏳ Progress</h3>
+      <ul class="steps" id="steps">
+        <li data-s="story"><span class="sdot"></span> Story analyze <span class="msg"></span></li>
+        <li data-s="voice"><span class="sdot"></span> Voices <span class="msg"></span></li>
+        <li data-s="asset"><span class="sdot"></span> Backgrounds + Characters <span class="msg"></span></li>
+        <li data-s="render"><span class="sdot"></span> Compositing + Render <span class="msg"></span></li>
+      </ul>
+      <button class="btn btn-sm" id="stopBtn" style="background:#dc2626;color:#fff;margin-top:6px" onclick="stopJob()">⏹ STOP Generation</button>
+      <div class="hint" style="margin-top:4px">Rukega — jitna ban chuka wo safe (baad mein Resume kar sakte).</div>
+      <p class="err hidden" id="errMsg"></p>
+    </div>
+
+    <div class="card hidden" id="resultCard">
+      <h3>✅ <span id="rTitle">Video Ready</span></h3>
+      <video id="rVideo" controls></video>
+      <div style="margin-top:10px"><a class="btn btn-green" id="rDownload" download style="display:block;text-align:center;text-decoration:none">⬇️ Download MP4</a></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: settings -->
+  <div class="right">
+    <details class="acc" open>
+      <summary>🎨 Style / Look</summary>
+      <div class="accbody">
+      <div class="inline">
+        <select id="style"></select>
+        <button class="btn btn-primary btn-sm" onclick="suggestStyle()">✨ AI</button>
+      </div>
+      <div class="hint" style="margin-top:6px">🧊 <b>3D mode</b> mein ye video ka <b>rang/roshni ka mahaul</b> control karta hai (warm/night/pastel/cinematic/vivid...). Cinematic/Puppet mode mein poora art-style. </div>
+      </div>
+    </details>
+
+    <details class="acc" open>
+      <summary>📐 Resolution &amp; Format</summary>
+      <div class="accbody">
+      <label>Aspect</label>
+      <div class="seg" id="aspectSeg">
+        <button data-v="landscape" class="on">🖥️ Landscape</button>
+        <button data-v="portrait">📱 Portrait</button>
+        <button data-v="square">⬜ Square</button>
+      </div>
+      <div class="row">
+        <div><label>Quality</label><select id="quality">
+          <option>720p</option><option selected>1080p</option><option>2K</option><option>4K</option></select></div>
+        <div><label>FPS</label><select id="fps"><option>30</option><option>60</option></select></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="fast_preview"> Fast preview (480p draft)</label>
+      <label class="chk"><input type="checkbox" id="gpu_encode" checked> ⚡ GPU encoding (NVENC)</label>
+      <div class="hint">Video encoding GPU (NVIDIA) par — CPU se tez, PC light rehta. Off = CPU (libx264).</div>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>🎞️ Motion &amp; Render</summary>
+      <div class="accbody">
+      <label>Motion preset</label>
+      <div class="seg" id="motionSeg">
+        <button data-v="subtle">Subtle</button>
+        <button data-v="dynamic" class="on">Dynamic</button>
+        <button data-v="cinematic">Cinematic</button>
+      </div>
+      <label>Render mode</label>
+      <div class="seg" id="modeSeg">
+        <button data-v="draft" class="on">⚡ Draft (free)</button>
+        <button data-v="cinematic">🎥 Cinematic ($)</button>
+      </div>
+      <label class="chk"><input type="checkbox" id="vignette" checked> Cinematic vignette</label>
+      <label class="chk"><input type="checkbox" id="intro_on"> Show opening title card</label>
+      <div class="hint">Off starts directly with the story hook. The closing card stays enabled.</div>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>💬 Subtitles / Captions</summary>
+      <div class="accbody">
+      <label class="chk"><input type="checkbox" id="cap_enabled"> Burn subtitles into video</label>
+      <div class="hint">Optional per video. In 3D mode this controls Urdu subtitles; in 2D mode it controls karaoke captions.</div>
+      <div class="row">
+        <div><label>Words/group</label><input type="number" id="cap_words" value="3" min="1" max="6"></div>
+        <div><label>Font size</label><input type="number" id="cap_size" value="58"></div>
+      </div>
+      <label>Position</label>
+      <div class="seg" id="posSeg">
+        <button data-v="bottom" class="on">Bottom</button>
+        <button data-v="center">Center</button>
+        <button data-v="top">Top</button>
+      </div>
+      <label>Highlight color</label>
+      <div class="color-row"><input type="color" id="cap_hl" value="#FFE000"><span class="hint">current word</span></div>
+      <label>Highlight style</label>
+      <div class="seg" id="hlSeg">
+        <button data-v="color" class="on">Color</button>
+        <button data-v="box">Box</button>
+        <button data-v="scale">Scale-pop</button>
+      </div>
+      <label class="chk"><input type="checkbox" id="cap_perspk" checked> Per-speaker color</label>
+      </div>
+    </details>
+
+    <details class="acc" open>
+      <summary>🎤 Voice &amp; Audio</summary>
+      <div class="accbody">
+      <label>Urdu Accent (lehja)</label>
+      <select id="urdu_accent">
+        <option value="pakistani">🇵🇰 Pakistani (Asad / Uzma)</option>
+        <option value="indian">🇮🇳 Indian (Salman / Gul)</option>
+      </select>
+      <div class="hint" style="margin-bottom:8px">Indian ya Pakistani Urdu voices (edge-tts, free). Har character ko gender ke hisab se voice milti.</div>
+      <label>TTS provider</label>
+      <select id="tts_provider"><option value="edge">edge-tts (free)</option><option value="elevenlabs">ElevenLabs</option></select>
+      <div class="row">
+        <div><label>Voice volume</label><input type="text" id="voice_volume" value="+0%"></div>
+        <div><label>Music vol</label><input type="number" id="music_volume" value="0.12" step="0.01" min="0" max="1"></div>
+      </div>
+      <div class="hint">Music: assets/music/&lt;mood&gt;/ mein daalein (auto mood-select).</div>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>🔧 Advanced / API Tester</summary>
+      <div class="accbody">
+      <div class="hint">LLM + Image endpoints check karo (504/timeout, key, latency).</div>
+      <label class="chk" style="margin-top:8px"><input type="checkbox" id="test_img" checked> Image test bhi karo (thodi cost)</label>
+      <button class="btn btn-primary btn-sm" style="margin-top:8px" id="testBtn" onclick="testRunware()">🔎 Test API</button>
+      <div id="testResult" style="margin-top:10px;font-size:13px"></div>
+      </div>
+    </details>
+  </div>
+</div>
+
+<script>
+let polling=null, OPTS=null, CUR_JOB=null;
+const ORDER=['story','voice','asset','render'];
+async function stopJob(){
+  if(!CUR_JOB) return;
+  const b=document.getElementById('stopBtn'); b.disabled=true; b.textContent='⏹ Ruk raha hai...';
+  try{ await fetch('/api/stop/'+CUR_JOB,{method:'POST'}); }catch(e){}
+}
+
+async function load(){
+  OPTS = await (await fetch('/api/options')).json();
+  const sel=document.getElementById('style');
+  OPTS.styles.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;
+    if(s===OPTS.defaults.style)o.selected=true; sel.appendChild(o);});
+  const p=OPTS.providers;
+  document.getElementById('provStatus').textContent=
+    `LLM:${p.llm.join('/')} · IMG:${p.image.join('/')} · TTS:${p.tts.join('/')}`;
+  if(OPTS.defaults && OPTS.defaults.urdu_accent){ const ua=document.getElementById('urdu_accent'); if(ua) ua.value=OPTS.defaults.urdu_accent; }
+  if(OPTS.defaults && OPTS.defaults.render_engine){ const re=document.getElementById('render_engine'); if(re) re.value=OPTS.defaults.render_engine; }
+  if(OPTS.defaults){
+    document.getElementById('cap_enabled').checked=!!OPTS.defaults.subtitles_on;
+    document.getElementById('intro_on').checked=!!OPTS.defaults.intro_on;
+  }
+  loadTemplates();
+  checkResumable();       // crash/close ke baad adhoore projects dikhao
+  loadProjectsList();     // purane projects ka count + list
+  initScriptTabs();       // script banane ke 4 tareeqe (tabs) switch karo
+}
+
+// Script card ke tabs (Idea se / Long-Form / Characters / Template) — ek waqt ek panel
+function initScriptTabs(){
+  const tabs=document.querySelectorAll('#scriptTabs .tab');
+  const panels=document.querySelectorAll('#scriptCard .tabpanel');
+  tabs.forEach(t=>t.addEventListener('click',()=>{
+    tabs.forEach(x=>x.classList.remove('on')); t.classList.add('on');
+    const k=t.dataset.t;
+    panels.forEach(p=>p.classList.toggle('hidden', p.dataset.t!==k));
+  }));
+}
+
+let TPL_SEL=null, TPLS=[], CHARS=[], CHAR_SEL=new Set();
+async function loadTemplates(){
+  TPLS = await (await fetch('/api/story-templates')).json();
+  CHARS = await (await fetch('/api/characters')).json();
+  const g=document.getElementById('tplGrid'); g.innerHTML='';
+  TPLS.forEach(t=>{
+    const b=document.createElement('button');
+    b.className='tplChip'; b.dataset.id=t.id;
+    b.innerHTML=`<div style="font-size:18px">${t.emoji}</div><div style="font-size:11px;line-height:1.2">${t.name}</div>`;
+    b.title=t.desc;
+    b.onclick=()=>selectTemplate(t.id);
+    g.appendChild(b);
+  });
+  const cg=document.getElementById('tplChars'); cg.innerHTML='';
+  CHARS.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='tplChip'; b.dataset.cid=c.id; b.style.padding='6px 2px';
+    b.innerHTML=`<div style="font-size:15px">${c.emoji}</div><div style="font-size:10px">${c.name}</div>`;
+    b.onclick=()=>toggleChar(c.id);
+    cg.appendChild(b);
+  });
+}
+function toggleChar(cid){
+  if(CHAR_SEL.has(cid)) CHAR_SEL.delete(cid); else CHAR_SEL.add(cid);
+  document.querySelectorAll('#tplChars .tplChip').forEach(c=>c.classList.toggle('on',CHAR_SEL.has(c.dataset.cid)));
+}
+function selectTemplate(id){
+  TPL_SEL=TPLS.find(t=>t.id===id);
+  document.querySelectorAll('#tplGrid .tplChip').forEach(c=>c.classList.toggle('on',c.dataset.id===id));
+  document.getElementById('tplPanel').classList.remove('hidden');
+  document.getElementById('tplName').textContent=`${TPL_SEL.emoji} ${TPL_SEL.name_en}`;
+  document.getElementById('tplTopic').placeholder='e.g. '+TPL_SEL.sample_topic;
+  // template ke default characters pre-select karo
+  CHAR_SEL=new Set(TPL_SEL.chars);
+  document.querySelectorAll('#tplChars .tplChip').forEach(c=>c.classList.toggle('on',CHAR_SEL.has(c.dataset.cid)));
+  document.getElementById('tplMsg').textContent=TPL_SEL.desc;
+}
+async function genFromTemplate(){
+  if(!TPL_SEL) return;
+  const btn=document.getElementById('tplGenBtn'), msg=document.getElementById('tplMsg');
+  if(CHAR_SEL.size<2){ msg.innerHTML='<span class="err">Kam az kam 2 characters chuno.</span>'; return; }
+  btn.disabled=true; btn.textContent='⏳ Likh raha hoon...';
+  msg.textContent='AI script likh raha hai...';
+  try{
+    const body={template_id:TPL_SEL.id, topic:document.getElementById('tplTopic').value,
+      language:document.getElementById('tplLang').value,
+      length:segVal('tplLenSeg')||'medium', characters:[...CHAR_SEL]};
+    const j=await (await fetch('/api/story-templates/generate',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+    if(j.error){ msg.innerHTML='<span class="err">'+j.error+'</span>'; }
+    else{
+      document.getElementById('script').value=j.script;
+      msg.innerHTML='<span style="color:var(--green)">✅ Script ready — upar Script box mein aa gaya. Edit kar sakte ho, phir Generate Video.</span>';
+      document.getElementById('script').scrollIntoView({behavior:'smooth',block:'center'});
+    }
+  }catch(e){ msg.innerHTML='<span class="err">Fail: '+e+'</span>'; }
+  btn.disabled=false; btn.textContent='✍️ Script Likho';
+}
+
+// Phase 2 — free-form: bina template, seedha idea se script
+async function genFreeform(){
+  const btn=document.getElementById('ffGenBtn'), msg=document.getElementById('ffMsg');
+  const idea=document.getElementById('ffIdea').value.trim();
+  if(!idea){ msg.innerHTML='<span class="err">Pehle apna idea likhein.</span>'; return; }
+  const pro=document.getElementById('ffPro').checked;
+  btn.disabled=true; btn.textContent=pro?'⏳ Plan → Draft → Polish...':'⏳ Soch raha hoon...';
+  msg.innerHTML='<span style="color:var(--muted)">'+(pro?'Pro pipeline: plan, hook variants, draft, polish...':'AI story bana raha hai...')+'</span>';
+  try{
+    const body={idea, genre:document.getElementById('ffGenre').value,
+      language:document.getElementById('ffLang').value,
+      length:segVal('ffLenSeg')||'medium', quality:pro?'pro':'fast'};
+    const j=await (await fetch('/api/freeform',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+    if(j.error){ msg.innerHTML='<span class="err">'+j.error+'</span>'; }
+    else{
+      document.getElementById('script').value=j.script||'';
+      const cast=(j.cast||[]).join(', ');
+      msg.innerHTML='<span style="color:var(--green)">✅ '+(j.title?('“'+j.title+'” '):'')
+        +'</span><span style="color:var(--muted)">'
+        +(j.genre?('['+j.genre+'] '):'')+(cast?('· '+cast):'')
+        +' — Script box mein aa gaya. Edit karke Generate.</span>';
+      document.getElementById('script').scrollIntoView({behavior:'smooth',block:'center'});
+    }
+  }catch(e){ msg.innerHTML='<span class="err">Fail: '+e+'</span>'; }
+  btn.disabled=false; btn.textContent='⚡ Script Banao';
+}
+
+// Phase 3 — long-form multi-scene story
+async function genLongform(){
+  const btn=document.getElementById('lfGenBtn'), msg=document.getElementById('lfMsg'),
+    out=document.getElementById('lfOutline');
+  const idea=document.getElementById('lfIdea').value.trim();
+  if(!idea){ msg.innerHTML='<span class="err">Pehle apna idea likhein.</span>'; return; }
+  btn.disabled=true; btn.textContent='⏳ Kahani ban rahi hai...';
+  msg.innerHTML='<span style="color:var(--muted)">Outline + scenes likhe ja rahe hain (~20–40s)...</span>';
+  out.innerHTML='';
+  try{
+    const body={idea, genre:document.getElementById('lfGenre').value,
+      language:document.getElementById('lfLang').value,
+      minutes:segVal('lfMinSeg')||'5min'};
+    const j=await (await fetch('/api/longform',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+    if(j.error){ msg.innerHTML='<span class="err">'+j.error+'</span>'; }
+    else{
+      document.getElementById('script').value=j.script||'';
+      const cast=(j.cast||[]).join(', ');
+      msg.innerHTML='<span style="color:var(--green)">✅ '+(j.title?('“'+j.title+'” '):'')
+        +'</span><span style="color:var(--muted)">'+(j.genre?('['+j.genre+'] '):'')
+        +(cast?('· '+cast):'')+'</span>';
+      if(j.logline) msg.innerHTML+='<div style="color:var(--muted);margin-top:4px">'+j.logline+'</div>';
+      // scene outline chips
+      if(j.scenes&&j.scenes.length){
+        out.innerHTML='<div style="font-weight:700;margin-bottom:4px">🎬 '+j.scenes.length
+          +' Scenes:</div>'+j.scenes.map((s,i)=>'<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,.06)"><b style="color:var(--green)">'
+          +(i+1)+'. '+(s.location||'')+'</b> <span style="color:var(--muted)">— '+(s.goal||'')+'</span></div>').join('');
+      }
+      document.getElementById('script').scrollIntoView({behavior:'smooth',block:'center'});
+    }
+  }catch(e){ msg.innerHTML='<span class="err">Fail: '+e+'</span>'; }
+  btn.disabled=false; btn.textContent='🎬 Story Likho';
+}
+
+// ---------- Phase 4: Characters & Series ----------
+let LIB_CHARS=[], SERIES=[], CUR_SERIES=null, NEW_CAST=new Set();
+async function loadLib(){
+  LIB_CHARS=await (await fetch('/api/characters-lib')).json();
+  SERIES=await (await fetch('/api/series')).json();
+  renderCharList(); renderSeriesSel(); renderCastPicker();
+}
+function renderCharList(){
+  const el=document.getElementById('charList'); el.innerHTML='';
+  if(!LIB_CHARS.length){ el.innerHTML='<span style="color:var(--muted);font-size:12px">Abhi koi character nahi.</span>'; return; }
+  LIB_CHARS.forEach(c=>{
+    const chip=document.createElement('div');
+    chip.style.cssText='background:rgba(255,255,255,.06);border-radius:14px;padding:3px 8px;font-size:12px;display:flex;align-items:center;gap:6px';
+    chip.innerHTML='<b>'+c.name+'</b><span style="color:var(--muted)">'+(c.trait?('· '+c.trait.slice(0,24)):'')+'</span><span style="cursor:pointer;color:var(--err)" onclick="delChar(\''+c.id+'\')">✕</span>';
+    chip.title=(c.trait||'')+(c.catchphrase?(' — "'+c.catchphrase+'"'):'');
+    el.appendChild(chip);
+  });
+}
+async function addChar(){
+  const name=document.getElementById('chName').value.trim();
+  if(!name){ alert('Character ka naam likhein'); return; }
+  await fetch('/api/characters-lib',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name, gender:document.getElementById('chGender').value,
+      trait:document.getElementById('chTrait').value, catchphrase:document.getElementById('chPhrase').value})});
+  document.getElementById('chName').value='';document.getElementById('chTrait').value='';document.getElementById('chPhrase').value='';
+  await loadLib();
+}
+async function delChar(cid){
+  await fetch('/api/characters-lib/'+cid,{method:'DELETE'}); await loadLib();
+}
+function renderSeriesSel(){
+  const sel=document.getElementById('serSel'); const cur=sel.value;
+  sel.innerHTML='<option value="">— Select series —</option>';
+  SERIES.forEach(s=>{const o=document.createElement('option');o.value=s.id;
+    o.textContent=s.name+' ('+s.episodes+' ep)';sel.appendChild(o);});
+  sel.value=cur;
+}
+function renderCastPicker(){
+  const el=document.getElementById('serCast'); el.innerHTML='';
+  if(!LIB_CHARS.length){ el.innerHTML='<span style="color:var(--muted);font-size:12px">Pehle character add karein.</span>'; return; }
+  LIB_CHARS.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='tplChip'; b.style.cssText='padding:4px 8px;font-size:12px';
+    b.textContent=c.name; b.classList.toggle('on',NEW_CAST.has(c.id));
+    b.onclick=()=>{NEW_CAST.has(c.id)?NEW_CAST.delete(c.id):NEW_CAST.add(c.id); b.classList.toggle('on');};
+    el.appendChild(b);
+  });
+}
+function toggleNewSeries(){ document.getElementById('newSeriesBox').classList.toggle('hidden'); NEW_CAST=new Set(); renderCastPicker(); }
+async function createSeries(){
+  const name=document.getElementById('serName').value.trim();
+  if(!name){ alert('Series naam likhein'); return; }
+  if(NEW_CAST.size<1){ alert('Kam az kam 1 cast character chuno'); return; }
+  const r=await (await fetch('/api/series',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name, premise:document.getElementById('serPremise').value,
+      genre:document.getElementById('serGenre').value, language:document.getElementById('serLang').value,
+      cast:[...NEW_CAST]})})).json();
+  if(r.error){ alert(r.error); return; }
+  document.getElementById('newSeriesBox').classList.add('hidden');
+  document.getElementById('serName').value='';document.getElementById('serPremise').value='';
+  await loadLib();
+  document.getElementById('serSel').value=r.id; selectSeries(r.id);
+}
+async function selectSeries(sid){
+  if(!sid){ document.getElementById('epBox').classList.add('hidden'); CUR_SERIES=null; return; }
+  CUR_SERIES=await (await fetch('/api/series/'+sid)).json();
+  document.getElementById('epBox').classList.remove('hidden');
+  const castNames=(CUR_SERIES.cast||[]).map(cid=>{const c=LIB_CHARS.find(x=>x.id===cid);return c?c.name:cid;}).join(', ');
+  document.getElementById('serInfo').innerHTML='<b style="color:var(--green)">'+CUR_SERIES.name+'</b> — Cast: '+castNames
+    +(CUR_SERIES.premise?('<br>'+CUR_SERIES.premise):'');
+  const eps=CUR_SERIES.episodes||[];
+  document.getElementById('epHistory').innerHTML = eps.length
+    ? '<b>📼 '+eps.length+' Episodes:</b>'+eps.map(e=>'<div style="padding:2px 0"><b>Ep '+e.num+':</b> '+e.title+' <span style="color:var(--muted)">— '+(e.summary||'').slice(0,80)+'</span></div>').join('')
+    : '<span style="color:var(--muted)">Abhi koi episode nahi — Ep 1 banao.</span>';
+  document.getElementById('epGenBtn').textContent='🎬 Generate Episode '+(eps.length+1);
+}
+async function genEpisode(){
+  if(!CUR_SERIES) return;
+  const btn=document.getElementById('epGenBtn'), msg=document.getElementById('epMsg');
+  btn.disabled=true; btn.textContent='⏳ Episode ban raha...';
+  msg.innerHTML='<span style="color:var(--muted)">Cast + pichhle episodes ka continuity use ho raha hai...</span>';
+  try{
+    const j=await (await fetch('/api/series/'+CUR_SERIES.id+'/episode',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({idea:document.getElementById('epIdea').value, length:segVal('epLenSeg')||'medium'})})).json();
+    if(j.error){ msg.innerHTML='<span class="err">'+j.error+'</span>'; }
+    else{
+      document.getElementById('script').value=j.script||'';
+      msg.innerHTML='<span style="color:var(--green)">✅ Episode '+j.episode_num+': “'+j.title+'”</span>'
+        +'<div style="color:var(--muted);margin-top:3px">'+(j.summary||'')+'</div>';
+      document.getElementById('epIdea').value='';
+      await selectSeries(CUR_SERIES.id);  // history refresh
+      document.getElementById('script').scrollIntoView({behavior:'smooth',block:'center'});
+    }
+  }catch(e){ msg.innerHTML='<span class="err">Fail: '+e+'</span>'; }
+  btn.disabled=false;
+}
+loadLib();
+load();
+
+// segmented buttons
+document.querySelectorAll('.seg').forEach(seg=>{
+  seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    seg.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+  });
+});
+function segVal(id){const e=document.querySelector('#'+id+' button.on');return e?e.dataset.v:null;}
+
+function collectSettings(){
+  return {
+    style: document.getElementById('style').value,
+    aspect: segVal('aspectSeg'),
+    quality: document.getElementById('quality').value,
+    fps: document.getElementById('fps').value,
+    fast_preview: document.getElementById('fast_preview').checked,
+    motion_preset: segVal('motionSeg'),
+    render_mode: segVal('modeSeg'),
+    story_mode: segVal('storySeg'),
+    multi_char: document.getElementById('multiChar').checked,
+    render_engine: document.getElementById('render_engine').value,
+    gpu: document.getElementById('gpu_encode').checked ? 'auto' : 'off',
+    vignette: document.getElementById('vignette').checked,
+    subtitles_on: document.getElementById('cap_enabled').checked,
+    intro_on: document.getElementById('intro_on').checked,
+    outro_on: true,
+    tts_provider: document.getElementById('tts_provider').value,
+    urdu_accent: document.getElementById('urdu_accent').value,
+    voice_volume: document.getElementById('voice_volume').value,
+    music_volume: document.getElementById('music_volume').value,
+    captions: {
+      enabled: document.getElementById('cap_enabled').checked,
+      words_per_group: document.getElementById('cap_words').value,
+      font_size: document.getElementById('cap_size').value,
+      position: segVal('posSeg'),
+      highlight_color: document.getElementById('cap_hl').value,
+      highlight_style: segVal('hlSeg'),
+      per_speaker_color: document.getElementById('cap_perspk').checked,
+    }
+  };
+}
+
+async function suggestStyle(){
+  const script=document.getElementById('script').value.trim();
+  if(script.length<10){alert('Pehle script likhein');return;}
+  const r=await (await fetch('/api/suggest-style',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({script})})).json();
+  if(r.style) document.getElementById('style').value=r.style;
+}
+
+function _scriptLang(){ const t=document.getElementById('tplLang'); return t?t.value:'roman_urdu'; }
+
+async function analyzeScript(){
+  const script=document.getElementById('script').value.trim();
+  const fb=document.getElementById('scriptFeedback');
+  if(script.length<10){fb.innerHTML='<span class="err">Pehle script likhein</span>';return;}
+  fb.innerHTML='<span style="color:var(--muted)">🔍 Analyze ho raha...</span>';
+  try{
+    const r=await (await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({script,language:_scriptLang()})})).json();
+    if(r.error){fb.innerHTML='<span class="err">'+r.error+'</span>';return;}
+    let h='<div style="border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px">';
+    if(r.hook_score!=null){const c=r.hook_score>=7?'var(--green)':(r.hook_score>=5?'#FBBF24':'var(--red)');
+      h+=`<div><b>Hook:</b> <span style="color:${c}">${r.hook_score}/10</span> &nbsp; <b>Pacing:</b> ${r.pacing||'-'} &nbsp; <b>Music:</b> ${r.music_mood||'-'}</div>`;}
+    if(r.title_ideas&&r.title_ideas.length){h+='<div style="margin-top:5px"><b>📌 Title ideas:</b><ul style="margin:3px 0 0 16px;padding:0">'+r.title_ideas.map(t=>`<li style="cursor:pointer" onclick="navigator.clipboard.writeText('${(t+'').replace(/'/g,"")}')">${t}</li>`).join('')+'</ul></div>';}
+    if(r.improvements&&r.improvements.length){h+='<div style="margin-top:5px"><b>💡 Behtari:</b><ul style="margin:3px 0 0 16px;padding:0">'+r.improvements.map(t=>`<li>${t}</li>`).join('')+'</ul></div>';}
+    if(r.strong_points&&r.strong_points.length){h+='<div style="margin-top:5px;color:var(--green)"><b>✅ Achha:</b> '+r.strong_points.join(', ')+'</div>';}
+    h+='</div>';
+    fb.innerHTML=h;
+  }catch(e){fb.innerHTML='<span class="err">Analyze fail: '+e+'</span>';}
+}
+
+async function improveScript(){
+  const el=document.getElementById('script'); const script=el.value.trim();
+  const fb=document.getElementById('scriptFeedback');
+  if(script.length<10){fb.innerHTML='<span class="err">Pehle script likhein</span>';return;}
+  fb.innerHTML='<span style="color:var(--muted)">✨ Behtar likha ja raha...</span>';
+  try{
+    const r=await (await fetch('/api/improve',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({script,language:_scriptLang()})})).json();
+    if(r.script&&!r.script.startsWith('[error]')){
+      el.value=r.script;
+      fb.innerHTML='<span style="color:var(--green)">✅ Script behtar ho gaya (upar box mein). Analyze karke dekh lein.</span>';
+    } else { fb.innerHTML='<span class="err">'+(r.script||'fail')+'</span>'; }
+  }catch(e){fb.innerHTML='<span class="err">Improve fail: '+e+'</span>';}
+}
+
+// Track C — YouTube Package (metadata)
+function _copy(t){ navigator.clipboard.writeText(t).catch(()=>{}); }
+async function genPackage(){
+  const script=document.getElementById('script').value.trim();
+  const pk=document.getElementById('pkgPanel');
+  if(script.length<20){ pk.innerHTML='<span class="err">Pehle script banayein.</span>'; return; }
+  pk.innerHTML='<span style="color:var(--muted)">📦 YouTube package ban raha (titles, description, tags, thumbnail)...</span>';
+  try{
+    const m=await (await fetch('/api/metadata',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({script,language:_scriptLang()})})).json();
+    if(m.error){ pk.innerHTML='<span class="err">'+m.error+'</span>'; return; }
+    const box=(label,content)=>`<div style="margin-top:8px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">${label}</div>${content}</div>`;
+    const titles=(m.titles||[]).map(t=>`<div style="display:flex;gap:6px;align-items:center;padding:3px 0"><span style="flex:1">${t}</span><button class="btn btn-sm" style="padding:1px 7px" onclick="_copy(${JSON.stringify(t).replace(/"/g,'&quot;')})">copy</button></div>`).join('');
+    const tags=(m.tags||[]).map(t=>`<span style="background:var(--card2,rgba(255,255,255,.06));border-radius:12px;padding:2px 8px;font-size:11px;margin:2px;display:inline-block">${t}</span>`).join('');
+    const chapters=(m.chapters||[]).length?box('Chapters',(m.chapters||[]).map(c=>`<div style="font-size:12px">${c}</div>`).join('')):'';
+    pk.innerHTML='<div style="border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 12px;font-size:13px">'
+      +'<div style="font-weight:700;color:#a78bfa">📦 YouTube Package</div>'
+      +box('🏷️ Thumbnail text','<div style="font-weight:800;font-size:18px;letter-spacing:.02em">'+(m.thumbnail_text||'')+'</div>')
+      +box('📝 Titles (5)',titles)
+      +box('📄 Description','<div style="white-space:pre-wrap">'+(m.description||'')+'</div><button class="btn btn-sm" style="margin-top:4px;padding:1px 8px" onclick="_copy('+JSON.stringify(m.description||'').replace(/"/g,'&quot;')+')">copy description</button>')
+      +box('🔖 Tags',tags+'<div><button class="btn btn-sm" style="margin-top:5px;padding:1px 8px" onclick="_copy('+JSON.stringify((m.tags||[]).join(', ')).replace(/"/g,'&quot;')+')">copy all tags</button></div>')
+      +box('📌 Pinned comment',(m.pinned_comment||''))
+      +chapters
+      +'</div>';
+  }catch(e){ pk.innerHTML='<span class="err">Package fail: '+e+'</span>'; }
+}
+
+function setStages(active,i,total,msg,fin){
+  const ai=ORDER.indexOf(active);
+  document.querySelectorAll('#steps li').forEach(li=>{
+    const si=ORDER.indexOf(li.dataset.s); li.classList.remove('active','done');
+    const m=li.querySelector('.msg');
+    if(fin||si<ai){li.classList.add('done');}
+    else if(si===ai){li.classList.add('active'); m.textContent=(total>1?`${i}/${total} `:'')+(msg||'');}
+  });
+}
+
+const EMOTIONS=['neutral','happy','sad','angry','excited','scared','confused','thinking','surprised'];
+let PLAN=null;
+
+let COSTUMES=[], ACCESSORIES=[], HELD=[];
+async function preview(){
+  const script=document.getElementById('script').value.trim();
+  if(script.length<10){alert('Script likhein');return;}
+  const btn=document.getElementById('previewBtn');
+  btn.disabled=true; btn.textContent='⏳ Plan bana raha hoon...';
+  document.getElementById('errMsg').classList.add('hidden');
+  try{
+    if(!COSTUMES.length){ try{ COSTUMES=await (await fetch('/api/costumes')).json(); }catch(e){} }
+    if(!ACCESSORIES.length){ try{ ACCESSORIES=await (await fetch('/api/accessories')).json(); }catch(e){} }
+    if(!HELD.length){ try{ HELD=await (await fetch('/api/held')).json(); }catch(e){} }
+    const j=await (await fetch('/api/preview',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({script})})).json();
+    if(j.error){ showErr(j.error); }
+    else { PLAN=j; renderPreview(j); }
+  }catch(e){ showErr('Preview fail: '+e); }
+  btn.disabled=false; btn.textContent='👁️ Preview & Edit';
+}
+
+function renderPreview(p){
+  document.getElementById('pvTitle').textContent=p.title||'';
+  // characters
+  const cc=document.getElementById('pvChars'); cc.innerHTML='';
+  const grpOpts=(arr)=>{
+    const g={}; arr.forEach(c=>{(g[c.group||'x']=g[c.group||'x']||[]).push(c);});
+    return Object.keys(g).map(k=>{
+      const inner=g[k].map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+      return k==='—' ? inner : `<optgroup label="${k}">${inner}</optgroup>`;
+    }).join('');
+  };
+  const costOpts=grpOpts(COSTUMES), accOpts=grpOpts(ACCESSORIES), heldOpts=grpOpts(HELD);
+  p.characters.forEach(ch=>{
+    const opts=p.veggies.map(v=>`<option value="${v.name}" ${v.package===ch.package?'selected':''}>${v.emoji} ${v.name}</option>`).join('');
+    const d=document.createElement('div'); d.className='pvRow'; d.dataset.cid=ch.id;
+    d.innerHTML=`<img src="${ch.avatar||''}" class="pvAv" onerror="this.style.visibility='hidden'">`
+      +`<div style="flex:1;min-width:70px"><b>${ch.name}</b> <span style="color:var(--muted);font-size:11px">${ch.voice||''}</span></div>`
+      +`<select class="pvVeg" title="3D character" style="width:100px">${opts}</select>`
+      +`<select class="pvCostume" title="Costume (rang)" style="width:100px">${costOpts}</select>`
+      +`<select class="pvAcc" title="Pehnawa (head/face)" style="width:100px">${accOpts}</select>`
+      +`<select class="pvHeld" title="Haath mein" style="width:100px">${heldOpts}</select>`;
+    cc.appendChild(d);
+  });
+  // scenes + lines
+  const sc=document.getElementById('pvScenes'); sc.innerHTML='';
+  p.scenes.forEach((s,si)=>{
+    const box=document.createElement('div'); box.className='pvScene'; box.dataset.si=si;
+    let h=`<div style="font-size:12px;color:var(--muted)">Scene ${s.id} · ${s.mood||''}</div>`
+      +`<label style="font-size:11px">Background</label>`
+      +`<input class="pvBg" value="${(s.background_prompt||'').replace(/"/g,'&quot;')}">`;
+    (s.lines||[]).forEach((ln,li)=>{
+      const eo=EMOTIONS.map(e=>`<option ${e===(ln.emotion||'neutral')?'selected':''}>${e}</option>`).join('');
+      h+=`<div class="pvLine" data-li="${li}" style="display:flex;gap:5px;margin-top:5px;align-items:center">`
+        +`<span style="min-width:62px;font-size:11px;color:var(--green)">${ln.speaker}</span>`
+        +`<select class="pvEmo" style="width:92px">${eo}</select>`
+        +`<input class="pvText" style="flex:1" value="${(ln.text||'').replace(/"/g,'&quot;')}"></div>`;
+    });
+    box.innerHTML=h; sc.appendChild(box);
+  });
+  document.getElementById('previewCard').classList.remove('hidden');
+  document.getElementById('previewCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function collectEditedParsed(){
+  const p=JSON.parse(JSON.stringify(PLAN.parsed));   // deep copy
+  // veggie overrides
+  const ov={}, cos={}, acc={}, held={};
+  document.querySelectorAll('#pvChars .pvRow').forEach(r=>{
+    ov[r.dataset.cid]=r.querySelector('.pvVeg').value;
+    const cv=r.querySelector('.pvCostume');
+    if(cv && cv.value && cv.value!=='default') cos[r.dataset.cid]=cv.value;
+    const av=r.querySelector('.pvAcc');
+    if(av && av.value && av.value!=='none') acc[r.dataset.cid]=av.value;
+    const hv=r.querySelector('.pvHeld');
+    if(hv && hv.value && hv.value!=='none') held[r.dataset.cid]=hv.value;
+  });
+  p.char_overrides=ov;
+  p.costumes=cos;
+  p.accessories=acc;
+  p.held=held;
+  // scenes: bg + lines (emotion, text)
+  document.querySelectorAll('#pvScenes .pvScene').forEach(box=>{
+    const s=p.scenes[+box.dataset.si];
+    s.background_prompt=box.querySelector('.pvBg').value;
+    box.querySelectorAll('.pvLine').forEach(le=>{
+      const ln=s.lines[+le.dataset.li];
+      ln.emotion=le.querySelector('.pvEmo').value;
+      ln.text=le.querySelector('.pvText').value;
+    });
+  });
+  return p;
+}
+
+async function confirmGenerate(){ startJob(collectEditedParsed()); }
+
+async function generate(){ startJob(null); }
+
+async function checkResumable(){
+  try{
+    const list=await (await fetch('/api/resumable')).json();
+    const card=document.getElementById('resumeCard'), el=document.getElementById('resumeList');
+    if(!list.length){ card.classList.add('hidden'); return; }
+    el.innerHTML=list.map(p=>{
+      const st=p.state==='error'?'⚠️ ruk gaya':'⏳ adhoora';
+      return `<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)">
+        <div style="flex:1"><b>${p.title||p.name}</b> <span style="color:var(--muted);font-size:11px">${st} · stage: ${p.stage||'?'} · ${p.done_clips||0} clips · ${p.updated||''}</span></div>
+        <button class="btn btn-green btn-sm" onclick="resumeProject('${p.name}')">▶ Resume</button>
+        <button class="btn btn-sm" style="background:var(--err,#b33)" onclick="dropProject('${p.name}',this)">🗑</button>
+      </div>`;
+    }).join('');
+    card.classList.remove('hidden');
+  }catch(e){}
+}
+let PROJECTS_SHOWN=false;
+async function loadProjectsList(){
+  try{
+    const list=await (await fetch('/api/projects')).json();
+    document.getElementById('projCount').textContent='('+list.length+')';
+    const el=document.getElementById('projList');
+    if(!list.length){ el.innerHTML='<div style="color:var(--muted);font-size:12px">Abhi koi project nahi.</div>'; return; }
+    el.innerHTML=list.map(p=>{
+      const d=p.created||new Date((p.mtime||0)*1000).toLocaleString();
+      // complete -> Video; adhoora -> Resume (usi project ko jahan tak bana wahin se aage)
+      const act=p.has_video
+        ? `<button class="btn btn-sm" style="background:#2563eb" onclick="playProject('${p.name}')">▶ Video</button>`
+        : `<button class="btn btn-sm" style="background:#f59e0b;color:#000" onclick="resumeProject('${p.name}')">▶ Resume</button>`;
+      return `<div style="display:flex;gap:6px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)">
+        <div style="flex:1;min-width:0"><b>${p.title||p.name}</b> ${p.has_video?'':'<span style="color:#f59e0b;font-size:10px">● adhoora</span>'}<br><span style="color:var(--muted);font-size:11px">${p.characters||0} chars · ${p.scenes||0} scenes · ${d}</span></div>
+        <button class="btn btn-green btn-sm" onclick="openProject('${p.name}')">📂 Load</button>
+        ${act}
+        <button class="btn btn-sm" style="background:var(--err,#b33)" onclick="delProject('${p.name}',event)">🗑</button>
+      </div>`;
+    }).join('');
+  }catch(e){}
+}
+function toggleProjects(){
+  const el=document.getElementById('projList');
+  PROJECTS_SHOWN=!PROJECTS_SHOWN;
+  el.classList.toggle('hidden',!PROJECTS_SHOWN);
+  if(PROJECTS_SHOWN) loadProjectsList();
+}
+async function openProject(name){
+  const p=await (await fetch('/api/project/'+encodeURIComponent(name))).json();
+  if(p.error){ alert(p.error); return; }
+  document.getElementById('script').value=p.script||'';
+  PLAN = p.parsed ? {parsed:p.parsed} : null;   // preview/generate isi plan par
+  if(p.settings){
+    if(p.settings.subtitles_on!==undefined) document.getElementById('cap_enabled').checked=!!p.settings.subtitles_on;
+    else if(p.settings.captions) document.getElementById('cap_enabled').checked=!!p.settings.captions.enabled;
+    if(p.settings.intro_on!==undefined) document.getElementById('intro_on').checked=!!p.settings.intro_on;
+  }
+  document.getElementById('script').scrollIntoView({behavior:'smooth',block:'center'});
+  const fb=document.getElementById('scriptFeedback');
+  if(fb) fb.innerHTML='<span style="color:var(--green)">✅ "'+(p.title||name)+'" load ho gaya — script box mein. Edit karke Preview/Generate karo'+(p.has_video?', ya ▶ Video se purani dekho.':'.')+'</span>';
+  if(p.has_video) playProject(name);
+}
+function playProject(name){
+  document.getElementById('resultCard').classList.remove('hidden');
+  document.getElementById('rTitle').textContent=name;
+  document.getElementById('rVideo').src='/projects/'+name+'/final.mp4?t='+Date.now();
+  document.getElementById('rDownload').href='/projects/'+name+'/final.mp4';
+  document.getElementById('resultCard').scrollIntoView({behavior:'smooth',block:'center'});
+}
+async function delProject(name,ev){
+  if(ev) ev.stopPropagation();
+  if(!confirm('"'+name+'" delete karein? (video + saara data)')) return;
+  await fetch('/api/projects/'+encodeURIComponent(name),{method:'DELETE'});
+  loadProjectsList();
+}
+async function resumeProject(name){
+  const btn=document.getElementById('genBtn'); if(btn) btn.disabled=true;
+  document.getElementById('progressCard').classList.remove('hidden');
+  document.getElementById('resumeCard').classList.add('hidden');
+  setStages('story',0,1,'Resume ho raha...');
+  const r=await (await fetch('/api/resume/'+name,{method:'POST'})).json();
+  if(r.error){ showErr(r.error); return; }
+  CUR_JOB=r.job_id; _resetStop();
+  polling=setInterval(()=>poll(r.job_id),1500);
+}
+async function dropProject(name,elBtn){
+  if(!confirm('Ye adhoora project delete karein?')) return;
+  await fetch('/api/projects/'+name,{method:'DELETE'});
+  checkResumable();
+}
+async function startJob(parsed){
+  const script=document.getElementById('script').value.trim();
+  if(!parsed && script.length<10){alert('Script likhein');return;}
+  const btn=document.getElementById('genBtn');
+  btn.disabled=true;
+  document.getElementById('progressCard').classList.remove('hidden');
+  document.getElementById('previewCard').classList.add('hidden');
+  document.getElementById('resultCard').classList.add('hidden');
+  document.getElementById('errMsg').classList.add('hidden');
+  setStages('story',0,1,'');
+  const body={script,settings:collectSettings()};
+  if(parsed) body.parsed=parsed;
+  const r=await (await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)})).json();
+  if(r.error){showErr(r.error);return;}
+  CUR_JOB=r.job_id; _resetStop();
+  polling=setInterval(()=>poll(r.job_id),1500);
+}
+function _resetStop(){ const b=document.getElementById('stopBtn'); if(b){b.disabled=false;b.textContent='⏹ STOP Generation';} }
+
+async function poll(id){
+  const j=await (await fetch('/api/status/'+id)).json();
+  if(j.state==='running') setStages(j.stage,j.i,j.total,j.message);
+  else if(j.state==='done'){clearInterval(polling);setStages('render',1,1,'',true);showResult(j.result);checkResumable();loadProjectsList();}
+  else if(j.state==='stopped'){clearInterval(polling);reset();document.getElementById('progressCard').classList.add('hidden');
+    const fb=document.getElementById('scriptFeedback'); if(fb)fb.innerHTML='<span style="color:#f59e0b">⏹ Generation ruk gaya — jitna bana wo safe. 📁 My Projects se ▶ Resume kar sakte.</span>';
+    checkResumable();loadProjectsList();}
+  else if(j.state==='error'){clearInterval(polling);showErr(j.error||'error');checkResumable();}
+}
+
+function showResult(res){
+  document.getElementById('resultCard').classList.remove('hidden');
+  document.getElementById('rTitle').textContent=res.title||'Video Ready';
+  document.getElementById('rVideo').src='/projects/'+res.video_rel+'?t='+Date.now();
+  document.getElementById('rDownload').href='/projects/'+res.video_rel;
+  reset();
+}
+function showErr(m){const e=document.getElementById('errMsg');e.textContent='❌ '+m;e.classList.remove('hidden');reset();}
+function reset(){
+  const b=document.getElementById('genBtn');b.disabled=false;b.textContent='🚀 Direct Generate (skip preview)';
+  const pb=document.getElementById('previewBtn');pb.disabled=false;pb.textContent='👁️ Preview & Edit';
+  const pg=document.getElementById('pvGenBtn');if(pg)pg.disabled=false;
+}
+
+async function testRunware(){
+  const btn=document.getElementById('testBtn'), out=document.getElementById('testResult');
+  btn.disabled=true; btn.textContent='⏳ Testing...';
+  out.innerHTML='<span style="color:var(--muted)">Runware ko test kiya ja raha hai...</span>';
+  try{
+    const img=document.getElementById('test_img').checked;
+    const j=await (await fetch('/api/test-runware',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({image:img})})).json();
+    const t=j.tests||{};
+    const dot=ok=>ok?'<span style="color:var(--green)">●</span>':'<span style="color:var(--red)">●</span>';
+    let h='';
+    h+=`<div>${dot(t.key&&t.key.ok)} <b>API Key</b> — ${t.key?t.key.masked:'?'}</div>`;
+    if(t.llm){h+=`<div>${dot(t.llm.ok)} <b>LLM</b> <span style="color:var(--muted)">(${t.llm.model})</span> — ${t.llm.ms}ms`
+      + (t.llm.ok?` → "${t.llm.sample||''}"`:'')+`</div>`;
+      if(!t.llm.ok) h+=`<div class="err">${t.llm.error}</div>`;}
+    if(t.image){h+=`<div>${dot(t.image.ok)} <b>Image</b> <span style="color:var(--muted)">(${t.image.model})</span> — ${t.image.ms}ms</div>`;
+      if(t.image.ok&&t.image.url) h+=`<div style="margin-top:5px"><img src="${t.image.url}" style="width:80px;height:80px;border-radius:8px;object-fit:cover"></div>`;
+      if(!t.image.ok) h+=`<div class="err">${t.image.error}</div>`;}
+    h+=`<div style="margin-top:8px;font-weight:700;color:${j.ok?'var(--green)':'var(--red)'}">`
+      + (j.ok?'✅ Runware theek chal raha hai':'⚠️ Masla — upar detail dekho')+`</div>`;
+    out.innerHTML=h;
+  }catch(e){ out.innerHTML='<div class="err">Test fail: '+e+'</div>'; }
+  btn.disabled=false; btn.textContent='🔎 Test API';
+}
+</script>
+</body>
+</html>

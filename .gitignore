@@ -1,0 +1,55 @@
+# Local credentials and machine-specific settings
+.env
+.env.*
+!.env.example
+
+# Python / test caches
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Node dependencies
+node_modules/
+
+# Generated projects and render outputs
+projects/
+_analyze/
+_char_v2/
+_incoming/
+_video_review*/
+_voicetest/
+blender/preview/
+blender/anim_tomato/
+blender/lipsync_full/
+threejs_render/frames*/
+threejs_render/_*/
+
+# Local production media libraries (repository is code-only)
+assets/
+characters/
+new_images/
+blender/assets/
+blender/rigged/
+threejs_render/assets/
+test_apple_layered.psd
+blender/_rigged.png
+blender/_talk.mp3
+blender/_tomato.mp3
+
+# Local diagnostics and proof-of-concept media
+_server.log
+_lf_*.png
+_v2*.png
+_limb*.png
+_poc_*
+threejs_render/_*.json
+threejs_render/_*.mjs
+threejs_render/diag*.html
+
+# OS/editor noise
+.claude/
+.DS_Store
+Thumbs.db
+*.log

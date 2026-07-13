@@ -1,0 +1,62 @@
+{
+  "characters": {
+    "raju": {
+      "id": "raju",
+      "name": "Raju",
+      "trait": "bahadur, jaldbaaz gaon ka ladka",
+      "gender": "child",
+      "catchphrase": "Chalo shuru!",
+      "role": ""
+    },
+    "motu": {
+      "id": "motu",
+      "name": "Motu",
+      "trait": "khane ka shauqeen, comic relief",
+      "gender": "child",
+      "catchphrase": "",
+      "role": ""
+    },
+    "nani": {
+      "id": "nani",
+      "name": "Nani",
+      "trait": "samajhdar buzurg, kahaniyan sunati hai",
+      "gender": "female",
+      "catchphrase": "",
+      "role": ""
+    }
+  },
+  "series": {
+    "gaon-ke-heroes": {
+      "id": "gaon-ke-heroes",
+      "name": "Gaon Ke Heroes",
+      "premise": "Gaon ke bachche har episode koi masla hal karte hain",
+      "genre": "adventure",
+      "language": "roman_urdu",
+      "cast": [
+        "raju",
+        "motu",
+        "nani"
+      ],
+      "episodes": [
+        {
+          "num": 1,
+          "title": "Kuen Ka Raaz Aur Billi Ka Bachao",
+          "summary": "Raju ne kuen se billi ki awaz suni aur Motu aur Nani ke saath milkar rassi aur balti laa kar usay bachane ki tayyari ki. Aakhir mein sab milkar kaam karte hain aur Nani unhein samjhati hai ke bahaduri aur samajh se mushkil aasan hoti hai.",
+          "created": "2026-07-07 23:00"
+        },
+        {
+          "num": 2,
+          "title": "Andheri Raat Ka Chhota Hero",
+          "summary": "Gaon ki bijli chali jaati hai aur Raju fuse check karne chhat par jaane lagta hai, jabke Motu torch aur biscuit maangte hue uske saath chal padta hai. Nani unhein samjhati hai ke andheray mein ghabrana nahi, mil kar aur soch samajh kar kaam karna chahiye.",
+          "created": "2026-07-07 23:00"
+        },
+        {
+          "num": 3,
+          "title": "Baarish Mein Pul Ka Jugaad",
+          "summary": "Raju aur Motu ne behte hue pul ko jaldi-jaldi jugaar se banane ki koshish ki, lekin Nani ne unhein akal se kaam lene aur majbooti par dhyan dene ki salah di. Aakhir mein sab milkar biscuit ki dabbi aur lakriyon ki madad se mazboot raasta banane lagte hain, aur Raju sabko pehle paar karwane ke liye khud aakhri mein jaane ko tayyar ho jata hai.",
+          "created": "2026-07-10 10:13"
+        }
+      ]
+    }
+  }
+}

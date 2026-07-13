@@ -1,0 +1,350 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+  html,body{margin:0;overflow:hidden;background:#9fbcd6} #c{display:block}
+</style></head><body>
+<canvas id="c"></canvas>
+<script type="importmap">
+{ "imports": { "three": "./node_modules/three/build/three.module.js",
+  "three/addons/": "./node_modules/three/examples/jsm/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+window.__error = null;
+window.addEventListener('error', e => { window.__error = String(e.message || e); });
+
+const DEG = Math.PI / 180;
+const loader = new GLTFLoader();
+function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g), undefined, rej)); }
+
+(async function(){
+  const spec = await (await fetch('./_spec.json')).json();
+  const [W, H] = spec.res || [960, 540];
+  const fps = spec.fps || 24;
+  const canvas = document.getElementById('c');
+  canvas.width = W; canvas.height = H;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+  renderer.setSize(W, H, false);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, W / H, 0.05, 200);
+
+  const sceneLook = spec.sceneLook || 'sunny';
+  const LOOK = {
+    sunny: { sky: 0x9fd8ff, ground: 0x7dcc55, key: 2.4, fill: 0.85 },
+    storm: { sky: 0x66798d, ground: 0x547051, key: 1.45, fill: 0.55 },
+    mud:   { sky: 0x91abc0, ground: 0x765536, key: 1.8, fill: 0.65 },
+    wash:  { sky: 0xbfe9ff, ground: 0x92d7dc, key: 2.25, fill: 0.9 },
+    stage: { sky: 0x8fdcff, ground: 0x7fd65b, key: 2.6, fill: 1.0 },
+  }[sceneLook] || { sky: 0x9fd8ff, ground: 0x7dcc55, key: 2.4, fill: 0.85 };
+
+  // lights (Blender key+fill jaisा)
+  const key = new THREE.DirectionalLight(0xfff4e6, LOOK.key); key.position.set(4, 8, 6); scene.add(key);
+  const fill = new THREE.DirectionalLight(0xdceaff, LOOK.fill); fill.position.set(-4, 4, 3); scene.add(fill);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+  renderer.setClearColor(LOOK.sky, 1);
+  if (sceneLook === 'storm') scene.fog = new THREE.Fog(LOOK.sky, 7, 18);
+
+  // ---- environment (ORIGIN par shift: floor y=0, horizontal center 0) ----
+  if (spec.env) {
+    const env = (await load(spec.env)).scene;
+    let box = new THREE.Box3().setFromObject(env);
+    const sz = new THREE.Vector3(); box.getSize(sz);
+    const s = 7.0 / Math.max(sz.x, sz.y, sz.z);
+    env.scale.setScalar(s); env.updateMatrixWorld(true);
+    box = new THREE.Box3().setFromObject(env);
+    const c = new THREE.Vector3(); box.getCenter(c);
+    env.position.set(-c.x, -box.min.y, -c.z);      // floor=0, center=origin
+    env.updateMatrixWorld(true);
+    box = new THREE.Box3().setFromObject(env);
+    // Keep all environment geometry behind the cast. This prevents an enclosing
+    // kitchen/house wall from sitting between the camera and the characters.
+    env.position.z += -0.75 - box.max.z;
+    scene.add(env);
+  }
+
+  // Procedural foreground makes story conditions visible even with a small GLB library.
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(14, 8),
+    new THREE.MeshStandardMaterial({ color: LOOK.ground, roughness: 0.9, metalness: 0 })
+  );
+  ground.rotation.x = -Math.PI / 2; ground.position.set(0, -0.015, 0.4); scene.add(ground);
+
+  if (sceneLook === 'mud') {
+    for (const [x, z, s] of [[-1.8,0.7,.75],[.2,.1,.55],[1.7,.9,.65]]) {
+      const puddle = new THREE.Mesh(new THREE.CircleGeometry(s, 32),
+        new THREE.MeshStandardMaterial({ color: 0x4b6b78, roughness: 0.2, metalness: 0.1 }));
+      puddle.rotation.x = -Math.PI / 2; puddle.scale.y = 0.42;
+      puddle.position.set(x, 0.006, z); scene.add(puddle);
+    }
+  }
+
+  let rain = null;
+  if (sceneLook === 'storm') {
+    const positions = new Float32Array(240 * 3);
+    for (let i=0; i<240; i++) {
+      positions[i*3] = (Math.random()-.5)*9;
+      positions[i*3+1] = Math.random()*5;
+      positions[i*3+2] = -1 + Math.random()*5;
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    rain = new THREE.Points(geometry,
+      new THREE.PointsMaterial({ color:0xd9f2ff, size:.035, transparent:true, opacity:.8 }));
+    scene.add(rain);
+  }
+
+  if (sceneLook === 'wash') {
+    for (let i=0; i<26; i++) {
+      const bubble = new THREE.Mesh(new THREE.SphereGeometry(.025 + (i%4)*.009, 10, 8),
+        new THREE.MeshBasicMaterial({ color:0xe9fbff, transparent:true, opacity:.55 }));
+      bubble.position.set(-2.5 + (i%9)*.58, .15 + (i%5)*.27, .15 + (i%3)*.12);
+      scene.add(bubble);
+    }
+  }
+
+  // ---- characters (actual bbox se: feet floor par, x slot par; NO rotation — +Z pehle se camera) ----
+  const TH = 1.5, SPACING = 1.55, NC = spec.chars.length;
+  const chars = [];
+  for (const c of spec.chars) {
+    const root = (await load(c.glb)).scene;
+    let box = new THREE.Box3().setFromObject(root);
+    const sz = new THREE.Vector3(); box.getSize(sz);
+    const cs = TH / (sz.y || 1); root.scale.setScalar(cs); root.updateMatrixWorld(true);
+    box = new THREE.Box3().setFromObject(root);        // scale ke baad asli box
+    const ctr = new THREE.Vector3(); box.getCenter(ctr);
+    // root ko local origin par center karo, feet y=0 par (holder-space)
+    root.position.set(-ctr.x, -box.min.y, -ctr.z);
+    // HOLDER group: placement (slot x, z aage) + squash-stretch yahin lagti hai.
+    // Holder origin = feet, isliye squash se feet planted rehte + SkinnedMesh scale untouched.
+    const holder = new THREE.Group();
+    holder.position.set((c.slot - (NC - 1) / 2) * SPACING, 0, 0.4);
+    holder.add(root);
+    holder.updateMatrixWorld(true);
+    scene.add(holder);
+    // bones + costume tint
+    const bones = {}; let mesh = null;
+    root.traverse(o => {
+      if (o.isMesh || o.isSkinnedMesh) o.frustumCulled = false;   // galat cull se bacho
+      if (o.isBone) bones[o.name] = o;
+      if (o.isSkinnedMesh) mesh = o;
+      if (o.isMesh && c.costume && o.material) {
+        const col = COSTUME[c.costume];
+        if (col && o.material.color) o.material.color.multiply(new THREE.Color(col[0], col[1], col[2]));
+      }
+    });
+    chars.push({ root, holder, bones, mesh, speaking: c.speaking, op: c.openness || [0],
+                 emo: c.emotion || 'neutral', phase: c.slot * 1.3, slot: c.slot,
+                 baseX: holder.position.x, baseZ: holder.position.z,
+                 action: c.action || 'none', target: (c.target == null ? -1 : c.target),
+                 seed: (c.slot * 2.7 + 0.6) });
+  }
+
+  // ---- camera framing: KNOWN placement se (skinned-mesh bbox reliable nahi) ----
+  // chars origin par hain: feet y=0, x = ±slot offset, z=0.4
+  const cc = new THREE.Vector3(0, TH * 0.5, 0.4);
+  const groupH = TH, groupW = (NC - 1) * SPACING + 1.2;
+  const frontZ = cc.z + groupH * 0.5;            // saamne (+Z) — depth ignore (robo inflate karta)
+  const focus = spec.focus || 0;
+  const focusX = cc.x + (focus - (NC - 1) / 2) * SPACING;
+  const shot = spec.shot || 'wide';
+  // chehra/aankhein ~0.9 world par (feet=0, height=1.5). Mascots ke decorative tops
+  // (lid/crown/hat) bbox height inflate karte, isliye asli chehra height ka ~60% par —
+  // NOT 92% (purana headY=1.38 bug jo camera ko upar utha kar character neeche kar deta tha).
+  const faceY = cc.y + groupH * 0.10;
+  function placeCam(f, nf) {
+    const push = shot === 'closeup' ? 0.94 : 0.97;
+    const k = 1 - (f / Math.max(1, nf)) * (1 - push);
+    if (shot === 'closeup') {                      // face/chest — thoda peeche taake base bhi dikhe
+      camera.position.set(focusX, faceY + groupH * 0.05, frontZ + groupH * 1.25 * k);
+      camera.lookAt(focusX, faceY - groupH * 0.06, cc.z);
+    } else if (shot === 'medium') {                // poora jism: feet se sar tak (grounded)
+      camera.position.set(focusX, cc.y + groupH * 0.15, frontZ + groupH * 1.75 * k);
+      camera.lookAt(focusX, cc.y + groupH * 0.03, cc.z);
+    } else {                                       // wide: group ~70% frame (width-based)
+      const dist = (groupW * 1.25 + 0.7) * k;
+      camera.position.set(cc.x, cc.y + groupH * 0.18, frontZ + dist);
+      camera.lookAt(cc.x, cc.y + groupH * 0.05, cc.z);
+    }
+  }
+
+  const NF = Math.max(...chars.map(c => c.op.length), 1);
+  window.__nframes = NF;
+  window.__debug = { cc: [cc.x, cc.y, cc.z], NC };
+
+  function smooth(op, idx) {   // light ±1 (track pehle se attack/release smoothed hai)
+    const lo = Math.max(0, idx - 1), hi = Math.min(op.length, idx + 2); let s = 0, n = 0;
+    for (let i = lo; i < hi; i++) { s += op[i % op.length]; n++; } return s / Math.max(1, n);
+  }
+
+  // ---- Animation engine: rig sirf {arm_L,arm_R,leg_L,leg_R,jaw,body} — koi head/eye bone
+  //      ya morph nahi. Isliye "graceful fallback": body bone = sar+dhad (nod/turn/tilt),
+  //      legs = weight-shift/walk, arms = gestures, holder = locomotion+hop+breathing.
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+  const ease = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };           // smoothstep
+  const seg = (p, a, b) => ease((p - a) / (b - a));                                // a..b ramp 0->1
+  const bump = (p, a, b) => { const m = (a + b) / 2; return p < m ? seg(p, a, m) : 1 - seg(p, m, b); };
+  // emotion -> pose parameters (degrees / scale)
+  const EMAP = { excited: 'happy', joy: 'happy', cheerful: 'happy', scared: 'fear',
+                 afraid: 'fear', worried: 'fear', shocked: 'surprise', amazed: 'surprise',
+                 mad: 'angry', upset: 'sad', crying: 'sad' };
+  const EMO = {
+    neutral:  { armRest: 8,  lean: 0,   spd: 1.0, open: 0,  hop: 0,    crouch: 0,    trem: 0,   bob: 2.2 },
+    happy:    { armRest: 24, lean: -4,  spd: 1.6, open: 14, hop: 0.02, crouch: 0,    trem: 0,   bob: 3.4 },
+    sad:      { armRest: 3,  lean: 13,  spd: 0.7, open: -5, hop: 0,    crouch: 0.03, trem: 0,   bob: 1.2 },
+    angry:    { armRest: 28, lean: 11,  spd: 2.3, open: 7,  hop: 0,    crouch: 0,    trem: 0.5, bob: 2.6 },
+    surprise: { armRest: 34, lean: -13, spd: 1.9, open: 20, hop: 0,    crouch: -0.03, trem: 0,  bob: 2.0 },
+    fear:     { armRest: 20, lean: 15,  spd: 1.7, open: -9, hop: 0,    crouch: 0.05, trem: 1.0, bob: 1.6 },
+  };
+  const emoOf = c => EMO[EMAP[c.emo] || c.emo] || EMO.neutral;
+  const PULL = ['help', 'rescue', 'pull', 'save', 'guide', 'lift'];
+  // partner interactions: kaun kis ko kheench/madad kar raha (target slot -> helper char)
+  const helpedBy = {};
+  for (const c of chars) if (PULL.includes(c.action) && c.target >= 0) {
+    const tg = chars.find(x => x.slot === c.target); if (tg) helpedBy[tg.slot] = c;
+  }
+
+  window.__poseFrame = function(f) {
+    const t = f / fps, prog = f / Math.max(1, NF - 1);   // 0..1 poore clip par
+    for (const c of chars) {
+      const ph = c.phase, sd = c.seed, b = c.bones, E = emoOf(c);
+      const speaking = c.speaking;
+      const op = speaking ? smooth(c.op, Math.min(f, c.op.length - 1)) : 0;
+      // accumulators (degrees / holder offsets)
+      let aL = E.armRest + E.open, aR = -(E.armRest + E.open);   // arm_L.z / arm_R.z base
+      let legL = 0, legR = 0, bX = E.lean, bY = 0, bZ = 0;       // body rot (x=nod,y=turn,z=tilt)
+      let dx = 0, dy = 0, dz = 0;                                // holder position offsets
+      let sqExtra = 0;
+
+      // ---- IDLE life-signs (hamesha on — kabhi static nahi) ----
+      bZ += E.bob * Math.sin((t + ph) * 0.55 * E.spd);          // weight-shift sway
+      legL += 3 * Math.sin((t + ph) * 0.55);                    // stance shift (legs live)
+      legR += -3 * Math.sin((t + ph) * 0.55);
+      bY += 6 * Math.sin(t * 0.3 + sd);                         // dheere "idhar-udhar dekhna"
+      bX += 1.5 * Math.sin(t * 0.8 + sd * 2);                   // halka micro head motion
+      // blink-beat: har ~3.2s ek tez head-dip (aankh geometry nahi to yehi life-sign)
+      const bt = (t + sd * 1.3) % 3.2;
+      if (bt < 0.13) bX += -4 * Math.sin(bt / 0.13 * Math.PI);
+      // tremble (fear/angry)
+      if (E.trem) { bX += E.trem * 1.5 * Math.sin(t * 22 + sd); dx += E.trem * 0.004 * Math.sin(t * 26 + sd); }
+      // crouch = SQUASH (feet planted, zameen mein dhansna nahi) — pehle dy translate
+      // karta tha jo feet ko floor ke neeche le jata. hop = asli uchhal (upar, dy+).
+      sqExtra += -E.crouch;
+      if (E.hop) dy += E.hop * TH * Math.abs(Math.sin(t * 3 * E.spd));
+
+      // ---- TALK layer ----
+      // jaw open-amount: op pehle se gated (silence=0) + attack/release smoothed.
+      // pow(0.85) low-mid ko halka lift (visible movement) par op=0 -> poori band.
+      if (b.jaw) b.jaw.rotation.x = -0.19 * Math.pow(Math.max(0, op), 0.85);
+      if (speaking) {
+        const g = 0.6 * Math.sin((t + ph) * 1.7 * E.spd) + 0.4 * Math.sin((t + ph) * 0.9 + 1);
+        aL += (E.spd * 6) * g + op * 16;                        // gesticulation
+        aR += -(E.spd * 6) * (0.6 * Math.sin((t + ph) * 1.7 * E.spd + 0.7) + 0.4 * Math.sin((t + ph) * 0.8)) - op * 16;
+        bX += op * 4;                                           // baat karte waqt sar hilana (nods)
+        bY += 4 * Math.sin((t + ph) * 1.3) * op;
+      }
+      // face the character being addressed (eye-contact feel)
+      if (c.target >= 0) { const dir = Math.sign((chars.find(x => x.slot === c.target)?.baseX ?? c.baseX) - c.baseX); bY += dir * 9; }
+
+      // ---- ACTION layer (story actions) ----
+      const act = c.action, tgt = chars.find(x => x.slot === c.target);
+      const dirT = tgt ? Math.sign(tgt.baseX - c.baseX) || 1 : 1;
+      const gap = tgt ? Math.abs(tgt.baseX - c.baseX) : SPACING;
+      if (act === 'point' || act === 'pointing') {
+        const r = seg(prog, 0.12, 0.32) * (1 - seg(prog, 0.82, 1));
+        aR += -55 * r; bY += dirT * 6 * r;                      // arm_R uthao target ki taraf
+      } else if (act === 'wave' || act === 'greet' || act === 'hello') {
+        const up = seg(prog, 0.1, 0.3) * (1 - seg(prog, 0.8, 1));
+        aR += (-50 + 18 * Math.sin(t * 9)) * up;
+      } else if (act === 'reach' || act === 'reaching' || act === 'give' || act === 'offer') {
+        const r = (act === 'give' || act === 'offer') ? bump(prog, 0.2, 0.9) : seg(prog, 0.15, 0.4);
+        aR += -48 * r; bX += 8 * r; dx += dirT * 0.25 * r;      // haath badhao + thoda jhuko
+      } else if (act === 'walk' || act === 'run' || act === 'come' || act === 'go' || act === 'approach') {
+        const fast = (act === 'run') ? 2.0 : 1.0;
+        const wp = t * 6 * fast + ph;
+        legL += 28 * Math.sin(wp); legR += 28 * Math.sin(wp + Math.PI);
+        aL += -14 * Math.sin(wp); aR += 14 * Math.sin(wp);      // arm counter-swing
+        dy += Math.abs(Math.sin(wp)) * 0.04 * TH;               // step bounce
+        const goDir = tgt ? dirT : (c.slot < NC / 2 ? 1 : -1);
+        dx += goDir * (gap * 0.6) * ease(prog) * fast;          // aage barho
+        bX += 5 * fast;
+      } else if (act === 'celebrate' || act === 'cheer' || act === 'win' || act === 'happy' || act === 'jump') {
+        const j = Math.abs(Math.sin(t * 4));
+        aL += 40 * j + 20; aR += -40 * j - 20;                  // dono haath upar
+        dy += j * 0.14 * TH; bX += -6;                          // uchhal
+      } else if (act === 'nod' || act === 'agree' || act === 'yes') {
+        bX += 12 * Math.sin(t * 5);                             // haan mein sar
+      } else if (act === 'shake' || act === 'deny' || act === 'no') {
+        bY += 16 * Math.sin(t * 5);                             // naa mein sar
+      } else if (act === 'hug') {
+        const r = seg(prog, 0.15, 0.45); aL += 30 * r; aR += -30 * r; dx += dirT * gap * 0.35 * r;
+      } else if (act === 'wash') {
+        const rub = seg(prog, 0.10, 0.25) * (1 - seg(prog, 0.88, 1));
+        aL += (34 + 14 * Math.sin(t * 9)) * rub;
+        aR += (-34 + 14 * Math.sin(t * 9 + Math.PI)) * rub;
+        bX += 7 * rub; bZ += 3 * Math.sin(t * 5) * rub;
+      } else if (act === 'slip') {
+        const fall = bump(prog, 0.18, 0.88);
+        bZ += 22 * fall; bX += 12 * fall;
+        legL += 30 * fall; legR += -18 * fall;
+        dx += 0.22 * fall; dy += 0.035 * TH * fall;
+      } else if (act === 'splash') {
+        const jump = Math.abs(Math.sin(t * 4.5)) * bump(prog, 0.08, 0.92);
+        dy += jump * 0.12 * TH; aL += 30 * jump; aR -= 30 * jump;
+      } else if (PULL.includes(act) && tgt) {
+        // MADAD/RESCUE: approach -> reach -> contact+pull -> settle (dono characters chalte)
+        const approach = seg(prog, 0.0, 0.32);
+        const reach = seg(prog, 0.3, 0.5);
+        const pull = seg(prog, 0.5, 0.82);
+        dx += dirT * (gap - 0.85) * approach;                  // paas jao (thoda gap chhoro)
+        aR += -50 * reach * (1 - pull * 0.3);                  // haath badhao
+        bX += 10 * (reach + pull * 0.5);
+        dx += -dirT * (gap - 0.85) * pull * 0.7;               // pull-back (wapas apni taraf)
+        const wp = t * 5 + ph;                                  // pull ke waqt qadam
+        legL += 16 * pull * Math.sin(wp); legR += 16 * pull * Math.sin(wp + Math.PI);
+      }
+      // agar is char ko koi kheench raha (being helped/rescued)
+      const H = helpedBy[c.slot];
+      if (H) {
+        const pull = seg(prog, 0.5, 0.82), relief = seg(prog, 0.82, 1);
+        const towardH = Math.sign(H.baseX - c.baseX) || 1;
+        dx += towardH * (Math.abs(H.baseX - c.baseX) - 0.85) * pull * 0.7;   // helper ke saath niklo
+        aL += 20 * pull; aR += -20 * pull;                     // sambhalna
+        bX += -8 * relief;                                     // bach gaye — relief (seedha/upar)
+        dy += relief * 0.05 * TH * Math.abs(Math.sin(t * 4));
+      }
+
+      // ---- APPLY ----
+      if (b.arm_L) b.arm_L.rotation.z = aL * DEG;
+      if (b.arm_R) b.arm_R.rotation.z = aR * DEG;
+      if (b.leg_L) b.leg_L.rotation.x = legL * DEG;
+      if (b.leg_R) b.leg_R.rotation.x = legR * DEG;
+      if (b.body) { b.body.rotation.set(bX * DEG, bY * DEG, bZ * DEG); }
+      // dy kabhi 0 se neeche nahi (feet floor par — koi animation zameen mein na dhansaye)
+      c.holder.position.set(c.baseX + dx, Math.max(0, dy), c.baseZ + dz);
+      // breathing + emotion crouch (sqExtra) — feet holder-origin par, planted rehte
+      const sy = 1 + 0.02 * Math.sin((t + ph) * 1.4 * E.spd) - op * 0.05 + sqExtra;
+      const sxz = 1 + (1 - sy) * 0.6;
+      c.holder.scale.set(sxz, sy, sxz);
+    }
+    placeCam(f, NF);
+    if (rain) {
+      const pos = rain.geometry.attributes.position;
+      for (let i=0; i<pos.count; i++) {
+        let y = pos.getY(i) - 0.13;
+        if (y < 0) y += 5;
+        pos.setY(i, y);
+      }
+      pos.needsUpdate = true;
+    }
+    renderer.render(scene, camera);
+    return true;
+  };
+  window.__ready = true;
+})().catch(e => { window.__error = String(e && e.stack || e); });
+
+const COSTUME = {  // simple tint multipliers (Blender costumes ka halka equivalent)
+  red:[1.3,.6,.6], blue:[.6,.7,1.3], green:[.6,1.2,.7], gold:[1.3,1.1,.6],
+  purple:[1,.7,1.3], pink:[1.3,.8,1], villain:[.7,.6,.8], night:[.7,.8,1.1]
+};
+</script>
+</body></html>

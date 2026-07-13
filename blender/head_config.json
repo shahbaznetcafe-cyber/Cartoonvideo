@@ -1,0 +1,8 @@
+{
+  "potato":  {"mult": 1.35, "off_z": 0.12},
+  "tomato":  {"mult": 1.0,  "off_z": 0.12},
+  "onion":   {"mult": 1.15, "off_z": 0.12},
+  "chilli":  {"mult": 1.05, "off_z": 0.15},
+  "banana":  {"mult": 1.2,  "off_z": 0.12},
+  "carrot":  {"mult": 0.85, "off_z": 0.5}
+}

@@ -1,0 +1,76 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+  html,body{margin:0;background:#a0bcd8;overflow:hidden}
+  #c{display:block}
+</style></head><body>
+<canvas id="c" width="960" height="540"></canvas>
+<script type="importmap">
+{ "imports": {
+  "three": "./node_modules/three/build/three.module.js",
+  "three/addons/": "./node_modules/three/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+window.__error = null;
+window.addEventListener('error', e => { window.__error = String(e.message || e); });
+
+const W = 960, H = 540;
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H, false);
+renderer.setClearColor(0x9fbcd6, 1);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42, W / H, 0.1, 100);
+
+// lights (Blender jaisा key + fill)
+const key = new THREE.DirectionalLight(0xfff4e6, 2.6); key.position.set(3, 6, 4); scene.add(key);
+const fill = new THREE.DirectionalLight(0xdceaff, 0.9); fill.position.set(-3, 3, 2); scene.add(fill);
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+
+let bones = {}, charMesh = null, ready = false, center = new THREE.Vector3(), size = new THREE.Vector3();
+
+new GLTFLoader().load('./assets/panda_rigged.glb', (gltf) => {
+  const root = gltf.scene; scene.add(root);
+  root.traverse((o) => {
+    if (o.isSkinnedMesh) charMesh = o;
+    if (o.isBone) bones[o.name] = o;
+  });
+  // bounding box -> camera framing (front)
+  const box = new THREE.Box3().setFromObject(root);
+  box.getCenter(center); box.getSize(size);
+  const h = size.y;
+  // character faces -Z (Blender front) after yup; camera saamne
+  camera.position.set(center.x, center.y + h * 0.12, center.z + h * 1.7);
+  camera.lookAt(center.x, center.y, center.z);
+  window.__meta = { h, cx: center.x, cy: center.y, cz: center.z };
+  ready = true; window.__ready = true;
+}, undefined, (err) => { window.__error = String(err); });
+
+// ek frame pose + render (Puppeteer isko call karega)
+window.__pose = function (op, t, shot) {
+  if (!ready) return false;
+  const jaw = bones['jaw'], aL = bones['arm_L'], aR = bones['arm_R'], body = bones['body'];
+  const amp = 12, freq = 1.7;
+  if (jaw) jaw.rotation.x = -0.14 * Math.min(1, op * 1.6);
+  if (aL) aL.rotation.z = (amp * (0.6 * Math.sin(t * freq) + 0.4 * Math.sin(t * 0.7 + 1)) + op * 14) * Math.PI / 180;
+  if (aR) aR.rotation.z = (-amp * (0.6 * Math.sin(t * freq + 0.7) + 0.4 * Math.sin(t * 0.6)) - op * 14) * Math.PI / 180;
+  if (body) body.rotation.x = op * 2.5 * Math.PI / 180;
+  // shot: closeup -> camera nazdeek
+  const m = window.__meta;
+  if (m) {
+    if (shot === 'closeup') {
+      camera.position.set(m.cx, m.cy + m.h * 0.28, m.cz + m.h * 0.85);
+      camera.lookAt(m.cx, m.cy + m.h * 0.22, m.cz);
+    } else {
+      camera.position.set(m.cx, m.cy + m.h * 0.12, m.cz + m.h * 1.7);
+      camera.lookAt(m.cx, m.cy, m.cz);
+    }
+  }
+  renderer.render(scene, camera);
+  return true;
+};
+</script>
+</body></html>
