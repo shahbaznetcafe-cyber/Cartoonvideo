@@ -4,6 +4,9 @@ const ORDER=['story','voice','asset','render'];
 function escHtml(value){
   return String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+function uiIcon(name){
+  return `<svg class="icon" aria-hidden="true"><use href="/static/icons/icons.svg?v=20260714-phase4#icon-${name}"></use></svg>`;
+}
 function elevenVoiceLabel(voice){
   const labels=voice.labels||{};
   const traits=[labels.gender,labels.age,labels.accent,labels['use case']||labels.use_case]
@@ -617,35 +620,113 @@ function populateCastInspector(plan){
   const action=document.getElementById('castInspectorAction');
   const background=document.getElementById('castInspectorBackground');
   const characters=plan?.characters||[];
-  character.innerHTML=characters.map(item=>`<option value="${escHtml(item.id)}">${escHtml(item.name||item.id)}</option>`).join('')||'<option>No characters</option>';
+  character.innerHTML=characters.map(item=>`<option value="${escHtml(item.name||item.id)}">${escHtml(item.name||item.id)}</option>`).join('')||'<option>No characters</option>';
   character.disabled=!characters.length;
-  const selected=characters[0]; voice.value=selected?.voice||'Automatic';
-  const firstScene=(plan?.scenes||[])[0], firstLine=(firstScene?.lines||[])[0];
-  emotion.disabled=!firstLine; emotion.value=firstLine?.emotion||'neutral';
-  action.disabled=!firstLine; action.value=firstLine?.action||'';
-  background.disabled=!firstScene; background.value=firstScene?.background_prompt||'';
+  voice.value=characters[0]?.voice||'Automatic';
+  const firstLine=document.querySelector('#pvScenes .pvLine');
+  const firstScene=document.querySelector('#pvScenes .pvScene');
+  if(firstLine) selectPreviewLine(firstLine);
+  else if(firstScene) selectPreviewScene(firstScene);
+  else{
+    emotion.disabled=true; action.disabled=true; background.disabled=true;
+    document.getElementById('castInspectorSelection').textContent='No editable scenes in this plan.';
+  }
+}
+
+function selectedPreviewLine(){ return document.querySelector('#pvScenes .pvLine.active'); }
+function selectedPreviewScene(){ return selectedPreviewLine()?.closest('.pvScene')||document.querySelector('#pvScenes .pvScene.active'); }
+function findPlanCharacterBySpeaker(speaker){
+  return (PLAN?.characters||[]).find(item=>String(item.name)===String(speaker)||String(item.id)===String(speaker));
+}
+
+function selectPreviewScene(scene,keepLine=false){
+  if(!scene) return;
+  if(!keepLine){
+    document.querySelectorAll('#pvScenes .pvLine').forEach(item=>item.classList.remove('active'));
+    document.getElementById('castInspectorCharacter').disabled=true;
+    document.getElementById('castInspectorEmotion').disabled=true;
+    document.getElementById('castInspectorAction').disabled=true;
+  }
+  document.querySelectorAll('#pvScenes .pvScene').forEach(item=>item.classList.toggle('active',item===scene));
+  const scenes=[...document.querySelectorAll('#pvScenes .pvScene')], order=scenes.indexOf(scene)+1;
+  const selection=document.getElementById('castInspectorSelection');
+  if(selection) selection.textContent=`Scene ${order} selected`;
+  const background=document.getElementById('castInspectorBackground');
+  const mood=document.getElementById('castInspectorMood');
+  background.disabled=false; background.value=scene.querySelector('.pvBg')?.value||'';
+  mood.disabled=false; mood.value=scene.querySelector('.pvMood')?.value||'';
+  document.getElementById('castInspectorScene').value=`Scene ${order}`;
+  document.getElementById('castInspectorDuration').value=scene.dataset.duration||'—';
+}
+
+function selectPreviewLine(line){
+  if(!line) return;
+  document.querySelectorAll('#pvScenes .pvLine').forEach(item=>item.classList.toggle('active',item===line));
+  const scene=line.closest('.pvScene'); selectPreviewScene(scene,true);
+  const lines=[...scene.querySelectorAll('.pvLine')], lineNumber=lines.indexOf(line)+1;
+  const scenes=[...document.querySelectorAll('#pvScenes .pvScene')], sceneNumber=scenes.indexOf(scene)+1;
+  document.getElementById('castInspectorSelection').textContent=`Scene ${sceneNumber} · Dialogue ${lineNumber}`;
+  const speaker=line.querySelector('.pvSpeaker')?.value||'';
+  const character=document.getElementById('castInspectorCharacter');
+  character.disabled=false;
+  if([...character.options].some(option=>option.value===speaker)) character.value=speaker;
+  const selected=findPlanCharacterBySpeaker(speaker);
+  document.getElementById('castInspectorVoice').value=selected?.voice||'Automatic';
+  const emotion=document.getElementById('castInspectorEmotion');
+  const action=document.getElementById('castInspectorAction');
+  emotion.disabled=false; emotion.value=line.querySelector('.pvEmo')?.value||'neutral';
+  action.disabled=false; action.value=line.querySelector('.pvAction')?.value||'';
 }
 
 function bindCastInspector(){
   const character=document.getElementById('castInspectorCharacter');
   character?.addEventListener('change',()=>{
-    const selected=(PLAN?.characters||[]).find(item=>String(item.id)===character.value);
+    const line=selectedPreviewLine(), speaker=line?.querySelector('.pvSpeaker');
+    if(speaker && [...speaker.options].some(option=>option.value===character.value)) speaker.value=character.value;
+    const selected=findPlanCharacterBySpeaker(character.value);
     document.getElementById('castInspectorVoice').value=selected?.voice||'Automatic';
+    validatePreviewPlan(false);
   });
   document.getElementById('castInspectorEmotion')?.addEventListener('change',event=>{
-    const target=document.querySelector('#pvScenes .pvEmo'); if(target) target.value=event.target.value;
-    if(PLAN?.parsed?.scenes?.[0]?.lines?.[0]) PLAN.parsed.scenes[0].lines[0].emotion=event.target.value;
+    const target=selectedPreviewLine()?.querySelector('.pvEmo'); if(target) target.value=event.target.value;
     scheduleWorkspaceAutosave();
   });
   document.getElementById('castInspectorAction')?.addEventListener('input',event=>{
-    if(PLAN?.parsed?.scenes?.[0]?.lines?.[0]) PLAN.parsed.scenes[0].lines[0].action=event.target.value;
+    const target=selectedPreviewLine()?.querySelector('.pvAction'); if(target) target.value=event.target.value;
     scheduleWorkspaceAutosave();
   });
   document.getElementById('castInspectorBackground')?.addEventListener('input',event=>{
-    const target=document.querySelector('#pvScenes .pvBg'); if(target) target.value=event.target.value;
-    if(PLAN?.parsed?.scenes?.[0]) PLAN.parsed.scenes[0].background_prompt=event.target.value;
+    const target=selectedPreviewScene()?.querySelector('.pvBg'); if(target) target.value=event.target.value;
+    validatePreviewPlan(false);
     scheduleWorkspaceAutosave();
   });
+  document.getElementById('castInspectorMood')?.addEventListener('input',event=>{
+    const target=selectedPreviewScene()?.querySelector('.pvMood'); if(target) target.value=event.target.value;
+    scheduleWorkspaceAutosave();
+  });
+  const scenes=document.getElementById('pvScenes');
+  scenes?.addEventListener('click',event=>{
+    const move=event.target.closest('[data-move-scene]');
+    if(move){moveSceneCard(move,Number(move.dataset.moveScene));return;}
+    const line=event.target.closest('.pvLine');
+    if(line) selectPreviewLine(line);
+    else{
+      const scene=event.target.closest('.pvScene'); if(scene) selectPreviewScene(scene);
+    }
+  });
+  const syncSelection=event=>{
+    const line=event.target.closest('.pvLine'); if(line) selectPreviewLine(line);
+    else{
+      const scene=event.target.closest('.pvScene');
+      if(scene){
+        if(event.target.classList.contains('pvMood')) scene.querySelector('.pvMoodBadge').textContent=event.target.value||'neutral';
+        selectPreviewScene(scene);
+      }
+    }
+    validatePreviewPlan(false); scheduleWorkspaceAutosave();
+  };
+  scenes?.addEventListener('input',syncSelection);
+  scenes?.addEventListener('change',syncSelection);
 }
 
 function initStudioWorkspace(){
@@ -812,60 +893,155 @@ async function preview(){
   btn.disabled=false; btn.textContent='Build Cast & Scene Plan';
 }
 
+function previewDuration(scene){
+  if(scene?.duration){
+    const value=String(scene.duration); return /(s|sec|min)$/i.test(value)?value:`${value}s`;
+  }
+  const lines=scene?.lines||[];
+  const words=lines.reduce((total,line)=>total+(String(line.text||'').trim().match(/\S+/g)||[]).length,0);
+  return `~${Math.max(3,Math.round(words/2.2+lines.length*.5))}s`;
+}
+
+function speakerOptions(characters,current){
+  const names=(characters||[]).map(character=>character.name||character.id).filter(Boolean);
+  if(current&&!names.includes(current)) names.unshift(current);
+  return names.map(name=>`<option value="${escHtml(name)}" ${String(name)===String(current)?'selected':''}>${escHtml(name)}</option>`).join('');
+}
+
 function renderPreview(p){
-  document.getElementById('pvTitle').textContent=p.title||'';
-  // characters
+  document.getElementById('pvTitle').textContent=p.title||'Untitled video';
+  const characters=p.characters||[], veggies=p.veggies||[], scenes=p.scenes||[];
   const cc=document.getElementById('pvChars'); cc.innerHTML='';
   const grpOpts=(arr)=>{
-    const g={}; arr.forEach(c=>{(g[c.group||'x']=g[c.group||'x']||[]).push(c);});
-    return Object.keys(g).map(k=>{
-      const inner=g[k].map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
-      return k==='—' ? inner : `<optgroup label="${k}">${inner}</optgroup>`;
+    const groups={}; (arr||[]).forEach(item=>{(groups[item.group||'Other']=groups[item.group||'Other']||[]).push(item);});
+    return Object.keys(groups).map(group=>{
+      const inner=groups[group].map(item=>`<option value="${escHtml(item.id)}">${escHtml(item.label)}</option>`).join('');
+      return group==='—'?inner:`<optgroup label="${escHtml(group)}">${inner}</optgroup>`;
     }).join('');
   };
   const costOpts=grpOpts(COSTUMES), accOpts=grpOpts(ACCESSORIES), heldOpts=grpOpts(HELD);
-  p.characters.forEach(ch=>{
-    const opts=p.veggies.map(v=>`<option value="${v.name}" ${v.package===ch.package?'selected':''}>${v.emoji} ${v.name}</option>`).join('');
-    const d=document.createElement('div'); d.className='pvRow'; d.dataset.cid=ch.id;
-    const cap=CHAR_CAPS[String(ch.package||'').toLowerCase()]||ch.capability;
-    d.innerHTML=`<img src="${ch.avatar||''}" class="pvAv" onerror="this.style.visibility='hidden'">`
-      +`<div style="flex:1;min-width:70px"><b>${ch.name}</b> <span style="color:var(--muted);font-size:11px">${ch.voice||''}</span><div class="capSlot">${capabilityMarkup(cap)}</div></div>`
-      +`<select class="pvVeg" title="3D character" style="width:100px">${opts}</select>`
-      +`<select class="pvCostume" title="Costume (rang)" style="width:100px">${costOpts}</select>`
-      +`<select class="pvAcc" title="Pehnawa (head/face)" style="width:100px">${accOpts}</select>`
-      +`<select class="pvHeld" title="Haath mein" style="width:100px">${heldOpts}</select>`;
-    cc.appendChild(d);
-    d.querySelector('.pvVeg').addEventListener('change',ev=>{
-      const selected=p.veggies.find(v=>v.name===ev.target.value);
+  characters.forEach(character=>{
+    const options=veggies.map(item=>`<option value="${escHtml(item.name)}" ${item.package===character.package?'selected':''}>${escHtml(`${item.emoji||''} ${item.name}`.trim())}</option>`).join('');
+    const card=document.createElement('article'); card.className='pvRow character-card'; card.dataset.cid=character.id;
+    const capability=CHAR_CAPS[String(character.package||'').toLowerCase()]||character.capability;
+    const initials=String(character.name||'?').trim().slice(0,2).toUpperCase();
+    card.innerHTML=`<div class="character-card-head"><div class="character-avatar"><span>${escHtml(initials)}</span><img src="${escHtml(character.avatar||'')}" class="pvAv" alt="${escHtml(character.name||'Character')} thumbnail"></div>`
+      +`<div class="character-identity"><h4>${escHtml(character.name||'Character')}</h4><span class="voice-pill">${escHtml(character.voice||'Automatic voice')}</span><div class="capSlot">${capabilityMarkup(capability)}</div></div></div>`
+      +`<div class="character-controls"><label><span>3D character</span><select class="pvVeg">${options}</select></label>`
+      +`<label><span>Costume</span><select class="pvCostume">${costOpts}</select></label>`
+      +`<label><span>Accessory</span><select class="pvAcc">${accOpts}</select></label>`
+      +`<label><span>Held item</span><select class="pvHeld">${heldOpts}</select></label></div>`;
+    cc.appendChild(card);
+    const image=card.querySelector('.pvAv');
+    image?.addEventListener('error',()=>card.classList.add('avatar-missing'));
+    card.querySelector('.pvVeg')?.addEventListener('change',event=>{
+      const selected=veggies.find(item=>item.name===event.target.value);
       const next=selected&&CHAR_CAPS[String(selected.package||'').toLowerCase()];
-      d.querySelector('.capSlot').innerHTML=capabilityMarkup(next);
+      card.querySelector('.capSlot').innerHTML=capabilityMarkup(next);
     });
   });
-  // scenes + lines
+  if(!characters.length) cc.innerHTML='<div class="empty-state compact"><span>'+uiIcon('characters')+'</span><div><strong>No characters found</strong><p>Script mein speaker names add karke plan dobara build karein.</p></div></div>';
+
   const sc=document.getElementById('pvScenes'); sc.innerHTML='';
-  p.scenes.forEach((s,si)=>{
-    const box=document.createElement('div'); box.className='pvScene'; box.dataset.si=si;
-    let h=`<div style="font-size:12px;color:var(--muted)">Scene ${s.id} · ${s.mood||''}</div>`
-      +`<label style="font-size:11px">Background</label>`
-      +`<input class="pvBg" value="${(s.background_prompt||'').replace(/"/g,'&quot;')}">`;
-    (s.lines||[]).forEach((ln,li)=>{
-      const eo=EMOTIONS.map(e=>`<option ${e===(ln.emotion||'neutral')?'selected':''}>${e}</option>`).join('');
-      h+=`<div class="pvLine" data-li="${li}" style="display:flex;gap:5px;margin-top:5px;align-items:center">`
-        +`<span style="min-width:62px;font-size:11px;color:var(--green)">${ln.speaker}</span>`
-        +`<select class="pvEmo" style="width:92px">${eo}</select>`
-        +`<input class="pvText" style="flex:1" value="${(ln.text||'').replace(/"/g,'&quot;')}"></div>`;
+  scenes.forEach((scene,sceneIndex)=>{
+    const box=document.createElement('article'); box.className='pvScene scene-card'; box.dataset.si=sceneIndex; box.dataset.duration=previewDuration(scene);
+    const lines=scene.lines||[], mood=scene.mood||'neutral';
+    let html=`<header class="scene-card-header"><div class="scene-order"><span>Scene</span><strong data-scene-order>${sceneIndex+1}</strong></div>`
+      +`<div class="scene-title"><h4>${escHtml(scene.location||`Scene ${scene.id||sceneIndex+1}`)}</h4><div><span class="scene-badge pvMoodBadge">${escHtml(mood)}</span><span class="scene-badge">${uiIcon('clock')} ${escHtml(box.dataset.duration)}</span><span class="scene-badge">${lines.length} lines</span></div></div>`
+      +`<div class="scene-reorder"><button type="button" class="icon-button scene-move" data-move-scene="-1" aria-label="Move scene up">${uiIcon('arrow-up')}</button><button type="button" class="icon-button scene-move" data-move-scene="1" aria-label="Move scene down">${uiIcon('arrow-down')}</button></div></header>`
+      +`<div class="scene-settings"><label><span>Background</span><input class="pvBg" value="${escHtml(scene.background_prompt||'')}" placeholder="Describe the scene background"></label><label><span>Mood</span><input class="pvMood" value="${escHtml(mood)}" placeholder="neutral"></label></div><div class="scene-validation hidden"></div>`
+      +`<div class="dialogue-heading"><span>Dialogue</span><small>${lines.length} ${lines.length===1?'line':'lines'}</small></div><div class="dialogue-list">`;
+    lines.forEach((line,lineIndex)=>{
+      const emotionOptions=EMOTIONS.map(emotion=>`<option ${emotion===(line.emotion||'neutral')?'selected':''}>${emotion}</option>`).join('');
+      html+=`<article class="pvLine dialogue-row" data-li="${lineIndex}"><div class="line-number"><span>Line</span><strong>${lineIndex+1}</strong></div><div class="dialogue-fields">`
+        +`<label><span>Speaker</span><select class="pvSpeaker">${speakerOptions(characters,line.speaker)}</select></label>`
+        +`<label><span>Emotion</span><select class="pvEmo">${emotionOptions}</select></label>`
+        +`<label><span>Action</span><input class="pvAction" value="${escHtml(line.action||'')}" placeholder="gesture or movement"></label>`
+        +`<label class="dialogue-text-field"><span>Dialogue</span><textarea class="pvText" rows="2" placeholder="Write the spoken line">${escHtml(line.text||'')}</textarea></label>`
+        +`<div class="line-validation hidden"></div></div></article>`;
     });
-    box.innerHTML=h; sc.appendChild(box);
+    html+='</div>';
+    box.innerHTML=html; sc.appendChild(box);
   });
+  if(!scenes.length) sc.innerHTML='<div class="empty-state compact"><span>'+uiIcon('warning')+'</span><div><strong>No scenes found</strong><p>Script format check karke plan dobara build karein.</p></div></div>';
+  updateSceneOrderLabels();
   document.getElementById('castEmptyState')?.classList.add('hidden');
   document.getElementById('previewCard').classList.remove('hidden');
-  document.getElementById('pvGenBtn').disabled=false;
   populateCastInspector(p);
+  validatePreviewPlan(false);
   setCurrentProject(p.title||STUDIO_UI.projectName);
   renderWorkflowSummary();
   setCreateStep(2,false);
-  document.getElementById('previewCard').scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('workspace')?.scrollTo({top:0,behavior:'auto'});
 }
+
+function updateSceneOrderLabels(){
+  const scenes=[...document.querySelectorAll('#pvScenes .pvScene')];
+  scenes.forEach((scene,index)=>{
+    const label=scene.querySelector('[data-scene-order]'); if(label) label.textContent=index+1;
+    const buttons=scene.querySelectorAll('[data-move-scene]');
+    if(buttons[0]) buttons[0].disabled=index===0;
+    if(buttons[1]) buttons[1].disabled=index===scenes.length-1;
+  });
+  const lineCount=document.querySelectorAll('#pvScenes .pvLine').length;
+  document.getElementById('pvSceneCount').textContent=scenes.length;
+  document.getElementById('pvDialogueCount').textContent=lineCount;
+  document.getElementById('pvCharacterCount').textContent=document.querySelectorAll('#pvChars .pvRow').length;
+}
+
+function moveSceneCard(button,direction){
+  const scene=button.closest('.pvScene'), list=scene?.parentElement; if(!scene||!list) return;
+  if(direction<0&&scene.previousElementSibling) list.insertBefore(scene,scene.previousElementSibling);
+  if(direction>0&&scene.nextElementSibling) list.insertBefore(scene.nextElementSibling,scene);
+  updateSceneOrderLabels(); selectPreviewScene(scene); validatePreviewPlan(false); scheduleWorkspaceAutosave();
+}
+
+function validatePreviewPlan(showErrors=true){
+  const validation=document.getElementById('previewValidation'), status=document.getElementById('previewPlanStatus');
+  const scenes=[...document.querySelectorAll('#pvScenes .pvScene')], errors=[];
+  if(!PLAN) errors.push('Build the cast and scene plan first.');
+  if(PLAN&&!scenes.length) errors.push('At least one scene is required.');
+  scenes.forEach((scene,sceneIndex)=>{
+    const sceneErrors=[], background=scene.querySelector('.pvBg');
+    const missingBackground=!background?.value.trim();
+    background?.classList.toggle('field-invalid',missingBackground);
+    if(missingBackground) sceneErrors.push('Background is required');
+    const lines=[...scene.querySelectorAll('.pvLine')];
+    if(!lines.length) sceneErrors.push('Add at least one dialogue line');
+    lines.forEach((line,lineIndex)=>{
+      const speaker=line.querySelector('.pvSpeaker'), text=line.querySelector('.pvText');
+      const lineErrors=[];
+      speaker?.classList.toggle('field-invalid',!speaker.value.trim());
+      text?.classList.toggle('field-invalid',!text.value.trim());
+      if(!speaker?.value.trim()) lineErrors.push('Choose a speaker');
+      if(!text?.value.trim()) lineErrors.push('Dialogue cannot be empty');
+      const message=line.querySelector('.line-validation');
+      message.textContent=lineErrors.join(' · '); message.classList.toggle('hidden',!lineErrors.length);
+      line.classList.toggle('has-error',!!lineErrors.length);
+      lineErrors.forEach(error=>errors.push(`Scene ${sceneIndex+1}, line ${lineIndex+1}: ${error}`));
+    });
+    const message=scene.querySelector('.scene-validation');
+    message.textContent=sceneErrors.join(' · '); message.classList.toggle('hidden',!sceneErrors.length);
+    scene.classList.toggle('has-error',!!sceneErrors.length);
+    sceneErrors.forEach(error=>errors.push(`Scene ${sceneIndex+1}: ${error}`));
+  });
+  updateSceneOrderLabels();
+  const valid=!errors.length;
+  status.className=`status-pill ${valid?'success':'warning'}`;
+  status.textContent=valid?'Plan ready':errors.length===1?'1 item needs attention':`${errors.length} items need attention`;
+  validation.classList.toggle('hidden',valid);
+  validation.innerHTML=valid?'':`<span>${uiIcon('warning')}</span><div><strong>${errors.length} ${errors.length===1?'item':'items'} need attention</strong><p>${escHtml(errors.slice(0,3).join(' · '))}${errors.length>3?' · …':''}</p></div>`;
+  const continueButton=document.getElementById('castContinueBtn'), generateButton=document.getElementById('pvGenBtn');
+  if(continueButton) continueButton.disabled=!valid;
+  if(generateButton) generateButton.disabled=!valid;
+  if(showErrors&&!valid){
+    const first=document.querySelector('#pvScenes .field-invalid');
+    first?.scrollIntoView({behavior:'smooth',block:'center'}); first?.focus();
+  }
+  return valid;
+}
+
+function continueFromCast(){ if(validatePreviewPlan(true)) setCreateStep(3); }
 
 function collectEditedParsed(){
   const p=JSON.parse(JSON.stringify(PLAN.parsed));   // deep copy
@@ -884,21 +1060,30 @@ function collectEditedParsed(){
   p.costumes=cos;
   p.accessories=acc;
   p.held=held;
-  // scenes: bg + lines (emotion, text)
+  // Scenes follow the visible card order and preserve the original parsed objects.
+  const reorderedScenes=[];
   document.querySelectorAll('#pvScenes .pvScene').forEach(box=>{
     const s=p.scenes[+box.dataset.si];
+    if(!s) return;
     s.background_prompt=box.querySelector('.pvBg').value;
+    s.mood=box.querySelector('.pvMood')?.value||s.mood;
     box.querySelectorAll('.pvLine').forEach(le=>{
       const ln=s.lines[+le.dataset.li];
+      if(!ln) return;
+      ln.speaker=le.querySelector('.pvSpeaker').value;
       ln.emotion=le.querySelector('.pvEmo').value;
+      ln.action=le.querySelector('.pvAction').value;
       ln.text=le.querySelector('.pvText').value;
     });
+    reorderedScenes.push(s);
   });
+  p.scenes=reorderedScenes;
   return p;
 }
 
 async function confirmGenerate(){
   if(!PLAN){ setCreateStep(2); return; }
+  if(!validatePreviewPlan(true)) return;
   startJob(collectEditedParsed());
 }
 

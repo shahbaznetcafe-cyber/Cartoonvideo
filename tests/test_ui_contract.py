@@ -71,6 +71,7 @@ REQUIRED_ICON_IDS = {
     "icon-help", "icon-chevron-down", "icon-close", "icon-play", "icon-stop",
     "icon-download", "icon-folder", "icon-trash", "icon-sparkles",
     "icon-script", "icon-preview", "icon-volume", "icon-captions", "icon-render",
+    "icon-arrow-up", "icon-arrow-down", "icon-warning", "icon-clock",
 }
 
 PHASE_TWO_IDS = {
@@ -92,6 +93,13 @@ PHASE_THREE_IDS = {
     "undoGeneratedScriptBtn", "keepGeneratedScriptBtn",
 }
 
+PHASE_FOUR_IDS = {
+    "previewPlanStatus", "pvCharacterCount", "pvSceneCount",
+    "pvDialogueCount", "previewValidation", "castSectionTitle",
+    "scenesSectionTitle", "castContinueBtn", "castInspectorSelection",
+    "castInspectorScene", "castInspectorDuration", "castInspectorMood",
+}
+
 
 class UIContractTests(unittest.TestCase):
     @classmethod
@@ -104,7 +112,7 @@ class UIContractTests(unittest.TestCase):
         self.assertIn("url_for('static', filename='css/studio.css')", self.template)
         self.assertIn("url_for('static', filename='js/studio.js')", self.template)
         self.assertIn("url_for('static', filename='icons/favicon.svg')", self.template)
-        self.assertIn("?v=20260714-phase3", self.template)
+        self.assertIn("?v=20260714-phase4", self.template)
         self.assertIsNone(re.search(r"<style\b", self.template, re.IGNORECASE))
         self.assertIsNone(re.search(
             r"<script(?![^>]*\bsrc=)[^>]*>", self.template, re.IGNORECASE))
@@ -194,6 +202,32 @@ class UIContractTests(unittest.TestCase):
         self.assertIn("scriptMode:STUDIO_UI.scriptMode", self.js)
         self.assertIn("aiTab:STUDIO_UI.aiTab", self.js)
 
+    def test_phase_four_cast_scene_editor_preserves_edited_plan_contract(self):
+        ids = set(re.findall(r'\bid=["\']([^"\']+)["\']', self.template))
+        self.assertTrue(PHASE_FOUR_IDS.issubset(ids),
+                        f"Missing Phase 4 IDs: {sorted(PHASE_FOUR_IDS - ids)}")
+        for function in (
+            "previewDuration", "speakerOptions", "updateSceneOrderLabels",
+            "moveSceneCard", "validatePreviewPlan", "continueFromCast",
+            "selectPreviewScene", "selectPreviewLine",
+        ):
+            self.assertRegex(self.js, rf"function\s+{function}\s*\(")
+        for selector in (
+            "character-card", "scene-card", "dialogue-row", "pvSpeaker",
+            "pvEmo", "pvAction", "pvText", "pvBg", "pvMood",
+        ):
+            self.assertIn(selector, self.js + self.css)
+        collect = re.search(
+            r"function\s+collectEditedParsed\s*\(\)\s*\{(.*?)\n\}",
+            self.js,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(collect)
+        block = collect.group(1)
+        for field in ("speaker", "emotion", "action", "text", "background_prompt", "mood"):
+            self.assertIn(field, block)
+        self.assertIn("p.scenes=reorderedScenes", block)
+
     def test_local_svg_sprite_is_valid_and_uses_current_color(self):
         source = ICONS.read_text(encoding="utf-8")
         root = ET.fromstring(source)
@@ -212,8 +246,8 @@ class UIContractTests(unittest.TestCase):
         try:
             self.assertEqual(page.status_code, 200)
             html = page.get_data(as_text=True)
-            self.assertIn("/static/css/studio.css?v=20260714-phase3", html)
-            self.assertIn("/static/js/studio.js?v=20260714-phase3", html)
+            self.assertIn("/static/css/studio.css?v=20260714-phase4", html)
+            self.assertIn("/static/js/studio.js?v=20260714-phase4", html)
         finally:
             page.close()
         for asset in (

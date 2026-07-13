@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🎬 SBZ AI Video Studio</title>
 <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icons/favicon.svg') }}?v=20260713-phase1">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/studio.css') }}?v=20260714-phase3">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/studio.css') }}?v=20260714-phase4">
 </head>
 <body>
 {% macro icon(name) -%}
-<svg class="icon" aria-hidden="true"><use href="{{ url_for('static', filename='icons/icons.svg') }}#icon-{{ name }}"></use></svg>
+<svg class="icon" aria-hidden="true"><use href="{{ url_for('static', filename='icons/icons.svg') }}?v=20260714-phase4#icon-{{ name }}"></use></svg>
 {%- endmacro %}
 
 <header class="appbar">
@@ -192,12 +192,13 @@
           <div class="empty-state large"><span>{{ icon('characters') }}</span><div><h2>Prepare cast and scenes</h2><p>Script ko characters, backgrounds aur editable dialogue mein convert karein.</p><button type="button" class="btn btn-primary" id="previewBtn" onclick="preview()">Build Cast &amp; Scene Plan</button><p class="err hidden" id="previewError" aria-live="assertive"></p></div></div>
         </div>
         <div class="card hidden" id="previewCard">
-          <div class="section-heading"><div><span class="eyebrow">Editable plan</span><h2 id="pvTitle"></h2></div><span class="status-pill success">Ready to edit</span></div>
-          <p class="section-copy">Character packages, costumes, backgrounds, emotions aur dialogue final render se pehle edit karein.</p>
-          <h3 class="subsection-title">Characters</h3><div id="pvChars"></div>
-          <h3 class="subsection-title">Scenes &amp; Dialogue</h3><div id="pvScenes"></div>
+          <div class="section-heading preview-plan-heading"><div><span class="eyebrow">Editable plan</span><h2 id="pvTitle"></h2><p class="section-copy">Cast, scene order aur har dialogue ko final render se pehle review karein.</p></div><span class="status-pill neutral" id="previewPlanStatus">Review plan</span></div>
+          <div class="plan-metrics" aria-label="Plan summary"><div><span>Characters</span><strong id="pvCharacterCount">0</strong></div><div><span>Scenes</span><strong id="pvSceneCount">0</strong></div><div><span>Dialogue lines</span><strong id="pvDialogueCount">0</strong></div></div>
+          <div class="plan-validation hidden" id="previewValidation" aria-live="polite"></div>
+          <section class="plan-section" aria-labelledby="castSectionTitle"><div class="plan-section-heading"><div><span class="eyebrow">Cast</span><h3 id="castSectionTitle">Characters</h3></div><span>Voice and appearance</span></div><div id="pvChars" class="character-card-grid"></div></section>
+          <section class="plan-section" aria-labelledby="scenesSectionTitle"><div class="plan-section-heading"><div><span class="eyebrow">Timeline</span><h3 id="scenesSectionTitle">Scenes &amp; Dialogue</h3></div><span>Use arrows to reorder scenes</span></div><div id="pvScenes" class="scene-card-list"></div></section>
         </div>
-        <div class="workflow-actions"><button type="button" class="btn btn-secondary" onclick="setCreateStep(1)">← Back</button><button type="button" class="btn btn-primary" onclick="setCreateStep(3)">Continue to Style &amp; Audio →</button></div>
+        <div class="workflow-actions"><button type="button" class="btn btn-secondary" onclick="setCreateStep(1)">← Back</button><button type="button" class="btn btn-primary" id="castContinueBtn" onclick="continueFromCast()">Continue to Style &amp; Audio →</button></div>
       </section>
 
       <section class="create-step-panel" data-step-panel="3">
@@ -271,8 +272,9 @@
     </div>
 
     <div class="inspector-panel" data-inspector-step="2">
-      <div class="inspector-section"><h3>Cast focus</h3><label for="castInspectorCharacter">Selected character</label><select id="castInspectorCharacter" disabled><option>No plan yet</option></select><label for="castInspectorVoice">Assigned voice</label><input type="text" id="castInspectorVoice" value="Build the plan first" readonly><label for="castInspectorEmotion">Line emotion</label><select id="castInspectorEmotion" disabled><option>neutral</option><option>happy</option><option>sad</option><option>angry</option><option>excited</option><option>scared</option><option>confused</option><option>thinking</option><option>surprised</option></select><label for="castInspectorAction">Action note</label><input type="text" id="castInspectorAction" placeholder="Select a dialogue line" disabled></div>
-      <div class="inspector-section"><h3>Scene focus</h3><label for="castInspectorBackground">Background</label><textarea id="castInspectorBackground" class="compact-textarea" placeholder="Build the scene plan first" disabled></textarea></div>
+      <div class="inspector-selection" id="castInspectorSelection">Build a plan to begin editing.</div>
+      <div class="inspector-section"><h3>Dialogue focus</h3><label for="castInspectorCharacter">Speaker</label><select id="castInspectorCharacter" disabled><option>No plan yet</option></select><label for="castInspectorVoice">Assigned voice</label><input type="text" id="castInspectorVoice" value="Build the plan first" readonly><label for="castInspectorEmotion">Line emotion</label><select id="castInspectorEmotion" disabled><option>neutral</option><option>happy</option><option>sad</option><option>angry</option><option>excited</option><option>scared</option><option>confused</option><option>thinking</option><option>surprised</option></select><label for="castInspectorAction">Action note</label><input type="text" id="castInspectorAction" placeholder="Select a dialogue line" disabled></div>
+      <div class="inspector-section"><h3>Scene focus</h3><div class="row"><div><label for="castInspectorScene">Scene</label><input type="text" id="castInspectorScene" value="—" readonly></div><div><label for="castInspectorDuration">Estimate</label><input type="text" id="castInspectorDuration" value="—" readonly></div></div><label for="castInspectorMood">Mood</label><input type="text" id="castInspectorMood" placeholder="Scene mood" disabled><label for="castInspectorBackground">Background</label><textarea id="castInspectorBackground" class="compact-textarea" placeholder="Build the scene plan first" disabled></textarea></div>
     </div>
 
     <div class="inspector-panel" data-inspector-step="3">
@@ -297,6 +299,6 @@
   <div class="toast-actions"><button type="button" class="text-button" id="undoGeneratedScriptBtn" onclick="undoGeneratedScript()">Undo</button><button type="button" class="icon-button" id="keepGeneratedScriptBtn" onclick="acceptGeneratedScript()" aria-label="Dismiss notification">{{ icon('close') }}</button></div>
 </div>
 
-<script src="{{ url_for('static', filename='js/studio.js') }}?v=20260714-phase3"></script>
+<script src="{{ url_for('static', filename='js/studio.js') }}?v=20260714-phase4"></script>
 </body>
 </html>
