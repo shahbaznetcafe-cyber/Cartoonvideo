@@ -9,6 +9,8 @@
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { FacialRuntime, useJawFallback } from './facial_runtime.js';
+import { gestureEnvelope, listenerReaction, sampleActingState } from './acting_state_runtime.js';
 window.__error = null;
 window.addEventListener('error', e => { window.__error = String(e.message || e); });
 
@@ -20,6 +22,10 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
   const spec = await (await fetch('./_spec.json')).json();
   const [W, H] = spec.res || [960, 540];
   const fps = spec.fps || 24;
+  const features = spec.features || {};
+  const facialEnabled = features.facialRuntime !== false;
+  const actingEnabled = features.persistentActing !== false;
+  const timeOffset = actingEnabled ? (Number(spec.timeOffset) || 0) : 0;
   const canvas = document.getElementById('c');
   canvas.width = W; canvas.height = H;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
@@ -132,11 +138,21 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
         if (col && o.material.color) o.material.color.multiply(new THREE.Color(col[0], col[1], col[2]));
       }
     });
-    chars.push({ root, holder, bones, mesh, speaking: c.speaking, op: c.openness || [0],
-                 emo: c.emotion || 'neutral', phase: c.slot * 1.3, slot: c.slot,
+    const acting = actingEnabled ? (c.acting || {}) : {};
+    const stableSeed = Number(acting.seed) || (c.slot * 2701 + 601);
+    const facial = facialEnabled
+      ? new FacialRuntime({ root, speaking: c.speaking, timeline: c.visemes,
+          emotion: c.emotion || 'neutral', seed: stableSeed, fps })
+      : { tier: 'LEGACY_JAW', canDriveVisemes: false, hasBlink: false,
+          frameCount: 0, update() {} };
+    chars.push({ root, holder, bones, mesh, facial, speaking: c.speaking, op: c.openness || [0],
+                 id: c.id || `slot_${c.slot}`, emo: c.emotion || 'neutral',
+                 phase: (stableSeed % 10000) / 1379, slot: c.slot,
                  baseX: holder.position.x, baseZ: holder.position.z,
                  action: c.action || 'none', target: (c.target == null ? -1 : c.target),
-                 seed: (c.slot * 2.7 + 0.6) });
+                 acting, reaction: actingEnabled ? (acting.reaction || 'none') : 'none',
+                 reactionStrength: Number(acting.reactionStrength) || 0,
+                 seed: stableSeed });
   }
 
   // ---- camera framing: KNOWN placement se (skinned-mesh bbox reliable nahi) ----
@@ -167,9 +183,12 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
     }
   }
 
-  const NF = Math.max(...chars.map(c => c.op.length), 1);
+  const NF = Math.max(...chars.map(c => Math.max(c.op.length, c.facial.frameCount)), 1);
   window.__nframes = NF;
-  window.__debug = { cc: [cc.x, cc.y, cc.z], NC };
+  window.__debug = { cc: [cc.x, cc.y, cc.z], NC,
+    tiers: chars.map(c => c.facial.tier || 'UNSUPPORTED'),
+    animationStateSchema: spec.animationStateSchema || 0, timeOffset,
+    features: { facialRuntime: facialEnabled, persistentActing: actingEnabled } };
 
   function smooth(op, idx) {   // light ±1 (track pehle se attack/release smoothed hai)
     const lo = Math.max(0, idx - 1), hi = Math.min(op.length, idx + 2); let s = 0, n = 0;
@@ -204,48 +223,59 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
   }
 
   window.__poseFrame = function(f) {
-    const t = f / fps, prog = f / Math.max(1, NF - 1);   // 0..1 poore clip par
+    const localTime = f / fps, t = timeOffset + localTime;
+    const prog = f / Math.max(1, NF - 1);   // 0..1 poore clip par
+    const lineGesture = gestureEnvelope(prog);
     for (const c of chars) {
       const ph = c.phase, sd = c.seed, b = c.bones, E = emoOf(c);
       const speaking = c.speaking;
       const op = speaking ? smooth(c.op, Math.min(f, c.op.length - 1)) : 0;
+      const persistent = c.acting && c.acting.start ? sampleActingState(c.acting, prog) : {
+        position: { x: 0, y: 0, z: 0 },
+        pose: { armL: E.armRest + E.open, armR: -(E.armRest + E.open),
+          legL: 0, legR: 0, bodyX: E.lean, bodyY: 0, bodyZ: 0 },
+        scaleY: 1 - E.crouch,
+      };
       // accumulators (degrees / holder offsets)
-      let aL = E.armRest + E.open, aR = -(E.armRest + E.open);   // arm_L.z / arm_R.z base
-      let legL = 0, legR = 0, bX = E.lean, bY = 0, bZ = 0;       // body rot (x=nod,y=turn,z=tilt)
-      let dx = 0, dy = 0, dz = 0;                                // holder position offsets
-      let sqExtra = 0;
+      let aL = persistent.pose.armL, aR = persistent.pose.armR;
+      let legL = persistent.pose.legL, legR = persistent.pose.legR;
+      let bX = persistent.pose.bodyX, bY = persistent.pose.bodyY, bZ = persistent.pose.bodyZ;
+      let dx = persistent.position.x, dy = persistent.position.y, dz = persistent.position.z;
+      let sqExtra = persistent.scaleY - 1;
 
       // ---- IDLE life-signs (hamesha on — kabhi static nahi) ----
-      bZ += E.bob * Math.sin((t + ph) * 0.55 * E.spd);          // weight-shift sway
+      bZ += 2.2 * Math.sin((t + ph) * 0.55);                    // continuous weight-shift sway
       legL += 3 * Math.sin((t + ph) * 0.55);                    // stance shift (legs live)
       legR += -3 * Math.sin((t + ph) * 0.55);
       bY += 6 * Math.sin(t * 0.3 + sd);                         // dheere "idhar-udhar dekhna"
       bX += 1.5 * Math.sin(t * 0.8 + sd * 2);                   // halka micro head motion
-      // blink-beat: har ~3.2s ek tez head-dip (aankh geometry nahi to yehi life-sign)
-      const bt = (t + sd * 1.3) % 3.2;
-      if (bt < 0.13) bX += -4 * Math.sin(bt / 0.13 * Math.PI);
+      // Morph eyelids na hon to legacy head-dip life-sign preserve karo.
+      if (!c.facial.hasBlink) {
+        const bt = (t + sd * 1.3) % 3.2;
+        if (bt < 0.13) bX += -4 * Math.sin(bt / 0.13 * Math.PI);
+      }
       // tremble (fear/angry)
-      if (E.trem) { bX += E.trem * 1.5 * Math.sin(t * 22 + sd); dx += E.trem * 0.004 * Math.sin(t * 26 + sd); }
-      // crouch = SQUASH (feet planted, zameen mein dhansna nahi) — pehle dy translate
-      // karta tha jo feet ko floor ke neeche le jata. hop = asli uchhal (upar, dy+).
-      sqExtra += -E.crouch;
-      if (E.hop) dy += E.hop * TH * Math.abs(Math.sin(t * 3 * E.spd));
+      if (E.trem) { bX += lineGesture * E.trem * 1.5 * Math.sin(t * 22 + sd); dx += lineGesture * E.trem * 0.004 * Math.sin(t * 26 + sd); }
+      if (E.hop) dy += lineGesture * E.hop * TH * Math.abs(Math.sin(t * 3 * E.spd));
 
       // ---- TALK layer ----
       // jaw open-amount: op pehle se gated (silence=0) + attack/release smoothed.
       // pow(0.85) low-mid ko halka lift (visible movement) par op=0 -> poori band.
-      if (b.jaw) b.jaw.rotation.x = -0.19 * Math.pow(Math.max(0, op), 0.85);
+      // Complete viseme rigs use morphs; every other rig keeps the proven jaw path.
+      if (b.jaw) b.jaw.rotation.x = useJawFallback(c.facial, speaking)
+        ? -0.19 * Math.pow(Math.max(0, op), 0.85) : 0;
       if (speaking) {
         const g = 0.6 * Math.sin((t + ph) * 1.7 * E.spd) + 0.4 * Math.sin((t + ph) * 0.9 + 1);
-        aL += (E.spd * 6) * g + op * 16;                        // gesticulation
-        aR += -(E.spd * 6) * (0.6 * Math.sin((t + ph) * 1.7 * E.spd + 0.7) + 0.4 * Math.sin((t + ph) * 0.8)) - op * 16;
-        bX += op * 4;                                           // baat karte waqt sar hilana (nods)
-        bY += 4 * Math.sin((t + ph) * 1.3) * op;
+        aL += lineGesture * ((E.spd * 6) * g + op * 16);        // eased gesticulation
+        aR += lineGesture * (-(E.spd * 6) * (0.6 * Math.sin((t + ph) * 1.7 * E.spd + 0.7) + 0.4 * Math.sin((t + ph) * 0.8)) - op * 16);
+        bX += lineGesture * op * 4;
+        bY += lineGesture * 4 * Math.sin((t + ph) * 1.3) * op;
       }
       // face the character being addressed (eye-contact feel)
-      if (c.target >= 0) { const dir = Math.sign((chars.find(x => x.slot === c.target)?.baseX ?? c.baseX) - c.baseX); bY += dir * 9; }
+      if (c.target >= 0) { const dir = Math.sign((chars.find(x => x.slot === c.target)?.baseX ?? c.baseX) - c.baseX); bY += lineGesture * dir * 9; }
 
       // ---- ACTION layer (story actions) ----
+      const actionBase = { aL, aR, legL, legR, bX, bY, bZ, dx, dy, dz };
       const act = c.action, tgt = chars.find(x => x.slot === c.target);
       const dirT = tgt ? Math.sign(tgt.baseX - c.baseX) || 1 : 1;
       const gap = tgt ? Math.abs(tgt.baseX - c.baseX) : SPACING;
@@ -313,6 +343,26 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
         dy += relief * 0.05 * TH * Math.abs(Math.sin(t * 4));
       }
 
+      // Every story action is transient at clip edges. Persistent locomotion comes
+      // from the saved start/end state, so the next line begins exactly where this ends.
+      aL = actionBase.aL + (aL - actionBase.aL) * lineGesture;
+      aR = actionBase.aR + (aR - actionBase.aR) * lineGesture;
+      legL = actionBase.legL + (legL - actionBase.legL) * lineGesture;
+      legR = actionBase.legR + (legR - actionBase.legR) * lineGesture;
+      bX = actionBase.bX + (bX - actionBase.bX) * lineGesture;
+      bY = actionBase.bY + (bY - actionBase.bY) * lineGesture;
+      bZ = actionBase.bZ + (bZ - actionBase.bZ) * lineGesture;
+      dx = actionBase.dx + (dx - actionBase.dx) * lineGesture;
+      dy = actionBase.dy + (dy - actionBase.dy) * lineGesture;
+      dz = actionBase.dz + (dz - actionBase.dz) * lineGesture;
+
+      if (!speaking) {
+        const reaction = listenerReaction(c.reaction, prog, t, c.reactionStrength);
+        aL += reaction.armL; aR += reaction.armR;
+        bX += reaction.bodyX; bY += reaction.bodyY; bZ += reaction.bodyZ;
+        dy += reaction.dy * TH;
+      }
+
       // ---- APPLY ----
       if (b.arm_L) b.arm_L.rotation.z = aL * DEG;
       if (b.arm_R) b.arm_R.rotation.z = aR * DEG;
@@ -322,9 +372,14 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
       // dy kabhi 0 se neeche nahi (feet floor par — koi animation zameen mein na dhansaye)
       c.holder.position.set(c.baseX + dx, Math.max(0, dy), c.baseZ + dz);
       // breathing + emotion crouch (sqExtra) — feet holder-origin par, planted rehte
-      const sy = 1 + 0.02 * Math.sin((t + ph) * 1.4 * E.spd) - op * 0.05 + sqExtra;
+      const sy = 1 + 0.02 * Math.sin((t + ph) * 1.4) - lineGesture * op * 0.05 + sqExtra;
       const sxz = 1 + (1 - sy) * 0.6;
       c.holder.scale.set(sxz, sy, sxz);
+      const targetChar = c.target >= 0 ? chars.find(x => x.slot === c.target) : null;
+      const gazeX = targetChar ? lineGesture * clamp((targetChar.baseX - c.baseX) / SPACING, -1, 1) * .65
+        : Math.sin(t * .37 + sd) * .16;
+      const gazeY = Math.sin(t * .23 + sd * 1.7) * .08;
+      c.facial.update(f, 1 / fps, { gazeX, gazeY, time: t });
     }
     placeCam(f, NF);
     if (rain) {

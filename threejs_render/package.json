@@ -1,2 +1,13 @@
-{ "name":"threejs-render","version":"1.0.0","type":"module",
-  "dependencies":{"three":"^0.160.0","puppeteer-core":"^22.0.0"} }
+{
+  "name": "threejs-render",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "benchmark": "node benchmark.mjs"
+  },
+  "dependencies": {
+    "three": "^0.160.0",
+    "puppeteer-core": "^22.0.0"
+  }
+}

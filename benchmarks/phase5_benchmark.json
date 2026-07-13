@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "benchmark": "phase5_same_10_second_scene",
+  "scene": {
+    "duration_seconds": 10,
+    "fps": 24,
+    "resolution": "960x540",
+    "frames": 240,
+    "characters": 2
+  },
+  "baseline": {
+    "frames": 240,
+    "renderer_seconds": 5.156,
+    "milliseconds_per_frame": 21.483,
+    "js_heap_mb": 9.43,
+    "wall_seconds": 7.724
+  },
+  "enhanced": {
+    "frames": 240,
+    "renderer_seconds": 5.234,
+    "milliseconds_per_frame": 21.808,
+    "js_heap_mb": 11.68,
+    "wall_seconds": 7.614
+  },
+  "comparison": {
+    "milliseconds_per_frame_delta": 0.325,
+    "overhead_percent": 1.51,
+    "renderer_seconds_delta": 0.078,
+    "wall_seconds_delta": -0.11,
+    "js_heap_mb_delta": 2.25
+  }
+}

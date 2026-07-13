@@ -47,6 +47,8 @@ _poc_*
 threejs_render/_*.json
 threejs_render/_*.mjs
 threejs_render/diag*.html
+*.visemes.json
+visemes/
 
 # OS/editor noise
 .claude/

@@ -112,6 +112,13 @@ def api_options():
     })
 
 
+@app.route("/api/characters3d/validation")
+def api_characters3d_validation():
+    """Read-only capability report for every Three.js character GLB."""
+    import char3d_lib
+    return jsonify(char3d_lib.validation_report())
+
+
 @app.route("/api/suggest-style", methods=["POST"])
 def api_suggest_style():
     script = (request.get_json(force=True) or {}).get("script", "")
@@ -258,13 +265,20 @@ def api_preview():
     # 3D library se assign (jo asal render mein use hota) -> preview = output
     import char3d_lib
     blend3d = char3d_lib.assign(chars)              # {id: blend_path}
+    manifest_by_slug = {
+        _os.path.splitext(_os.path.basename(str(entry.get("blend") or "")))[0].lower(): entry
+        for entry in char3d_lib.load()
+    }
     out_chars = []
     for ch in chars:
         bp = blend3d.get(ch["id"]) or ""
         slug = _os.path.splitext(_os.path.basename(bp))[0] if bp else ""
         avatar = f"/char3d-thumb/{slug}" if slug else None
+        entry = manifest_by_slug.get(slug.lower())
+        capability = char3d_lib.validate_entry(entry) if entry else None
         out_chars.append({"id": ch["id"], "name": ch.get("name"), "gender": ch.get("gender"),
-                          "voice": ch.get("voice"), "package": slug, "avatar": avatar})
+                          "voice": ch.get("voice"), "package": slug, "avatar": avatar,
+                          "capability": capability})
 
     import story_templates
     return jsonify({"title": parsed.get("title"), "language": parsed.get("language"),

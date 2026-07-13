@@ -16,21 +16,35 @@ const specIn = JSON.parse(fs.readFileSync(process.argv[2], 'utf-8'));
 const [VW, VH] = (specIn.res || '960x540').split('x').map(Number);
 const fps = specIn.fps || 24;
 
-// blend->glb, openness json->values, env->url
+// blend->glb, openness/viseme JSON->values, env->url
 const chars = specIn.chars.map(c => {
   let op = [0];
+  let visemes = null;
   if (c.speaking && c.openness && fs.existsSync(c.openness)) {
     try { op = JSON.parse(fs.readFileSync(c.openness, 'utf-8')).values || [0]; } catch (e) {}
   }
-  return { glb: `./assets/chars/${slug(c.blend)}.glb`, slot: c.slot, speaking: !!c.speaking,
-           openness: op, emotion: c.emotion || 'neutral',
+  if (c.speaking && c.visemes && fs.existsSync(c.visemes)) {
+    try {
+      const candidate = JSON.parse(fs.readFileSync(c.visemes, 'utf-8'));
+      if (candidate && Array.isArray(candidate.frames)) visemes = candidate;
+    } catch (e) {}
+  }
+  return { id: c.id || `slot_${c.slot}`, glb: `./assets/chars/${slug(c.blend)}.glb`,
+           slot: c.slot, speaking: !!c.speaking,
+           openness: op, visemes, emotion: c.emotion || 'neutral',
            costume: c.costume || '', accessory: c.accessory || '', held: c.held || '',
-           action: c.action || 'none', target: (c.target == null ? -1 : c.target) };
+           action: c.action || 'none', target: (c.target == null ? -1 : c.target),
+           acting: c.acting || {} };
 });
 const env = specIn.env ? `./assets/env/${path.basename(specIn.env)}` : '';
 const pageSpec = { res: [VW, VH], fps, env, exposure: specIn.exposure || -0.2,
   shot: specIn.shot || 'wide', focus: specIn.focus || 0,
-  sceneLook: specIn.sceneLook || 'sunny', chars };
+  sceneLook: specIn.sceneLook || 'sunny', timeOffset: Number(specIn.timeOffset) || 0,
+  animationStateSchema: Number(specIn.animationStateSchema) || 0,
+  features: {
+    facialRuntime: specIn.features?.facialRuntime !== false,
+    persistentActing: specIn.features?.persistentActing !== false,
+  }, chars };
 fs.writeFileSync(path.join(HERE, '_spec.json'), JSON.stringify(pageSpec));
 
 const OUT = specIn.out; fs.mkdirSync(OUT, { recursive: true });
@@ -72,6 +86,8 @@ for (let f = 0; f < NF; f++) {
     Buffer.from(data.split(',')[1], 'base64'));
 }
 const dt = (Date.now() - t0) / 1000;
-console.log(`SCENE_DONE ${NF} frames in ${dt.toFixed(1)}s = ${(dt / NF * 1000).toFixed(0)}ms/frame`);
+console.log(`SCENE_DONE ${NF} frames in ${dt.toFixed(3)}s = ${(dt / NF * 1000).toFixed(3)}ms/frame`);
+const metrics = await page.metrics();
+console.log(`SCENE_METRICS js_heap_mb=${(metrics.JSHeapUsedSize / 1048576).toFixed(2)}`);
 await browser.close();
 server.close();

@@ -43,6 +43,14 @@
   .tplChip.on{background:var(--accent);border-color:var(--accent);}
   .pvRow{display:flex;align-items:center;gap:8px;padding:6px;border:1px solid rgba(255,255,255,.08);border-radius:8px;margin-bottom:5px;}
   .pvAv{width:34px;height:34px;border-radius:7px;object-fit:cover;object-position:top;background:#0e1218;}
+  .capBadge{display:inline-block;padding:2px 6px;border-radius:999px;font-size:9px;font-weight:700;
+    letter-spacing:.35px;background:#283244;color:#cbd5e1;vertical-align:middle;}
+  .capBadge.full{background:#123c26;color:#86efac}.capBadge.viseme{background:#16345c;color:#93c5fd}
+  .capBadge.legacy{background:#4a3212;color:#fcd34d}.capBadge.bad{background:#4a1d24;color:#fca5a5}
+  .capDetails{font-size:10px;color:var(--muted);margin-top:3px;max-width:330px;}
+  .capDetails>summary{cursor:pointer;list-style:none}.capDetails>summary::-webkit-details-marker{display:none}
+  .capBody{margin-top:5px;padding:7px;background:#0e1218;border:1px solid var(--bd);border-radius:6px;
+    line-height:1.45;overflow-wrap:anywhere;}
   .pvScene{border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px;margin-bottom:7px;}
   .pvScene input,.pvScene select{padding:6px 7px;font-size:12px;}
   .row{display:flex;gap:10px;} .row>*{flex:1;}
@@ -449,8 +457,37 @@
 </div>
 
 <script>
-let polling=null, OPTS=null, CUR_JOB=null;
+let polling=null, OPTS=null, CUR_JOB=null, CHAR_CAPS={};
 const ORDER=['story','voice','asset','render'];
+function escHtml(value){
+  return String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function capabilityMarkup(cap){
+  if(!cap) return '<span class="capBadge bad">NOT VALIDATED</span>';
+  const tier=cap.tier||'UNSUPPORTED', pct=Number(cap.compatibility_percent||0);
+  const cls=!cap.valid_glb?'bad':tier==='FULL_FACIAL'?'full':tier==='VISEME_FACE'?'viseme':tier==='LEGACY_JAW'?'legacy':'';
+  const vis=(cap.visemes&&cap.visemes.missing)||[], face=(cap.facial&&cap.facial.missing)||[];
+  const warns=(cap.warnings||[]).map(w=>escHtml(w.message||w)).join('<br>');
+  const errs=(cap.errors||[]).map(e=>escHtml(e.message||e)).join('<br>');
+  return `<details class="capDetails"><summary><span class="capBadge ${cls}">${escHtml(tier)}</span> ${pct}% compatibility</summary>`
+    +`<div class="capBody"><b>GLB:</b> ${cap.valid_glb?'Valid':'Invalid'} · <b>Bones:</b> ${(cap.skeleton_bones||[]).length}`
+    +` · <b>Skinned meshes:</b> ${(cap.skinned_meshes||[]).length}<br>`
+    +`<b>Mixamo:</b> ${cap.mixamo_compatible?'Compatible':'No'} · <b>TalkingHead strict:</b> ${cap.talkinghead_compatible?'Compatible':'No'}<br>`
+    +`<b>Visemes:</b> ${15-vis.length}/15${vis.length?`<br><b>Missing:</b> ${escHtml(vis.join(', '))}`:''}`
+    +`<br><b>Facial:</b> ${9-face.length}/9${face.length?`<br><b>Missing:</b> ${escHtml(face.join(', '))}`:''}`
+    +(warns?`<br><span style="color:#fbbf24"><b>Warning:</b> ${warns}</span>`:'')
+    +(errs?`<br><span style="color:#fca5a5"><b>Error:</b> ${errs}</span>`:'')+`</div></details>`;
+}
+async function load3dValidation(){
+  try{
+    const payload=await (await fetch('/api/characters3d/validation')).json();
+    CHAR_CAPS={};
+    (payload.characters||[]).forEach(cap=>{
+      const blend=((cap.character&&cap.character.blend)||'').replace(/\\/g,'/').split('/').pop().replace(/\.(blend|glb)$/i,'').toLowerCase();
+      if(blend) CHAR_CAPS[blend]=cap;
+    });
+  }catch(e){ CHAR_CAPS={}; }
+}
 async function stopJob(){
   if(!CUR_JOB) return;
   const b=document.getElementById('stopBtn'); b.disabled=true; b.textContent='⏹ Ruk raha hai...';
@@ -848,6 +885,7 @@ async function preview(){
     if(!COSTUMES.length){ try{ COSTUMES=await (await fetch('/api/costumes')).json(); }catch(e){} }
     if(!ACCESSORIES.length){ try{ ACCESSORIES=await (await fetch('/api/accessories')).json(); }catch(e){} }
     if(!HELD.length){ try{ HELD=await (await fetch('/api/held')).json(); }catch(e){} }
+    if(!Object.keys(CHAR_CAPS).length){ await load3dValidation(); }
     const j=await (await fetch('/api/preview',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({script})})).json();
     if(j.error){ showErr(j.error); }
@@ -871,13 +909,19 @@ function renderPreview(p){
   p.characters.forEach(ch=>{
     const opts=p.veggies.map(v=>`<option value="${v.name}" ${v.package===ch.package?'selected':''}>${v.emoji} ${v.name}</option>`).join('');
     const d=document.createElement('div'); d.className='pvRow'; d.dataset.cid=ch.id;
+    const cap=CHAR_CAPS[String(ch.package||'').toLowerCase()]||ch.capability;
     d.innerHTML=`<img src="${ch.avatar||''}" class="pvAv" onerror="this.style.visibility='hidden'">`
-      +`<div style="flex:1;min-width:70px"><b>${ch.name}</b> <span style="color:var(--muted);font-size:11px">${ch.voice||''}</span></div>`
+      +`<div style="flex:1;min-width:70px"><b>${ch.name}</b> <span style="color:var(--muted);font-size:11px">${ch.voice||''}</span><div class="capSlot">${capabilityMarkup(cap)}</div></div>`
       +`<select class="pvVeg" title="3D character" style="width:100px">${opts}</select>`
       +`<select class="pvCostume" title="Costume (rang)" style="width:100px">${costOpts}</select>`
       +`<select class="pvAcc" title="Pehnawa (head/face)" style="width:100px">${accOpts}</select>`
       +`<select class="pvHeld" title="Haath mein" style="width:100px">${heldOpts}</select>`;
     cc.appendChild(d);
+    d.querySelector('.pvVeg').addEventListener('change',ev=>{
+      const selected=p.veggies.find(v=>v.name===ev.target.value);
+      const next=selected&&CHAR_CAPS[String(selected.package||'').toLowerCase()];
+      d.querySelector('.capSlot').innerHTML=capabilityMarkup(next);
+    });
   });
   // scenes + lines
   const sc=document.getElementById('pvScenes'); sc.innerHTML='';

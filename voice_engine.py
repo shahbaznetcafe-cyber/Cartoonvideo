@@ -11,6 +11,7 @@ import subprocess
 import edge_tts
 
 import config
+import viseme_timeline
 
 # Same gender ke kai characters ko distinguish karne ke liye variations
 _PITCH_RATE_VARIANTS = [
@@ -92,6 +93,7 @@ def generate_voices(parsed, proj_dir, on_progress=None):
 
     voices_dir = os.path.join(proj_dir, "voices")
     os.makedirs(voices_dir, exist_ok=True)
+    visemes_dir = os.path.join(proj_dir, "visemes")
 
     timeline = []
     # total lines (progress ke liye)
@@ -153,7 +155,7 @@ def generate_voices(parsed, proj_dir, on_progress=None):
             dur = _duration(fpath)
 
         first_in_scene = i == 1 or all_lines[i - 2][0].get("id") != sc.get("id")
-        timeline.append({
+        entry = {
             "scene": sc["id"],
             "location": sc.get("location"),
             "time": sc.get("time"),
@@ -171,7 +173,25 @@ def generate_voices(parsed, proj_dir, on_progress=None):
                                      if first_in_scene else None)),
             "audio": os.path.join("voices", fname),
             "duration": round(dur, 2),
-        })
+        }
+
+        # Provider-neutral facial timeline. Failure is advisory so the existing
+        # openness JSON remains the guaranteed fallback for legacy jaw rigs.
+        try:
+            words_path = fpath + ".words.json"
+            _, viseme_path, _cache_hit = viseme_timeline.cached_viseme_timeline(
+                ln.get("text", ""), fpath, visemes_dir,
+                words_path if os.path.exists(words_path) else None,
+                language=parsed.get("language"),
+                fps=getattr(config, "BLENDER3D_FPS", 24),
+                duration=dur,
+            )
+            entry["visemes"] = os.path.relpath(viseme_path, proj_dir)
+            entry["viseme_schema"] = viseme_timeline.SCHEMA_VERSION
+        except Exception as _ex:
+            print(f"  [viseme timeline skip -> openness fallback] {_ex}", flush=True)
+
+        timeline.append(entry)
 
         if on_progress:
             on_progress(i, total, f"Voice {i}/{total}: [{spk}]")
