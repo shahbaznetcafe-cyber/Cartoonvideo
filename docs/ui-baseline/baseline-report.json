@@ -1,0 +1,133 @@
+{
+  "captured_at": "2026-07-13T18:41:50.007Z",
+  "url": "http://127.0.0.1:5050/",
+  "viewports": [
+    {
+      "width": 1920,
+      "height": 1080,
+      "status": 200,
+      "screenshot": "baseline-1920x1080.png",
+      "metrics": {
+        "title": "🎬 SBZ AI Video Studio",
+        "httpReadyState": "complete",
+        "viewport": {
+          "width": 1920,
+          "height": 1080
+        },
+        "document": {
+          "clientWidth": 1920,
+          "scrollWidth": 1920,
+          "clientHeight": 1080,
+          "scrollHeight": 1091,
+          "horizontalOverflow": false
+        },
+        "body": {
+          "clientWidth": 1920,
+          "scrollWidth": 1920
+        },
+        "middlePane": {
+          "clientHeight": 1024,
+          "scrollHeight": 1496
+        },
+        "rightPane": {
+          "clientHeight": 1024,
+          "scrollHeight": 1029
+        },
+        "visiblePrimaryActions": [],
+        "domIdCount": 97
+      },
+      "consoleMessages": [
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 404 (NOT FOUND)"
+        }
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "badResponses": [
+        {
+          "url": "http://127.0.0.1:5050/favicon.ico",
+          "status": 404
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "status": 200,
+      "screenshot": "baseline-1440x900.png",
+      "metrics": {
+        "title": "🎬 SBZ AI Video Studio",
+        "httpReadyState": "complete",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "document": {
+          "clientWidth": 1440,
+          "scrollWidth": 1440,
+          "clientHeight": 900,
+          "scrollHeight": 911,
+          "horizontalOverflow": false
+        },
+        "body": {
+          "clientWidth": 1440,
+          "scrollWidth": 1440
+        },
+        "middlePane": {
+          "clientHeight": 844,
+          "scrollHeight": 1526
+        },
+        "rightPane": {
+          "clientHeight": 844,
+          "scrollHeight": 1029
+        },
+        "visiblePrimaryActions": [],
+        "domIdCount": 97
+      },
+      "consoleMessages": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "badResponses": []
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "status": 200,
+      "screenshot": "baseline-1280x720.png",
+      "metrics": {
+        "title": "🎬 SBZ AI Video Studio",
+        "httpReadyState": "complete",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "document": {
+          "clientWidth": 1280,
+          "scrollWidth": 1280,
+          "clientHeight": 720,
+          "scrollHeight": 731,
+          "horizontalOverflow": false
+        },
+        "body": {
+          "clientWidth": 1280,
+          "scrollWidth": 1280
+        },
+        "middlePane": {
+          "clientHeight": 664,
+          "scrollHeight": 1539
+        },
+        "rightPane": {
+          "clientHeight": 664,
+          "scrollHeight": 1029
+        },
+        "visiblePrimaryActions": [],
+        "domIdCount": 97
+      },
+      "consoleMessages": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "badResponses": []
+    }
+  ]
+}
