@@ -100,6 +100,13 @@ PHASE_FOUR_IDS = {
     "castInspectorScene", "castInspectorDuration", "castInspectorMood",
 }
 
+PHASE_FIVE_IDS = {
+    "advancedSettingsBackdrop", "advancedSettingsDrawer",
+    "advancedSettingsTitle", "advancedSettingsClose", "advancedRenderGroup",
+    "advancedCaptionsGroup", "advancedProviderGroup",
+    "advancedProviderDetails", "musicVolumeValue",
+}
+
 
 class UIContractTests(unittest.TestCase):
     @classmethod
@@ -112,7 +119,7 @@ class UIContractTests(unittest.TestCase):
         self.assertIn("url_for('static', filename='css/studio.css')", self.template)
         self.assertIn("url_for('static', filename='js/studio.js')", self.template)
         self.assertIn("url_for('static', filename='icons/favicon.svg')", self.template)
-        self.assertIn("?v=20260714-phase4", self.template)
+        self.assertIn("?v=20260714-phase5", self.template)
         self.assertIsNone(re.search(r"<style\b", self.template, re.IGNORECASE))
         self.assertIsNone(re.search(
             r"<script(?![^>]*\bsrc=)[^>]*>", self.template, re.IGNORECASE))
@@ -228,6 +235,30 @@ class UIContractTests(unittest.TestCase):
             self.assertIn(field, block)
         self.assertIn("p.scenes=reorderedScenes", block)
 
+    def test_phase_five_uses_progressive_disclosure_without_losing_settings(self):
+        ids = set(re.findall(r'\bid=["\']([^"\']+)["\']', self.template))
+        self.assertTrue(PHASE_FIVE_IDS.issubset(ids),
+                        f"Missing Phase 5 IDs: {sorted(PHASE_FIVE_IDS - ids)}")
+        drawer = re.search(
+            r'id=["\']advancedSettingsDrawer["\'](.*?)</aside>',
+            self.template,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(drawer)
+        advanced_markup = drawer.group(1)
+        for setting_id in (
+            "render_engine", "fps", "gpu_encode", "fast_preview",
+            "motionSeg", "modeSeg", "multiChar", "vignette", "intro_on",
+            "cap_words", "cap_size", "posSeg", "cap_hl", "hlSeg",
+            "cap_perspk", "test_img", "testBtn", "testResult",
+        ):
+            self.assertRegex(advanced_markup, rf'\bid=["\']{setting_id}["\']')
+        for function in ("toggleAdvancedSettings", "syncAdvancedSettingsUI"):
+            self.assertRegex(self.js, rf"function\s+{function}\s*\(")
+        self.assertIn("#studioShell,#advancedSettingsDrawer", self.js)
+        self.assertIn("advanced-settings-open", self.css)
+        self.assertGreaterEqual(self.template.count("data-advanced-settings-trigger"), 4)
+
     def test_local_svg_sprite_is_valid_and_uses_current_color(self):
         source = ICONS.read_text(encoding="utf-8")
         root = ET.fromstring(source)
@@ -246,8 +277,8 @@ class UIContractTests(unittest.TestCase):
         try:
             self.assertEqual(page.status_code, 200)
             html = page.get_data(as_text=True)
-            self.assertIn("/static/css/studio.css?v=20260714-phase4", html)
-            self.assertIn("/static/js/studio.js?v=20260714-phase4", html)
+            self.assertIn("/static/css/studio.css?v=20260714-phase5", html)
+            self.assertIn("/static/js/studio.js?v=20260714-phase5", html)
         finally:
             page.close()
         for asset in (

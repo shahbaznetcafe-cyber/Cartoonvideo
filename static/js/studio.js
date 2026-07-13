@@ -5,7 +5,7 @@ function escHtml(value){
   return String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 function uiIcon(name){
-  return `<svg class="icon" aria-hidden="true"><use href="/static/icons/icons.svg?v=20260714-phase4#icon-${name}"></use></svg>`;
+  return `<svg class="icon" aria-hidden="true"><use href="/static/icons/icons.svg?v=20260714-phase5#icon-${name}"></use></svg>`;
 }
 function elevenVoiceLabel(voice){
   const labels=voice.labels||{};
@@ -98,8 +98,10 @@ async function load(){
   OPTS.styles.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;
     if(s===OPTS.defaults.style)o.selected=true; sel.appendChild(o);});
   const p=OPTS.providers;
-  document.getElementById('provStatus').textContent=
-    `LLM:${p.llm.join('/')} · IMG:${p.image.join('/')} · TTS:${p.tts.join('/')}`;
+  const providerSummary=`LLM:${p.llm.join('/')} · IMG:${p.image.join('/')} · TTS:${p.tts.join('/')}`;
+  document.getElementById('provStatus').textContent=providerSummary;
+  const advancedProviders=document.getElementById('advancedProviderDetails');
+  if(advancedProviders) advancedProviders.textContent=providerSummary;
   if(OPTS.defaults && OPTS.defaults.urdu_accent){ const ua=document.getElementById('urdu_accent'); if(ua) ua.value=OPTS.defaults.urdu_accent; }
   const tts=document.getElementById('tts_provider');
   if(OPTS.defaults && OPTS.defaults.tts_provider) tts.value=OPTS.defaults.tts_provider;
@@ -400,7 +402,7 @@ function segVal(id){const e=document.querySelector('#'+id+' button.on');return e
 const STUDIO_SESSION_KEY='sbz-studio-session-v2';
 const STUDIO_STEP_TITLES=['','Script setup','Cast & scene focus','Style & audio','Render setup'];
 let STUDIO_UI={view:'dashboard',step:1,projectName:'Untitled video',scriptMode:'write',aiTab:'quick'};
-let WORKSPACE_INITIALIZED=false, AUTOSAVE_TIMER=null, GENERATED_SCRIPT_UNDO=null, TOAST_TIMER=null;
+let WORKSPACE_INITIALIZED=false, AUTOSAVE_TIMER=null, GENERATED_SCRIPT_UNDO=null, TOAST_TIMER=null, ADVANCED_RETURN_FOCUS=null;
 
 function setAutosaveState(state,label){
   const el=document.getElementById('autosaveStatus');
@@ -475,11 +477,38 @@ function toggleTopPopover(id,button){
 }
 
 function toggleInspector(force){
-  if(STUDIO_UI.view!=='create') showStudioView('create',false);
   const open=typeof force==='boolean'?force:!document.body.classList.contains('inspector-open');
+  if(open && STUDIO_UI.view!=='create') showStudioView('create',false);
   document.body.classList.toggle('inspector-open',open);
   const toggle=document.getElementById('inspectorToggle');
   if(toggle) toggle.setAttribute('aria-expanded',String(open));
+}
+
+function syncAdvancedSettingsUI(){
+  const music=document.getElementById('music_volume');
+  const value=document.getElementById('musicVolumeValue');
+  if(music && value) value.textContent=`${Math.round(Number(music.value||0)*100)}%`;
+}
+
+function toggleAdvancedSettings(force,section=''){
+  const drawer=document.getElementById('advancedSettingsDrawer'); if(!drawer) return;
+  const open=typeof force==='boolean'?force:!document.body.classList.contains('advanced-settings-open');
+  if(open){
+    ADVANCED_RETURN_FOCUS=document.activeElement;
+    closeTopPopovers(); toggleInspector(false);
+  }
+  document.body.classList.toggle('advanced-settings-open',open);
+  drawer.setAttribute('aria-hidden',String(!open));
+  document.querySelectorAll('[data-advanced-settings-trigger]').forEach(button=>button.setAttribute('aria-expanded',String(open)));
+  if(open){
+    syncAdvancedSettingsUI();
+    const group=section==='captions'?document.getElementById('advancedCaptionsGroup'):
+      section==='providers'?document.getElementById('advancedProviderGroup'):document.getElementById('advancedRenderGroup');
+    if(group){group.open=true;requestAnimationFrame(()=>group.scrollIntoView({block:'start',behavior:'smooth'}));}
+    document.getElementById('advancedSettingsClose')?.focus();
+  }else if(ADVANCED_RETURN_FOCUS && typeof ADVANCED_RETURN_FOCUS.focus==='function'){
+    ADVANCED_RETURN_FOCUS.focus(); ADVANCED_RETURN_FOCUS=null;
+  }
 }
 
 function showStudioView(view,persist=true){
@@ -493,6 +522,7 @@ function showStudioView(view,persist=true){
   const shell=document.getElementById('studioShell');
   if(shell) shell.classList.toggle('no-inspector',view!=='create');
   document.body.classList.remove('inspector-open');
+  toggleAdvancedSettings(false);
   if(view==='create') setCreateStep(STUDIO_UI.step,false);
   if(view==='projects') loadProjectsList();
   if(view==='dashboard'){checkResumable();loadProjectsList();}
@@ -563,6 +593,7 @@ function renderWorkflowSummary(){
   set('renderCharacterCount',PLAN?.characters?.length??PLAN?.parsed?.characters?.length??'—');
   set('renderQuality',quality);
   set('renderEngineSummary',engine==='blender'?'Blender':'Three.js');
+  syncAdvancedSettingsUI();
 }
 
 function setCurrentProject(name){
@@ -734,10 +765,10 @@ function initStudioWorkspace(){
   document.querySelectorAll('.nav-item[data-view]').forEach(item=>item.addEventListener('click',()=>showStudioView(item.dataset.view)));
   document.querySelectorAll('.workflow-step[data-step]').forEach(item=>item.addEventListener('click',()=>setCreateStep(item.dataset.step)));
   document.getElementById('script')?.addEventListener('input',updateScriptCount);
-  document.addEventListener('input',event=>{if(event.target.closest('#studioShell'))scheduleWorkspaceAutosave();},true);
-  document.addEventListener('change',event=>{if(event.target.closest('#studioShell')){renderWorkflowSummary();scheduleWorkspaceAutosave();}},true);
+  document.addEventListener('input',event=>{if(event.target.closest('#studioShell,#advancedSettingsDrawer')){syncAdvancedSettingsUI();scheduleWorkspaceAutosave();}},true);
+  document.addEventListener('change',event=>{if(event.target.closest('#studioShell,#advancedSettingsDrawer')){renderWorkflowSummary();scheduleWorkspaceAutosave();}},true);
   document.addEventListener('click',event=>{if(!event.target.closest('.popover-wrap'))closeTopPopovers();});
-  document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeTopPopovers();toggleInspector(false);}});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeTopPopovers();toggleInspector(false);toggleAdvancedSettings(false);}});
   window.addEventListener('resize',()=>{if(window.innerWidth>=1280)document.body.classList.remove('inspector-open');});
   bindCastInspector();
   restoreWorkspaceDraft();
@@ -746,7 +777,7 @@ function initStudioWorkspace(){
   selectScriptMode(STUDIO_UI.scriptMode,false);
   selectAIGenerator(STUDIO_UI.aiTab,false);
   document.getElementById('ffLang')?.addEventListener('change',()=>updateScriptLanguageIndicator(document.getElementById('script')?.value||''));
-  syncVoiceProviderUI(); updateScriptCount(); renderWorkflowSummary();
+  syncVoiceProviderUI(); syncAdvancedSettingsUI(); updateScriptCount(); renderWorkflowSummary();
   showStudioView(STUDIO_UI.view,false);
   setAutosaveState('saved','Session saved');
 }
