@@ -85,7 +85,7 @@ async function load3dValidation(){
 }
 async function stopJob(){
   if(!CUR_JOB) return;
-  const b=document.getElementById('stopBtn'); b.disabled=true; b.textContent='⏹ Ruk raha hai...';
+  const b=document.getElementById('stopBtn'); b.disabled=true; b.textContent='Stopping…';
   try{ await fetch('/api/stop/'+CUR_JOB,{method:'POST'}); }catch(e){}
 }
 
@@ -111,7 +111,8 @@ async function load(){
   loadTemplates();
   checkResumable();       // crash/close ke baad adhoore projects dikhao
   loadProjectsList();     // purane projects ka count + list
-  initScriptTabs();       // script banane ke 4 tareeqe (tabs) switch karo
+  initScriptTabs();
+  initStudioWorkspace();
 }
 
 // Script card ke tabs (Idea se / Long-Form / Characters / Template) — ek waqt ek panel
@@ -119,9 +120,11 @@ function initScriptTabs(){
   const tabs=document.querySelectorAll('#scriptTabs .tab');
   const panels=document.querySelectorAll('#scriptCard .tabpanel');
   tabs.forEach(t=>t.addEventListener('click',()=>{
-    tabs.forEach(x=>x.classList.remove('on')); t.classList.add('on');
+    tabs.forEach(x=>{x.classList.remove('on');x.setAttribute('aria-selected','false');});
+    t.classList.add('on'); t.setAttribute('aria-selected','true');
     const k=t.dataset.t;
     panels.forEach(p=>p.classList.toggle('hidden', p.dataset.t!==k));
+    scheduleWorkspaceAutosave();
   }));
 }
 
@@ -178,10 +181,10 @@ async function genFromTemplate(){
     else{
       document.getElementById('script').value=j.script;
       msg.innerHTML='<span style="color:var(--green)">✅ Script ready — upar Script box mein aa gaya. Edit kar sakte ho, phir Generate Video.</span>';
-      document.getElementById('script').scrollIntoView({behavior:'smooth',block:'center'});
+      focusGeneratedScript(TPL_SEL?.name_en||'Template story');
     }
   }catch(e){ msg.innerHTML='<span class="err">Fail: '+e+'</span>'; }
-  btn.disabled=false; btn.textContent='✍️ Script Likho';
+  btn.disabled=false; btn.textContent='Generate Script';
 }
 
 // Phase 2 — free-form: bina template, seedha idea se script
@@ -206,10 +209,10 @@ async function genFreeform(){
         +'</span><span style="color:var(--muted)">'
         +(j.genre?('['+j.genre+'] '):'')+(cast?('· '+cast):'')
         +' — Script box mein aa gaya. Edit karke Generate.</span>';
-      document.getElementById('script').scrollIntoView({behavior:'smooth',block:'center'});
+      focusGeneratedScript(j.title||'AI story');
     }
   }catch(e){ msg.innerHTML='<span class="err">Fail: '+e+'</span>'; }
-  btn.disabled=false; btn.textContent='⚡ Script Banao';
+  btn.disabled=false; btn.textContent='Generate Script';
 }
 
 // Phase 3 — long-form multi-scene story
@@ -241,10 +244,10 @@ async function genLongform(){
           +' Scenes:</div>'+j.scenes.map((s,i)=>'<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,.06)"><b style="color:var(--green)">'
           +(i+1)+'. '+(s.location||'')+'</b> <span style="color:var(--muted)">— '+(s.goal||'')+'</span></div>').join('');
       }
-      document.getElementById('script').scrollIntoView({behavior:'smooth',block:'center'});
+      focusGeneratedScript(j.title||'Long-form story');
     }
   }catch(e){ msg.innerHTML='<span class="err">Fail: '+e+'</span>'; }
-  btn.disabled=false; btn.textContent='🎬 Story Likho';
+  btn.disabled=false; btn.textContent='Generate Long Story';
 }
 
 // ---------- Phase 4: Characters & Series ----------
@@ -339,22 +342,247 @@ async function genEpisode(){
         +'<div style="color:var(--muted);margin-top:3px">'+(j.summary||'')+'</div>';
       document.getElementById('epIdea').value='';
       await selectSeries(CUR_SERIES.id);  // history refresh
-      document.getElementById('script').scrollIntoView({behavior:'smooth',block:'center'});
+      focusGeneratedScript(j.title||CUR_SERIES.name);
     }
   }catch(e){ msg.innerHTML='<span class="err">Fail: '+e+'</span>'; }
   btn.disabled=false;
 }
-loadLib();
-load();
-
 // segmented buttons
 document.querySelectorAll('.seg').forEach(seg=>{
   seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{
     seg.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
     b.classList.add('on');
+    renderWorkflowSummary();
+    scheduleWorkspaceAutosave();
   });
 });
 function segVal(id){const e=document.querySelector('#'+id+' button.on');return e?e.dataset.v:null;}
+
+// Phase 2 desktop workspace shell. This stays provider/backend neutral and only
+// coordinates existing DOM controls, views, and workflow state.
+const STUDIO_SESSION_KEY='sbz-studio-session-v2';
+const STUDIO_STEP_TITLES=['','Script setup','Cast & scene focus','Style & audio','Render setup'];
+let STUDIO_UI={view:'dashboard',step:1,projectName:'Untitled video'};
+let WORKSPACE_INITIALIZED=false, AUTOSAVE_TIMER=null;
+
+function setAutosaveState(state,label){
+  const el=document.getElementById('autosaveStatus');
+  if(!el) return;
+  el.classList.remove('saving','saved');
+  if(state) el.classList.add(state);
+  el.innerHTML='<span class="status-dot"></span> '+(label||'Autosave ready');
+}
+
+function workspaceSnapshot(){
+  const fields={};
+  document.querySelectorAll('input[id],select[id],textarea[id]').forEach(el=>{
+    if(el.type==='button' || el.id.startsWith('castInspector')) return;
+    fields[el.id]=el.type==='checkbox'?{checked:el.checked}:{value:el.value};
+  });
+  const segments={};
+  document.querySelectorAll('.seg[id]').forEach(seg=>{segments[seg.id]=segVal(seg.id);});
+  return {view:STUDIO_UI.view,step:STUDIO_UI.step,projectName:STUDIO_UI.projectName,fields,segments};
+}
+
+function saveWorkspaceDraft(){
+  try{
+    sessionStorage.setItem(STUDIO_SESSION_KEY,JSON.stringify(workspaceSnapshot()));
+    setAutosaveState('saved','Session saved');
+  }catch(e){ setAutosaveState('','Session active'); }
+}
+
+function scheduleWorkspaceAutosave(){
+  if(!WORKSPACE_INITIALIZED) return;
+  setAutosaveState('saving','Saving…');
+  clearTimeout(AUTOSAVE_TIMER);
+  AUTOSAVE_TIMER=setTimeout(saveWorkspaceDraft,450);
+}
+
+function restoreWorkspaceDraft(){
+  try{
+    const raw=sessionStorage.getItem(STUDIO_SESSION_KEY);
+    if(!raw) return null;
+    const draft=JSON.parse(raw);
+    Object.entries(draft.fields||{}).forEach(([id,state])=>{
+      const el=document.getElementById(id); if(!el) return;
+      if(Object.prototype.hasOwnProperty.call(state,'checked')) el.checked=!!state.checked;
+      else if(el.tagName==='SELECT'){
+        if([...el.options].some(option=>option.value===String(state.value))) el.value=state.value;
+      }else el.value=state.value==null?'':state.value;
+    });
+    Object.entries(draft.segments||{}).forEach(([id,value])=>{
+      const seg=document.getElementById(id); if(!seg || value==null) return;
+      seg.querySelectorAll('button').forEach(button=>button.classList.toggle('on',button.dataset.v===value));
+    });
+    STUDIO_UI.view=draft.view||'dashboard';
+    STUDIO_UI.step=Math.min(4,Math.max(1,Number(draft.step)||1));
+    STUDIO_UI.projectName=draft.projectName||'Untitled video';
+    return draft;
+  }catch(e){ return null; }
+}
+
+function closeTopPopovers(){
+  document.querySelectorAll('.top-popover').forEach(popover=>popover.classList.add('hidden'));
+  document.querySelectorAll('.popover-wrap>[aria-expanded]').forEach(button=>button.setAttribute('aria-expanded','false'));
+}
+
+function toggleTopPopover(id,button){
+  const popover=document.getElementById(id); if(!popover) return;
+  const open=popover.classList.contains('hidden');
+  closeTopPopovers();
+  popover.classList.toggle('hidden',!open);
+  if(button) button.setAttribute('aria-expanded',String(open));
+}
+
+function toggleInspector(force){
+  if(STUDIO_UI.view!=='create') showStudioView('create',false);
+  const open=typeof force==='boolean'?force:!document.body.classList.contains('inspector-open');
+  document.body.classList.toggle('inspector-open',open);
+  const toggle=document.getElementById('inspectorToggle');
+  if(toggle) toggle.setAttribute('aria-expanded',String(open));
+}
+
+function showStudioView(view,persist=true){
+  const panel=document.querySelector(`[data-view-panel="${view}"]`); if(!panel) return;
+  STUDIO_UI.view=view;
+  document.querySelectorAll('[data-view-panel]').forEach(item=>item.classList.toggle('active',item===panel));
+  document.querySelectorAll('.nav-item[data-view]').forEach(item=>{
+    const active=item.dataset.view===view;
+    item.classList.toggle('active',active); item.setAttribute('aria-selected',String(active));
+  });
+  const shell=document.getElementById('studioShell');
+  if(shell) shell.classList.toggle('no-inspector',view!=='create');
+  document.body.classList.remove('inspector-open');
+  if(view==='create') setCreateStep(STUDIO_UI.step,false);
+  if(view==='projects') loadProjectsList();
+  if(view==='dashboard'){checkResumable();loadProjectsList();}
+  document.getElementById('workspace')?.scrollTo({top:0,behavior:'auto'});
+  closeTopPopovers();
+  if(persist) scheduleWorkspaceAutosave();
+}
+
+function setCreateStep(step,persist=true){
+  step=Math.min(4,Math.max(1,Number(step)||1));
+  STUDIO_UI.step=step;
+  if(STUDIO_UI.view!=='create'){
+    STUDIO_UI.view='create';
+    showStudioView('create',false);
+  }
+  document.querySelectorAll('[data-step-panel]').forEach(panel=>panel.classList.toggle('active',Number(panel.dataset.stepPanel)===step));
+  document.querySelectorAll('.workflow-step[data-step]').forEach(button=>{
+    const current=Number(button.dataset.step), active=current===step;
+    button.classList.toggle('active',active); button.classList.toggle('complete',current<step);
+    button.setAttribute('aria-selected',String(active));
+  });
+  document.querySelectorAll('[data-inspector-step]').forEach(panel=>panel.classList.toggle('active',Number(panel.dataset.inspectorStep)===step));
+  const title=document.getElementById('inspectorTitle'); if(title) title.textContent=STUDIO_STEP_TITLES[step];
+  const createTitle=document.getElementById('createViewTitle');
+  if(createTitle) createTitle.textContent=['','Build your story','Shape cast and scenes','Set the look and sound','Preview and render'][step];
+  if(step===2){
+    const hasRenderedPreview=!!document.querySelector('#pvScenes .pvScene');
+    document.getElementById('castEmptyState')?.classList.toggle('hidden',hasRenderedPreview);
+    document.getElementById('previewCard')?.classList.toggle('hidden',!hasRenderedPreview);
+  }
+  if(step===4) renderWorkflowSummary();
+  document.getElementById('workspace')?.scrollTo({top:0,behavior:'auto'});
+  if(window.innerWidth<1280) document.body.classList.remove('inspector-open');
+  if(persist) scheduleWorkspaceAutosave();
+}
+
+function updateScriptCount(){
+  const value=document.getElementById('script')?.value||'';
+  const words=(value.trim().match(/\S+/g)||[]).length;
+  const lines=value?value.split(/\r?\n/).filter(line=>line.trim()).length:0;
+  const out=document.getElementById('scriptCount'); if(out) out.textContent=`${words} words · ${lines} lines`;
+}
+
+function renderWorkflowSummary(){
+  const storyLabels={blender3d:'3D Characters',puppet:'Puppet 2D',cinematic:'Cinematic'};
+  const aspectLabels={landscape:'Landscape',portrait:'Portrait',square:'Square'};
+  const engine=document.getElementById('render_engine')?.value||'threejs';
+  const quality=document.getElementById('quality')?.value||'1080p';
+  const tts=document.getElementById('tts_provider')?.value||'edge';
+  const story=segVal('storySeg')||'blender3d', aspect=segVal('aspectSeg')||'landscape';
+  const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
+  set('summaryStoryMode',storyLabels[story]||story);
+  set('summaryFormat',`${aspectLabels[aspect]||aspect} · ${quality}`);
+  set('summaryVoice',tts==='elevenlabs'?'ElevenLabs':'Edge TTS');
+  set('summarySubtitles',document.getElementById('cap_enabled')?.checked?'Enabled':'Optional');
+  set('renderSceneCount',PLAN?.scenes?.length??PLAN?.parsed?.scenes?.length??'—');
+  set('renderCharacterCount',PLAN?.characters?.length??PLAN?.parsed?.characters?.length??'—');
+  set('renderQuality',quality);
+  set('renderEngineSummary',engine==='blender'?'Blender':'Three.js');
+}
+
+function setCurrentProject(name){
+  STUDIO_UI.projectName=name||'Untitled video';
+  const el=document.getElementById('currentProjectName'); if(el) el.textContent=STUDIO_UI.projectName;
+  scheduleWorkspaceAutosave();
+}
+
+function focusGeneratedScript(title){
+  if(title) setCurrentProject(title);
+  showStudioView('create',false); setCreateStep(1,false); updateScriptCount();
+  document.getElementById('script')?.scrollIntoView({behavior:'smooth',block:'center'});
+  scheduleWorkspaceAutosave();
+}
+
+function populateCastInspector(plan){
+  const character=document.getElementById('castInspectorCharacter');
+  const voice=document.getElementById('castInspectorVoice');
+  const emotion=document.getElementById('castInspectorEmotion');
+  const action=document.getElementById('castInspectorAction');
+  const background=document.getElementById('castInspectorBackground');
+  const characters=plan?.characters||[];
+  character.innerHTML=characters.map(item=>`<option value="${escHtml(item.id)}">${escHtml(item.name||item.id)}</option>`).join('')||'<option>No characters</option>';
+  character.disabled=!characters.length;
+  const selected=characters[0]; voice.value=selected?.voice||'Automatic';
+  const firstScene=(plan?.scenes||[])[0], firstLine=(firstScene?.lines||[])[0];
+  emotion.disabled=!firstLine; emotion.value=firstLine?.emotion||'neutral';
+  action.disabled=!firstLine; action.value=firstLine?.action||'';
+  background.disabled=!firstScene; background.value=firstScene?.background_prompt||'';
+}
+
+function bindCastInspector(){
+  const character=document.getElementById('castInspectorCharacter');
+  character?.addEventListener('change',()=>{
+    const selected=(PLAN?.characters||[]).find(item=>String(item.id)===character.value);
+    document.getElementById('castInspectorVoice').value=selected?.voice||'Automatic';
+  });
+  document.getElementById('castInspectorEmotion')?.addEventListener('change',event=>{
+    const target=document.querySelector('#pvScenes .pvEmo'); if(target) target.value=event.target.value;
+    if(PLAN?.parsed?.scenes?.[0]?.lines?.[0]) PLAN.parsed.scenes[0].lines[0].emotion=event.target.value;
+    scheduleWorkspaceAutosave();
+  });
+  document.getElementById('castInspectorAction')?.addEventListener('input',event=>{
+    if(PLAN?.parsed?.scenes?.[0]?.lines?.[0]) PLAN.parsed.scenes[0].lines[0].action=event.target.value;
+    scheduleWorkspaceAutosave();
+  });
+  document.getElementById('castInspectorBackground')?.addEventListener('input',event=>{
+    const target=document.querySelector('#pvScenes .pvBg'); if(target) target.value=event.target.value;
+    if(PLAN?.parsed?.scenes?.[0]) PLAN.parsed.scenes[0].background_prompt=event.target.value;
+    scheduleWorkspaceAutosave();
+  });
+}
+
+function initStudioWorkspace(){
+  if(WORKSPACE_INITIALIZED) return;
+  document.querySelectorAll('.nav-item[data-view]').forEach(item=>item.addEventListener('click',()=>showStudioView(item.dataset.view)));
+  document.querySelectorAll('.workflow-step[data-step]').forEach(item=>item.addEventListener('click',()=>setCreateStep(item.dataset.step)));
+  document.getElementById('script')?.addEventListener('input',updateScriptCount);
+  document.addEventListener('input',event=>{if(event.target.closest('#studioShell'))scheduleWorkspaceAutosave();},true);
+  document.addEventListener('change',event=>{if(event.target.closest('#studioShell')){renderWorkflowSummary();scheduleWorkspaceAutosave();}},true);
+  document.addEventListener('click',event=>{if(!event.target.closest('.popover-wrap'))closeTopPopovers();});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeTopPopovers();toggleInspector(false);}});
+  window.addEventListener('resize',()=>{if(window.innerWidth>=1280)document.body.classList.remove('inspector-open');});
+  bindCastInspector();
+  restoreWorkspaceDraft();
+  WORKSPACE_INITIALIZED=true;
+  document.getElementById('currentProjectName').textContent=STUDIO_UI.projectName;
+  syncVoiceProviderUI(); updateScriptCount(); renderWorkflowSummary();
+  showStudioView(STUDIO_UI.view,false);
+  setAutosaveState('saved','Session saved');
+}
 
 function collectSettings(){
   const ttsProvider=document.getElementById('tts_provider').value;
@@ -480,9 +708,11 @@ let COSTUMES=[], ACCESSORIES=[], HELD=[];
 async function preview(){
   const script=document.getElementById('script').value.trim();
   if(script.length<10){alert('Script likhein');return;}
+  showStudioView('create',false); setCreateStep(2,false);
   const btn=document.getElementById('previewBtn');
-  btn.disabled=true; btn.textContent='⏳ Plan bana raha hoon...';
+  btn.disabled=true; btn.textContent='Building plan…';
   document.getElementById('errMsg').classList.add('hidden');
+  document.getElementById('previewError').classList.add('hidden');
   try{
     if(!COSTUMES.length){ try{ COSTUMES=await (await fetch('/api/costumes')).json(); }catch(e){} }
     if(!ACCESSORIES.length){ try{ ACCESSORIES=await (await fetch('/api/accessories')).json(); }catch(e){} }
@@ -490,10 +720,10 @@ async function preview(){
     if(!Object.keys(CHAR_CAPS).length){ await load3dValidation(); }
     const j=await (await fetch('/api/preview',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({script})})).json();
-    if(j.error){ showErr(j.error); }
+    if(j.error){ showPreviewError(j.error); }
     else { PLAN=j; renderPreview(j); }
-  }catch(e){ showErr('Preview fail: '+e); }
-  btn.disabled=false; btn.textContent='👁️ Preview & Edit';
+  }catch(e){ showPreviewError('Preview fail: '+e); }
+  btn.disabled=false; btn.textContent='Build Cast & Scene Plan';
 }
 
 function renderPreview(p){
@@ -541,7 +771,13 @@ function renderPreview(p){
     });
     box.innerHTML=h; sc.appendChild(box);
   });
+  document.getElementById('castEmptyState')?.classList.add('hidden');
   document.getElementById('previewCard').classList.remove('hidden');
+  document.getElementById('pvGenBtn').disabled=false;
+  populateCastInspector(p);
+  setCurrentProject(p.title||STUDIO_UI.projectName);
+  renderWorkflowSummary();
+  setCreateStep(2,false);
   document.getElementById('previewCard').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
@@ -575,7 +811,15 @@ function collectEditedParsed(){
   return p;
 }
 
-async function confirmGenerate(){ startJob(collectEditedParsed()); }
+async function confirmGenerate(){
+  if(!PLAN){ setCreateStep(2); return; }
+  startJob(collectEditedParsed());
+}
+
+function showPreviewError(message){
+  const error=document.getElementById('previewError');
+  error.textContent=message; error.classList.remove('hidden');
+}
 
 async function generate(){ startJob(null); }
 
@@ -583,6 +827,9 @@ async function checkResumable(){
   try{
     const list=await (await fetch('/api/resumable')).json();
     const card=document.getElementById('resumeCard'), el=document.getElementById('resumeList');
+    const notice=document.getElementById('resumeNotice'), count=document.getElementById('resumeNoticeCount');
+    if(count) count.textContent=list.length;
+    if(notice) notice.classList.toggle('hidden',!list.length);
     if(!list.length){ card.classList.add('hidden'); return; }
     el.innerHTML=list.map(p=>{
       const st=p.state==='error'?'⚠️ ruk gaya':'⏳ adhoora';
@@ -595,11 +842,12 @@ async function checkResumable(){
     card.classList.remove('hidden');
   }catch(e){}
 }
-let PROJECTS_SHOWN=false;
+let PROJECTS_SHOWN=true;
 async function loadProjectsList(){
   try{
     const list=await (await fetch('/api/projects')).json();
     document.getElementById('projCount').textContent='('+list.length+')';
+    const dashboardCount=document.getElementById('dashboardProjectCount'); if(dashboardCount) dashboardCount.textContent=list.length;
     const el=document.getElementById('projList');
     if(!list.length){ el.innerHTML='<div style="color:var(--muted);font-size:12px">Abhi koi project nahi.</div>'; return; }
     el.innerHTML=list.map(p=>{
@@ -626,6 +874,7 @@ function toggleProjects(){
 async function openProject(name){
   const p=await (await fetch('/api/project/'+encodeURIComponent(name))).json();
   if(p.error){ alert(p.error); return; }
+  showStudioView('create',false); setCreateStep(1,false); setCurrentProject(p.title||name);
   document.getElementById('script').value=p.script||'';
   PLAN = p.parsed ? {parsed:p.parsed} : null;   // preview/generate isi plan par
   if(p.settings){
@@ -633,12 +882,14 @@ async function openProject(name){
     else if(p.settings.captions) document.getElementById('cap_enabled').checked=!!p.settings.captions.enabled;
     if(p.settings.intro_on!==undefined) document.getElementById('intro_on').checked=!!p.settings.intro_on;
   }
+  updateScriptCount(); renderWorkflowSummary(); scheduleWorkspaceAutosave();
   document.getElementById('script').scrollIntoView({behavior:'smooth',block:'center'});
   const fb=document.getElementById('scriptFeedback');
   if(fb) fb.innerHTML='<span style="color:var(--green)">✅ "'+(p.title||name)+'" load ho gaya — script box mein. Edit karke Preview/Generate karo'+(p.has_video?', ya ▶ Video se purani dekho.':'.')+'</span>';
   if(p.has_video) playProject(name);
 }
 function playProject(name){
+  showStudioView('create',false); setCreateStep(4,false); setCurrentProject(name);
   document.getElementById('resultCard').classList.remove('hidden');
   document.getElementById('rTitle').textContent=name;
   document.getElementById('rVideo').src='/projects/'+name+'/final.mp4?t='+Date.now();
@@ -652,6 +903,7 @@ async function delProject(name,ev){
   loadProjectsList();
 }
 async function resumeProject(name){
+  showStudioView('create',false); setCreateStep(4,false); setCurrentProject(name);
   const btn=document.getElementById('genBtn'); if(btn) btn.disabled=true;
   document.getElementById('progressCard').classList.remove('hidden');
   document.getElementById('resumeCard').classList.add('hidden');
@@ -669,10 +921,10 @@ async function dropProject(name,elBtn){
 async function startJob(parsed){
   const script=document.getElementById('script').value.trim();
   if(!parsed && script.length<10){alert('Script likhein');return;}
+  showStudioView('create',false); setCreateStep(4,false);
   const btn=document.getElementById('genBtn');
   btn.disabled=true;
   document.getElementById('progressCard').classList.remove('hidden');
-  document.getElementById('previewCard').classList.add('hidden');
   document.getElementById('resultCard').classList.add('hidden');
   document.getElementById('errMsg').classList.add('hidden');
   setStages('story',0,1,'');
@@ -681,10 +933,11 @@ async function startJob(parsed){
   const r=await (await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify(body)})).json();
   if(r.error){showErr(r.error);return;}
+  setCurrentProject(r.project||STUDIO_UI.projectName);
   CUR_JOB=r.job_id; _resetStop();
   polling=setInterval(()=>poll(r.job_id),1500);
 }
-function _resetStop(){ const b=document.getElementById('stopBtn'); if(b){b.disabled=false;b.textContent='⏹ STOP Generation';} }
+function _resetStop(){ const b=document.getElementById('stopBtn'); if(b){b.disabled=false;b.textContent='Stop Generation';} }
 
 async function poll(id){
   const j=await (await fetch('/api/status/'+id)).json();
@@ -697,17 +950,19 @@ async function poll(id){
 }
 
 function showResult(res){
+  showStudioView('create',false); setCreateStep(4,false);
   document.getElementById('resultCard').classList.remove('hidden');
   document.getElementById('rTitle').textContent=res.title||'Video Ready';
+  setCurrentProject(res.title||STUDIO_UI.projectName);
   document.getElementById('rVideo').src='/projects/'+res.video_rel+'?t='+Date.now();
   document.getElementById('rDownload').href='/projects/'+res.video_rel;
   reset();
 }
 function showErr(m){const e=document.getElementById('errMsg');e.textContent='❌ '+m;e.classList.remove('hidden');reset();}
 function reset(){
-  const b=document.getElementById('genBtn');b.disabled=false;b.textContent='🚀 Direct Generate (skip preview)';
-  const pb=document.getElementById('previewBtn');pb.disabled=false;pb.textContent='👁️ Preview & Edit';
-  const pg=document.getElementById('pvGenBtn');if(pg)pg.disabled=false;
+  const b=document.getElementById('genBtn');b.disabled=false;b.textContent='Direct Generate';
+  const pb=document.getElementById('previewBtn');pb.disabled=false;pb.textContent='Build Cast & Scene Plan';
+  const pg=document.getElementById('pvGenBtn');if(pg)pg.disabled=!PLAN;
 }
 
 async function testRunware(){
@@ -734,3 +989,6 @@ async function testRunware(){
   }catch(e){ out.innerHTML='<div class="err">Test fail: '+e+'</div>'; }
   btn.disabled=false; btn.textContent='🔎 Test API';
 }
+
+loadLib();
+load();

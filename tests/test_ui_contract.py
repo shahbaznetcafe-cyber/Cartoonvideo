@@ -73,6 +73,19 @@ REQUIRED_ICON_IDS = {
     "icon-script", "icon-preview", "icon-volume", "icon-captions", "icon-render",
 }
 
+PHASE_TWO_IDS = {
+    "studioShell", "workspace", "currentProjectName", "autosaveStatus",
+    "resumeNotice", "resumeNoticeCount", "providerButton", "providerPopover",
+    "helpButton", "helpPopover", "inspectorToggle", "contextInspector",
+    "inspectorTitle", "workflowStepper", "view-dashboard", "view-create",
+    "view-characters", "view-projects", "view-templates", "view-assets",
+    "view-settings", "castEmptyState", "scriptCount", "summaryStoryMode",
+    "summaryFormat", "summaryVoice", "summarySubtitles", "renderSceneCount",
+    "renderCharacterCount", "renderQuality", "renderEngineSummary",
+    "castInspectorCharacter", "castInspectorVoice", "castInspectorEmotion",
+    "castInspectorAction", "castInspectorBackground",
+}
+
 
 class UIContractTests(unittest.TestCase):
     @classmethod
@@ -119,6 +132,35 @@ class UIContractTests(unittest.TestCase):
                         f"Missing setting keys: {sorted(REQUIRED_SETTING_KEYS - keys)}")
         self.assertRegex(block, r"outro_on\s*:\s*true")
         self.assertIn("captions:", block)
+
+    def test_phase_two_workspace_views_steps_and_inspector_are_contractual(self):
+        ids = set(re.findall(r'\bid=["\']([^"\']+)["\']', self.template))
+        self.assertTrue(PHASE_TWO_IDS.issubset(ids),
+                        f"Missing Phase 2 IDs: {sorted(PHASE_TWO_IDS - ids)}")
+        views = set(re.findall(r'\bdata-view-panel=["\']([^"\']+)["\']', self.template))
+        self.assertEqual(views, {
+            "dashboard", "create", "characters", "projects", "templates",
+            "assets", "settings",
+        })
+        nav_views = set(re.findall(
+            r'class=["\'][^"\']*nav-item[^"\']*["\'][^>]*\bdata-view=["\']([^"\']+)',
+            self.template,
+        ))
+        self.assertEqual(nav_views, views)
+        self.assertEqual(
+            set(re.findall(r'\bdata-step-panel=["\']([1-4])["\']', self.template)),
+            {"1", "2", "3", "4"},
+        )
+        self.assertEqual(
+            set(re.findall(r'\bdata-inspector-step=["\']([1-4])["\']', self.template)),
+            {"1", "2", "3", "4"},
+        )
+        for function in (
+            "initStudioWorkspace", "showStudioView", "setCreateStep",
+            "toggleInspector", "toggleTopPopover", "saveWorkspaceDraft",
+            "restoreWorkspaceDraft", "renderWorkflowSummary",
+        ):
+            self.assertRegex(self.js, rf"function\s+{function}\s*\(")
 
     def test_local_svg_sprite_is_valid_and_uses_current_color(self):
         source = ICONS.read_text(encoding="utf-8")

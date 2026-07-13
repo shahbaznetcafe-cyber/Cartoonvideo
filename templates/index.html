@@ -8,377 +8,264 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/studio.css') }}?v=20260713-phase1">
 </head>
 <body>
-<div class="topbar">
-  <div><h1>🎬 SBZ AI Video Studio <span class="sub">v1.0</span></h1>
-       <div class="sub">Multi-character AI video generator</div></div>
-  <div class="status">
-    <span><span class="dot"></span>Engine: Ready</span>
-    <span id="provStatus" class="sub"></span>
+{% macro icon(name) -%}
+<svg class="icon" aria-hidden="true"><use href="{{ url_for('static', filename='icons/icons.svg') }}#icon-{{ name }}"></use></svg>
+{%- endmacro %}
+
+<header class="appbar">
+  <div class="appbar-brand">
+    <span class="brand-mark">{{ icon('studio') }}</span>
+    <div class="brand-copy">
+      <strong>SBZ AI Video Studio</strong>
+      <span>Desktop creator</span>
+    </div>
   </div>
-</div>
-
-<div class="layout">
-  <!-- LEFT NAV -->
-  <nav class="nav">
-    <h3>Navigation</h3>
-    <a class="active">🎬 Video Generator</a>
-    <a onclick="document.getElementById('scriptCard').scrollIntoView({behavior:'smooth'})">✍️ Script banao</a>
-    <a onclick="document.getElementById('genCard').scrollIntoView({behavior:'smooth'})">🚀 Generate</a>
-    <a onclick="document.getElementById('projCardTop').scrollIntoView({behavior:'smooth'})">📁 My Projects</a>
-  </nav>
-
-  <!-- MIDDLE: controls -->
-  <div class="mid">
-    <div class="card hidden" id="resumeCard" style="border:1px solid #f59e0b;background:rgba(245,158,11,.08)">
-      <h3 style="color:#f59e0b">🔄 Adhoore Projects (resume ho sakte)</h3>
-      <div class="hint" style="margin-bottom:8px">Software band/crash hua tha? Ye projects wahin se complete honge — voices/backgrounds/clips dobara nahi banenge.</div>
-      <div id="resumeList"></div>
+  <div class="project-context" aria-label="Current project">
+    <span class="project-label">Current project</span>
+    <strong id="currentProjectName">Untitled video</strong>
+    <span class="autosave-status" id="autosaveStatus"><span class="status-dot"></span> Autosave ready</span>
+  </div>
+  <div class="appbar-actions">
+    <button type="button" class="unfinished-notice hidden" id="resumeNotice" onclick="showStudioView('dashboard')">
+      <span id="resumeNoticeCount">0</span> unfinished projects <span aria-hidden="true">—</span> Review
+    </button>
+    <div class="popover-wrap">
+      <button type="button" class="status-button" id="providerButton" aria-expanded="false" onclick="toggleTopPopover('providerPopover',this)">
+        <span class="status-dot ready"></span><span>Engine ready</span>{{ icon('chevron-down') }}
+      </button>
+      <div class="top-popover hidden" id="providerPopover" role="dialog" aria-label="Engine and provider status">
+        <div class="popover-title">Engine status</div>
+        <div class="health-row"><span class="status-dot ready"></span><div><strong>Generation engine</strong><span>Ready for new work</span></div></div>
+        <div class="provider-detail"><span>Provider routing</span><code id="provStatus"></code></div>
+      </div>
     </div>
-
-    <div class="card" id="projCardTop">
-      <h3>📁 My Projects <span id="projCount" class="sub" style="font-size:12px;color:var(--muted)"></span>
-        <button class="btn btn-sm" style="float:right" onclick="toggleProjects()">📂 Kholo / Chhupao</button></h3>
-      <div id="projList" class="hidden" style="margin-top:8px;max-height:280px;overflow-y:auto"></div>
+    <button type="button" class="icon-button inspector-toggle" id="inspectorToggle" aria-label="Toggle inspector" aria-expanded="false" onclick="toggleInspector()">{{ icon('settings') }}</button>
+    <button type="button" class="icon-button" id="settingsButton" aria-label="Open settings" onclick="showStudioView('settings')">{{ icon('settings') }}</button>
+    <div class="popover-wrap">
+      <button type="button" class="icon-button" id="helpButton" aria-label="Open help" aria-expanded="false" onclick="toggleTopPopover('helpPopover',this)">{{ icon('help') }}</button>
+      <div class="top-popover help-popover hidden" id="helpPopover" role="dialog" aria-label="Studio help">
+        <div class="popover-title">Quick help</div>
+        <p>Create Video ke four steps follow karein. Aap backward ja sakte hain; form data isi session mein safe rehta hai.</p>
+        <p>Running render ko Stop karne par completed clips cache mein safe rehte hain.</p>
+      </div>
     </div>
+  </div>
+</header>
 
-    <div class="card" id="scriptCard">
-      <h3>✍️ Script banao</h3>
-      <textarea id="script" placeholder="Tamatar: Main sehatmand hoon.&#10;Aam: Main meetha hoon, sab mujhe pasand karte hain."></textarea>
-      <div class="hint">Tip: Urdu / Roman Urdu / English. Character ke naam se shuru karein (e.g. tamatar, aam, bhindi).</div>
-      <div class="row" style="margin-top:8px">
-        <button class="btn btn-primary btn-sm" onclick="analyzeScript()">🔍 Analyze</button>
-        <button class="btn btn-green btn-sm" onclick="improveScript()">✨ Improve</button>
-        <button class="btn btn-sm" style="background:#7c3aed;color:#fff" onclick="genPackage()">📦 YouTube Package</button>
-      </div>
-      <div id="scriptFeedback" style="margin-top:8px;font-size:12px"></div>
-      <div id="pkgPanel" style="margin-top:10px"></div>
+<div class="studio-shell" id="studioShell">
+  <aside class="sidebar" aria-label="Studio navigation">
+    <nav class="sidebar-nav">
+      <button type="button" class="nav-item active" data-view="dashboard" aria-selected="true">
+        {{ icon('dashboard') }}<span>Dashboard</span>
+      </button>
+      <button type="button" class="nav-item" data-view="create" aria-selected="false">
+        {{ icon('create') }}<span>Create Video</span>
+      </button>
+      <button type="button" class="nav-item" data-view="characters" aria-selected="false">
+        {{ icon('characters') }}<span>Characters</span>
+      </button>
+      <button type="button" class="nav-item" data-view="projects" aria-selected="false">
+        {{ icon('projects') }}<span>Projects</span>
+      </button>
+      <button type="button" class="nav-item" data-view="templates" aria-selected="false">
+        {{ icon('templates') }}<span>Templates</span>
+      </button>
+      <button type="button" class="nav-item" data-view="assets" aria-selected="false">
+        {{ icon('assets') }}<span>Asset Library</span>
+      </button>
+      <button type="button" class="nav-item" data-view="settings" aria-selected="false">
+        {{ icon('settings') }}<span>Settings</span>
+      </button>
+    </nav>
+    <div class="sidebar-footer"><span class="status-dot ready"></span><span>SBZ Studio v1.0</span></div>
+  </aside>
 
-      <div class="divlabel">Ya AI se likhwao</div>
-      <div class="tabs" id="scriptTabs">
-        <button class="tab on" data-t="quick">⚡ Idea se</button>
-        <button class="tab" data-t="longform">🎬 Long-Form</button>
-        <button class="tab" data-t="series">🎭 Characters</button>
-        <button class="tab" data-t="template">📚 Template</button>
+  <main class="workspace" id="workspace">
+    <section class="studio-view active" id="view-dashboard" data-view-panel="dashboard">
+      <div class="view-header">
+        <div><span class="eyebrow">Workspace</span><h1>Dashboard</h1><p>Continue a project or start a new cartoon video.</p></div>
+        <button type="button" class="btn btn-primary view-primary" onclick="showStudioView('create')">{{ icon('create') }} New Video</button>
       </div>
+      <div class="dashboard-grid">
+        <button type="button" class="dashboard-new" onclick="showStudioView('create')">
+          <span class="dashboard-new-icon">{{ icon('sparkles') }}</span>
+          <span><strong>Create a new video</strong><small>Script se final MP4 tak guided workflow</small></span>
+          <span class="dashboard-arrow" aria-hidden="true">→</span>
+        </button>
+        <div class="metric-card"><span>Projects</span><strong id="dashboardProjectCount">—</strong><small>saved locally</small></div>
+        <div class="metric-card"><span>Engine</span><strong class="success-text">Ready</strong><small>providers connected</small></div>
+      </div>
+      <div class="card hidden resume-dashboard-card" id="resumeCard">
+        <div class="section-heading"><div><span class="warning-kicker">Recovery</span><h2>Unfinished projects</h2></div><span class="status-pill warning">Safe to resume</span></div>
+        <p class="section-copy">Voices, backgrounds aur completed clips dobara nahi banenge.</p>
+        <div id="resumeList"></div>
+      </div>
+      <div class="dashboard-section">
+        <div class="section-heading"><div><span class="eyebrow">Library</span><h2>Recent work</h2></div><button type="button" class="text-button" onclick="showStudioView('projects')">View all projects →</button></div>
+        <div class="empty-state compact"><span>{{ icon('projects') }}</span><div><strong>Your local projects are ready</strong><p>Projects page par completed aur resumable videos manage karein.</p></div></div>
+      </div>
+    </section>
 
-      <div class="tabpanel" data-t="quick">
-      <label>Aapka idea</label>
-      <textarea id="ffIdea" style="min-height:60px" placeholder="e.g. Jungle mein sher aur bandar ki dosti, comedy — bandar hamesha shararat karta hai"></textarea>
-      <div class="row" style="margin-top:8px">
-        <div style="flex:1"><label>Genre</label>
-          <select id="ffGenre">
-            <option value="auto">Auto (AI decide)</option>
-            <option value="comedy">Comedy</option>
-            <option value="moral">Moral / Sabak</option>
-            <option value="educational">Educational</option>
-            <option value="emotional">Emotional</option>
-            <option value="adventure">Adventure</option>
-            <option value="mystery">Mystery</option>
-            <option value="rhyme">Rhyme / Geet</option>
-          </select>
-        </div>
-        <div style="flex:1"><label>Zubaan</label>
-          <select id="ffLang"><option value="roman_urdu">Roman Urdu</option><option value="urdu">Urdu</option><option value="english">English</option></select>
-        </div>
+    <section class="studio-view" id="view-create" data-view-panel="create">
+      <div class="create-header">
+        <div><span class="eyebrow">Create Video</span><h1 id="createViewTitle">Build your story</h1></div>
+        <span class="create-session-note">Changes stay in this session</span>
       </div>
-      <label style="margin-top:8px;display:block">Length</label>
-      <div class="seg" id="ffLenSeg">
-        <button data-v="short">Short<br><span style="font-size:9px;opacity:.7">~30s</span></button>
-        <button data-v="medium" class="on">Medium<br><span style="font-size:9px;opacity:.7">~60s</span></button>
-        <button data-v="long">Long<br><span style="font-size:9px;opacity:.7">~2m</span></button>
-      </div>
-      <div class="hint" style="margin-top:6px">Characters khali chhoro to AI khud idea ke mutabiq cast chunega. Script upar box mein aa jayega.</div>
-      <label style="display:flex;align-items:center;gap:7px;margin-top:8px;cursor:pointer;font-size:13px">
-        <input type="checkbox" id="ffPro" checked style="width:auto">
-        <span>⭐ <b>Pro quality</b> — multi-pass (plan → draft → polish, hook variants). Behtar par thoda dheema (~6s).</span>
-      </label>
-      <button class="btn btn-green btn-sm" style="margin-top:8px" id="ffGenBtn" onclick="genFreeform()">⚡ Script Banao</button>
-      <div id="ffMsg" style="margin-top:8px;font-size:12px"></div>
-      </div>
-
-      <div class="tabpanel hidden" data-t="longform">
-      <label>Aapka idea</label>
-      <textarea id="lfIdea" style="min-height:60px" placeholder="e.g. Ek gaon ka chhota heero jo sukhe ke waqt sab ke liye paani dhoondta hai"></textarea>
-      <div class="row" style="margin-top:8px">
-        <div style="flex:1"><label>Genre</label>
-          <select id="lfGenre">
-            <option value="auto">Auto (AI decide)</option>
-            <option value="comedy">Comedy</option>
-            <option value="moral">Moral / Sabak</option>
-            <option value="adventure">Adventure</option>
-            <option value="emotional">Emotional</option>
-            <option value="mystery">Mystery</option>
-            <option value="educational">Educational</option>
-          </select>
-        </div>
-        <div style="flex:1"><label>Zubaan</label>
-          <select id="lfLang"><option value="roman_urdu">Roman Urdu</option><option value="urdu">Urdu</option><option value="english">English</option></select>
-        </div>
-      </div>
-      <label style="margin-top:8px;display:block">Video length</label>
-      <div class="seg" id="lfMinSeg">
-        <button data-v="3min">~3 min<br><span style="font-size:9px;opacity:.7">4 scenes</span></button>
-        <button data-v="5min" class="on">~5 min<br><span style="font-size:9px;opacity:.7">6 scenes</span></button>
-        <button data-v="8min">~8 min<br><span style="font-size:9px;opacity:.7">8 scenes</span></button>
-      </div>
-      <div class="hint" style="margin-top:6px">AI pehle poori kahani ka outline (acts/scenes) banata hai, phir har scene alag likhta hai — coherent lambi kahani. Thoda waqt lega (~20–40s).</div>
-      <button class="btn btn-green btn-sm" style="margin-top:10px" id="lfGenBtn" onclick="genLongform()">🎬 Story Likho</button>
-      <div id="lfMsg" style="margin-top:8px;font-size:12px"></div>
-      <div id="lfOutline" style="margin-top:8px;font-size:12px"></div>
+      <div class="workflow-stepper" id="workflowStepper" role="tablist" aria-label="Video creation steps">
+        <button type="button" class="workflow-step active" data-step="1" role="tab" aria-selected="true"><span>1</span><b>Script</b></button>
+        <span class="step-line"></span>
+        <button type="button" class="workflow-step" data-step="2" role="tab" aria-selected="false"><span>2</span><b>Cast &amp; Scenes</b></button>
+        <span class="step-line"></span>
+        <button type="button" class="workflow-step" data-step="3" role="tab" aria-selected="false"><span>3</span><b>Style &amp; Audio</b></button>
+        <span class="step-line"></span>
+        <button type="button" class="workflow-step" data-step="4" role="tab" aria-selected="false"><span>4</span><b>Preview &amp; Render</b></button>
       </div>
 
-      <div class="tabpanel hidden" data-t="series">
-      <!-- My recurring characters -->
-      <div style="font-weight:700;margin-bottom:4px">👤 My Characters</div>
-      <div class="row">
-        <input type="text" id="chName" placeholder="Naam (e.g. Raju)" style="flex:1">
-        <select id="chGender" style="flex:0 0 90px"><option value="male">Male</option><option value="female">Female</option><option value="child">Child</option></select>
-      </div>
-      <input type="text" id="chTrait" placeholder="Personality (e.g. bahadur, jaldbaaz gaon ka ladka)" style="margin-top:5px">
-      <input type="text" id="chPhrase" placeholder="Catchphrase (optional, e.g. 'Chalo shuru!')" style="margin-top:5px">
-      <button class="btn btn-sm" style="margin-top:6px" onclick="addChar()">➕ Add Character</button>
-      <div id="charList" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px"></div>
-
-      <!-- Series -->
-      <div style="font-weight:700;margin:12px 0 4px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">📺 Series</div>
-      <div class="row">
-        <select id="serSel" style="flex:1" onchange="selectSeries(this.value)"><option value="">— Select series —</option></select>
-        <button class="btn btn-sm" onclick="toggleNewSeries()">＋ New</button>
-      </div>
-      <div id="newSeriesBox" class="hidden" style="margin-top:8px;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px">
-        <input type="text" id="serName" placeholder="Series naam (e.g. Gaon Ke Heroes)">
-        <textarea id="serPremise" style="min-height:44px;margin-top:5px" placeholder="Premise (e.g. Ek gaon ke bachche har episode koi masla hal karte hain)"></textarea>
-        <div class="row" style="margin-top:5px">
-          <select id="serGenre" style="flex:1"><option value="auto">Auto genre</option><option value="comedy">Comedy</option><option value="moral">Moral</option><option value="adventure">Adventure</option><option value="educational">Educational</option><option value="emotional">Emotional</option></select>
-          <select id="serLang" style="flex:1"><option value="roman_urdu">Roman Urdu</option><option value="urdu">Urdu</option><option value="english">English</option></select>
-        </div>
-        <div style="font-size:12px;margin-top:6px">Cast chuno:</div>
-        <div id="serCast" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px"></div>
-        <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="createSeries()">✅ Create Series</button>
-      </div>
-
-      <!-- Next episode -->
-      <div id="epBox" class="hidden" style="margin-top:10px">
-        <div id="serInfo" style="font-size:12px;color:var(--muted);margin-bottom:6px"></div>
-        <div id="epHistory" style="font-size:12px;margin-bottom:6px"></div>
-        <label>Iss episode ka idea (khali = kahani natural aage badhao)</label>
-        <input type="text" id="epIdea" placeholder="e.g. gaon mein bijli chali gayi">
-        <label style="margin-top:6px;display:block">Length</label>
-        <div class="seg" id="epLenSeg">
-          <button data-v="short">Short</button>
-          <button data-v="medium" class="on">Medium</button>
-          <button data-v="long">Long</button>
-          <button data-v="3min">~3m</button>
-          <button data-v="5min">~5m</button>
-        </div>
-        <button class="btn btn-green btn-sm" style="margin-top:8px" id="epGenBtn" onclick="genEpisode()">🎬 Generate Next Episode</button>
-        <div id="epMsg" style="margin-top:8px;font-size:12px"></div>
-      </div>
-      </div>
-
-      <div class="tabpanel hidden" data-t="template">
-      <div id="tplGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px"></div>
-      <div id="tplPanel" class="hidden" style="border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
-        <div style="font-size:13px;margin-bottom:6px">Chuna: <b id="tplName" style="color:var(--green)"></b></div>
-        <label>Topic / idea (khali chhoro to auto)</label>
-        <input type="text" id="tplTopic" placeholder="e.g. jhoot bolne ka anjaam">
-
-        <label style="margin-top:8px;display:block">Characters <span style="color:var(--muted);font-weight:400">(kam az kam 2 chuno)</span></label>
-        <div id="tplChars" style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px"></div>
-
-        <div class="row" style="margin-top:8px">
-          <div><label>Length</label>
-            <div class="seg" id="tplLenSeg">
-              <button data-v="short">Short<br><span style="font-size:9px;opacity:.7">~30s</span></button>
-              <button data-v="medium" class="on">Medium<br><span style="font-size:9px;opacity:.7">~60s</span></button>
-              <button data-v="long">Long<br><span style="font-size:9px;opacity:.7">~2m</span></button>
-            </div>
+      <section class="create-step-panel active" data-step-panel="1" aria-labelledby="createViewTitle">
+        <div class="card script-workspace" id="scriptCard">
+          <div class="section-heading"><div><span class="eyebrow">Step 1</span><h2>Write or generate your script</h2></div><span class="status-pill neutral">Urdu · Roman Urdu · English</span></div>
+          <textarea id="script" class="script-editor" placeholder="Tamatar: Main sehatmand hoon.&#10;Aam: Main meetha hoon, sab mujhe pasand karte hain."></textarea>
+          <div class="editor-meta"><span>Character name se dialogue shuru karein.</span><span id="scriptCount">0 words · 0 lines</span></div>
+          <div class="secondary-actions">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="analyzeScript()">Analyze</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="improveScript()">Improve</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="genPackage()">YouTube Package</button>
           </div>
-          <div><label>Zubaan</label>
-            <select id="tplLang"><option value="roman_urdu">Roman Urdu</option><option value="urdu">Urdu</option><option value="english">English</option></select></div>
+          <div id="scriptFeedback" class="feedback-region"></div>
+          <div id="pkgPanel" class="package-region"></div>
+
+          <div class="divlabel">Generate with AI</div>
+          <div class="tabs" id="scriptTabs" role="tablist" aria-label="AI script modes">
+            <button type="button" class="tab on" data-t="quick">Quick Idea</button>
+            <button type="button" class="tab" data-t="longform">Long-form</button>
+          </div>
+          <div class="tabpanel" data-t="quick">
+            <label for="ffIdea">Your idea</label>
+            <textarea id="ffIdea" class="idea-editor" placeholder="Jungle mein sher aur bandar ki dosti, comedy — bandar hamesha shararat karta hai"></textarea>
+            <p class="hint">Language, genre, duration aur Pro quality right inspector mein available hain.</p>
+            <button type="button" class="btn btn-secondary btn-sm" id="ffGenBtn" onclick="genFreeform()">Generate Script</button>
+            <div id="ffMsg" class="feedback-region"></div>
+          </div>
+          <div class="tabpanel hidden" data-t="longform">
+            <label for="lfIdea">Long story idea</label>
+            <textarea id="lfIdea" class="idea-editor" placeholder="Ek gaon ka chhota hero jo sukhe ke waqt sab ke liye paani dhoondta hai"></textarea>
+            <div class="row form-row">
+              <div><label for="lfGenre">Genre</label><select id="lfGenre"><option value="auto">Auto</option><option value="comedy">Comedy</option><option value="moral">Moral</option><option value="adventure">Adventure</option><option value="emotional">Emotional</option><option value="mystery">Mystery</option><option value="educational">Educational</option></select></div>
+              <div><label for="lfLang">Language</label><select id="lfLang"><option value="roman_urdu">Roman Urdu</option><option value="urdu">Urdu</option><option value="english">English</option></select></div>
+            </div>
+            <label>Video length</label>
+            <div class="seg" id="lfMinSeg"><button type="button" data-v="3min">~3 min<small>4 scenes</small></button><button type="button" data-v="5min" class="on">~5 min<small>6 scenes</small></button><button type="button" data-v="8min">~8 min<small>8 scenes</small></button></div>
+            <p class="hint">Outline aur scenes pehle plan honge; generation 20–40 seconds le sakti hai.</p>
+            <button type="button" class="btn btn-secondary btn-sm" id="lfGenBtn" onclick="genLongform()">Generate Long Story</button>
+            <div id="lfMsg" class="feedback-region"></div><div id="lfOutline" class="feedback-region"></div>
+          </div>
         </div>
-        <button class="btn btn-primary btn-sm" style="margin-top:10px" id="tplGenBtn" onclick="genFromTemplate()">✍️ Script Likho</button>
-        <div id="tplMsg" class="hint"></div>
-      </div>
-      </div>
+        <div class="workflow-actions"><span></span><button type="button" class="btn btn-primary" onclick="setCreateStep(2)">Continue to Cast &amp; Scenes <span aria-hidden="true">→</span></button></div>
+      </section>
 
+      <section class="create-step-panel" data-step-panel="2">
+        <div class="card" id="castEmptyState">
+          <div class="empty-state large"><span>{{ icon('characters') }}</span><div><h2>Prepare cast and scenes</h2><p>Script ko characters, backgrounds aur editable dialogue mein convert karein.</p><button type="button" class="btn btn-primary" id="previewBtn" onclick="preview()">Build Cast &amp; Scene Plan</button><p class="err hidden" id="previewError" aria-live="assertive"></p></div></div>
+        </div>
+        <div class="card hidden" id="previewCard">
+          <div class="section-heading"><div><span class="eyebrow">Editable plan</span><h2 id="pvTitle"></h2></div><span class="status-pill success">Ready to edit</span></div>
+          <p class="section-copy">Character packages, costumes, backgrounds, emotions aur dialogue final render se pehle edit karein.</p>
+          <h3 class="subsection-title">Characters</h3><div id="pvChars"></div>
+          <h3 class="subsection-title">Scenes &amp; Dialogue</h3><div id="pvScenes"></div>
+        </div>
+        <div class="workflow-actions"><button type="button" class="btn btn-secondary" onclick="setCreateStep(1)">← Back</button><button type="button" class="btn btn-primary" onclick="setCreateStep(3)">Continue to Style &amp; Audio →</button></div>
+      </section>
+
+      <section class="create-step-panel" data-step-panel="3">
+        <div class="card step-guidance">
+          <span class="guidance-icon">{{ icon('volume') }}</span>
+          <div><span class="eyebrow">Step 3</span><h2>Choose the look and sound</h2><p>Story mode, visual style, format, subtitles, voice aur music right inspector mein set karein.</p></div>
+        </div>
+        <div class="selection-overview">
+          <div><span>Story mode</span><strong id="summaryStoryMode">3D Characters</strong></div>
+          <div><span>Format</span><strong id="summaryFormat">Landscape · 1080p</strong></div>
+          <div><span>Voice</span><strong id="summaryVoice">Edge TTS</strong></div>
+          <div><span>Subtitles</span><strong id="summarySubtitles">Optional</strong></div>
+        </div>
+        <div class="workflow-actions"><button type="button" class="btn btn-secondary" onclick="setCreateStep(2)">← Back</button><button type="button" class="btn btn-primary" onclick="setCreateStep(4)">Continue to Preview &amp; Render →</button></div>
+      </section>
+
+      <section class="create-step-panel" data-step-panel="4">
+        <div class="card render-card" id="genCard">
+          <div class="render-surface"><span>{{ icon('preview') }}</span><strong>Preview workspace</strong><small>Final video aur generation progress yahan appear hogi.</small></div>
+          <div class="section-heading render-heading"><div><span class="eyebrow">Step 4</span><h2>Ready to render</h2></div><span class="status-pill success">Settings complete</span></div>
+          <div class="render-summary">
+            <div><span>Scenes</span><strong id="renderSceneCount">—</strong></div><div><span>Characters</span><strong id="renderCharacterCount">—</strong></div><div><span>Quality</span><strong id="renderQuality">1080p</strong></div><div><span>Engine</span><strong id="renderEngineSummary">Three.js</strong></div>
+          </div>
+          <div class="render-actions"><button type="button" class="btn btn-secondary" id="genBtn" onclick="generate()">Direct Generate</button><button type="button" class="btn btn-primary" id="pvGenBtn" onclick="confirmGenerate()" disabled>Generate Edited Plan</button></div>
+          <div class="cost" id="costEst"></div>
+        </div>
+        <div class="card hidden progress-experience" id="progressCard" aria-live="polite">
+          <div class="section-heading"><div><span class="eyebrow">Rendering</span><h2>Video generation in progress</h2></div><span class="status-pill warning">Cached safely</span></div>
+          <ul class="steps" id="steps"><li data-s="story"><span class="sdot"></span> Story analyze <span class="msg"></span></li><li data-s="voice"><span class="sdot"></span> Voices <span class="msg"></span></li><li data-s="asset"><span class="sdot"></span> Backgrounds + Characters <span class="msg"></span></li><li data-s="render"><span class="sdot"></span> Compositing + Render <span class="msg"></span></li></ul>
+          <button type="button" class="btn btn-danger btn-sm" id="stopBtn" onclick="stopJob()">Stop Generation</button><p class="hint">Completed work safe rahega aur baad mein Resume ho sakta hai.</p><p class="err hidden" id="errMsg" aria-live="assertive"></p>
+        </div>
+        <div class="card hidden" id="resultCard"><div class="section-heading"><div><span class="eyebrow">Complete</span><h2 id="rTitle">Video Ready</h2></div><span class="status-pill success">MP4 ready</span></div><video id="rVideo" controls></video><a class="btn btn-primary download-action" id="rDownload" download>Download MP4</a></div>
+        <div class="workflow-actions"><button type="button" class="btn btn-secondary" onclick="setCreateStep(3)">← Back to Style</button><span></span></div>
+      </section>
+    </section>
+
+    <section class="studio-view" id="view-characters" data-view-panel="characters">
+      <div class="view-header"><div><span class="eyebrow">Library</span><h1>Characters</h1><p>Recurring cast aur episode continuity manage karein.</p></div></div>
+      <div class="two-column-content">
+        <div class="card"><div class="section-heading"><div><span class="eyebrow">Reusable cast</span><h2>My Characters</h2></div></div><div class="row form-row"><input type="text" id="chName" placeholder="Name, e.g. Raju"><select id="chGender"><option value="male">Male</option><option value="female">Female</option><option value="child">Child</option></select></div><input type="text" id="chTrait" placeholder="Personality"><input type="text" id="chPhrase" placeholder="Catchphrase (optional)"><button type="button" class="btn btn-secondary btn-sm" onclick="addChar()">Add Character</button><div id="charList" class="chip-list"></div></div>
+        <div class="card"><div class="section-heading"><div><span class="eyebrow">Continuity</span><h2>Series &amp; Episodes</h2></div></div><div class="row form-row"><select id="serSel" onchange="selectSeries(this.value)"><option value="">Select series</option></select><button type="button" class="btn btn-secondary btn-sm" onclick="toggleNewSeries()">New Series</button></div><div id="newSeriesBox" class="hidden nested-panel"><input type="text" id="serName" placeholder="Series name"><textarea id="serPremise" class="compact-textarea" placeholder="Series premise"></textarea><div class="row form-row"><select id="serGenre"><option value="auto">Auto genre</option><option value="comedy">Comedy</option><option value="moral">Moral</option><option value="adventure">Adventure</option><option value="educational">Educational</option><option value="emotional">Emotional</option></select><select id="serLang"><option value="roman_urdu">Roman Urdu</option><option value="urdu">Urdu</option><option value="english">English</option></select></div><label>Cast</label><div id="serCast" class="chip-list"></div><button type="button" class="btn btn-primary btn-sm" onclick="createSeries()">Create Series</button></div><div id="epBox" class="hidden nested-panel"><div id="serInfo" class="section-copy"></div><div id="epHistory" class="history-list"></div><label for="epIdea">Episode idea</label><input type="text" id="epIdea" placeholder="Khali = story naturally continue"><label>Length</label><div class="seg" id="epLenSeg"><button type="button" data-v="short">Short</button><button type="button" data-v="medium" class="on">Medium</button><button type="button" data-v="long">Long</button><button type="button" data-v="3min">~3m</button><button type="button" data-v="5min">~5m</button></div><button type="button" class="btn btn-primary btn-sm" id="epGenBtn" onclick="genEpisode()">Generate Next Episode</button><div id="epMsg" class="feedback-region"></div></div></div>
+      </div>
+    </section>
+
+    <section class="studio-view" id="view-projects" data-view-panel="projects">
+      <div class="view-header"><div><span class="eyebrow">Local workspace</span><h1>Projects</h1><p>Completed aur unfinished videos load, preview, resume ya delete karein.</p></div><button type="button" class="btn btn-primary view-primary" onclick="showStudioView('create')">{{ icon('create') }} New Video</button></div>
+      <div class="card" id="projCardTop"><div class="section-heading"><div><span class="eyebrow">All projects</span><h2>My Projects <span id="projCount" class="muted-inline"></span></h2></div><button type="button" class="btn btn-secondary btn-sm" onclick="toggleProjects()">Show / Hide</button></div><div id="projList" class="project-list"></div></div>
+    </section>
+
+    <section class="studio-view" id="view-templates" data-view-panel="templates">
+      <div class="view-header"><div><span class="eyebrow">Story starters</span><h1>Templates</h1><p>Proven story structures ko apne topic aur cast ke saath generate karein.</p></div></div>
+      <div class="card"><div id="tplGrid" class="template-grid"></div><div id="tplPanel" class="hidden template-config"><div class="selection-title">Selected: <strong id="tplName"></strong></div><label for="tplTopic">Topic / idea</label><input type="text" id="tplTopic" placeholder="Jhoot bolne ka anjaam"><label>Characters <span class="muted-inline">(minimum 2)</span></label><div id="tplChars" class="template-character-grid"></div><div class="row form-row"><div><label>Length</label><div class="seg" id="tplLenSeg"><button type="button" data-v="short">Short</button><button type="button" data-v="medium" class="on">Medium</button><button type="button" data-v="long">Long</button></div></div><div><label for="tplLang">Language</label><select id="tplLang"><option value="roman_urdu">Roman Urdu</option><option value="urdu">Urdu</option><option value="english">English</option></select></div></div><button type="button" class="btn btn-primary btn-sm" id="tplGenBtn" onclick="genFromTemplate()">Generate Script</button><div id="tplMsg" class="feedback-region"></div></div></div>
+    </section>
+
+    <section class="studio-view" id="view-assets" data-view-panel="assets">
+      <div class="view-header"><div><span class="eyebrow">Local media</span><h1>Asset Library</h1><p>Characters, music, costumes, accessories aur backgrounds ka workspace.</p></div></div>
+      <div class="card"><div class="empty-state large"><span>{{ icon('assets') }}</span><div><h2>Your existing local assets remain available</h2><p>Current asset folders aur render lookup behavior unchanged hain. Rich browsing tools aane wale UI phase mein add honge.</p></div></div></div>
+    </section>
+
+    <section class="studio-view" id="view-settings" data-view-panel="settings">
+      <div class="view-header"><div><span class="eyebrow">Application</span><h1>Settings</h1><p>Provider health aur technical diagnostics.</p></div></div>
+      <div class="settings-grid"><div class="card"><div class="section-heading"><div><span class="eyebrow">Provider health</span><h2>API Tester</h2></div></div><p class="section-copy">LLM aur image endpoints ki key, latency aur availability check karein.</p><label class="chk"><input type="checkbox" id="test_img" checked> Include image test (may use provider credits)</label><button type="button" class="btn btn-primary btn-sm" id="testBtn" onclick="testRunware()">Run API Test</button><div id="testResult" class="feedback-region"></div></div><div class="card"><div class="section-heading"><div><span class="eyebrow">Rendering</span><h2>Workflow settings</h2></div></div><p class="section-copy">Video-specific style, audio aur render controls Create Video ke relevant step inspector mein milenge.</p><button type="button" class="btn btn-secondary" onclick="showStudioView('create');setCreateStep(3)">Open Style &amp; Audio</button></div></div>
+    </section>
+  </main>
+
+  <aside class="inspector" id="contextInspector" aria-label="Context inspector">
+    <div class="inspector-header"><div><span class="eyebrow">Inspector</span><h2 id="inspectorTitle">Script setup</h2></div><button type="button" class="icon-button inspector-close" aria-label="Close inspector" onclick="toggleInspector(false)">{{ icon('close') }}</button></div>
+    <div class="inspector-panel active" data-inspector-step="1">
+      <div class="inspector-section"><h3>Story basics</h3><label for="ffLang">Language</label><select id="ffLang"><option value="roman_urdu">Roman Urdu</option><option value="urdu">Urdu</option><option value="english">English</option></select><label for="ffGenre">Genre</label><select id="ffGenre"><option value="auto">Auto (AI decide)</option><option value="comedy">Comedy</option><option value="moral">Moral / Lesson</option><option value="educational">Educational</option><option value="emotional">Emotional</option><option value="adventure">Adventure</option><option value="mystery">Mystery</option><option value="rhyme">Rhyme / Song</option></select><label>Duration</label><div class="seg vertical-compact" id="ffLenSeg"><button type="button" data-v="short">Short <small>~30s</small></button><button type="button" data-v="medium" class="on">Medium <small>~60s</small></button><button type="button" data-v="long">Long <small>~2m</small></button></div><label class="chk quality-toggle"><input type="checkbox" id="ffPro" checked><span><strong>Pro quality</strong><small>Plan, draft, polish and hook variants</small></span></label></div>
+      <div class="inspector-note">Quick Idea generator ye settings use karta hai. Manual script ka text change nahi hoga.</div>
     </div>
 
-    <div class="card" id="genCard">
-      <h3>🎬 Generation</h3>
-      <label>Story Mode</label>
-      <div class="seg" id="storySeg">
-        <button data-v="blender3d" class="on">🧊 3D Characters</button>
-        <button data-v="puppet">🎭 Puppet (2D)</button>
-        <button data-v="cinematic">🎬 Cinematic Scenes</button>
-      </div>
-      <div class="hint" style="margin-bottom:10px">🧊 <b>3D Characters</b> = asli Blender 3D rigged characters (Panda, Robo, Hero...) — body rig + jaw lip-sync + gestures. Puppet = 2D image characters. Cinematic = har scene ek mukammal AI image.</div>
-      <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer">
-        <input type="checkbox" id="multiChar" checked style="width:auto">
-        <span>👥 <b>Multi-character</b> — ek scene ke saare characters (max 3) ek saath frame mein (bolne wala lip-sync, baaki idle). <span style="color:var(--muted)">Sirf 3D mode.</span></span>
-      </label>
-      <label>Render Engine</label>
-      <select id="render_engine" style="margin-bottom:6px">
-        <option value="threejs">⚡ Three.js (headless Chrome) — ~35x tez</option>
-        <option value="blender">🧊 Blender (Eevee) — dheema, Blender install chahiye</option>
-      </select>
-      <div class="hint" style="margin-bottom:10px">⚡ <b>Three.js</b> = wohi rigged 3D characters, magar Chrome WebGL se render (~60ms/frame vs Blender ~2-3s). 1-min video ~90 sec mein. Chrome hona zaroori. <span style="color:var(--muted)">Sirf 3D mode.</span></div>
-      <button class="btn btn-primary" id="previewBtn" onclick="preview()">👁️ Preview &amp; Edit</button>
-      <button class="btn btn-green btn-sm" style="margin-top:8px" id="genBtn" onclick="generate()">🚀 Direct Generate (skip preview)</button>
-      <div class="cost" id="costEst" style="margin-top:8px"></div>
+    <div class="inspector-panel" data-inspector-step="2">
+      <div class="inspector-section"><h3>Cast focus</h3><label for="castInspectorCharacter">Selected character</label><select id="castInspectorCharacter" disabled><option>No plan yet</option></select><label for="castInspectorVoice">Assigned voice</label><input type="text" id="castInspectorVoice" value="Build the plan first" readonly><label for="castInspectorEmotion">Line emotion</label><select id="castInspectorEmotion" disabled><option>neutral</option><option>happy</option><option>sad</option><option>angry</option><option>excited</option><option>scared</option><option>confused</option><option>thinking</option><option>surprised</option></select><label for="castInspectorAction">Action note</label><input type="text" id="castInspectorAction" placeholder="Select a dialogue line" disabled></div>
+      <div class="inspector-section"><h3>Scene focus</h3><label for="castInspectorBackground">Background</label><textarea id="castInspectorBackground" class="compact-textarea" placeholder="Build the scene plan first" disabled></textarea></div>
     </div>
 
-    <div class="card hidden" id="previewCard">
-      <h3>👁️ Preview — <span id="pvTitle" style="color:var(--green)"></span></h3>
-      <div class="hint">Video banne se pehle sab kuch dekho aur edit karo. Phir "Confirm & Generate".</div>
-      <div style="font-weight:700;margin:10px 0 4px">🎭 Characters</div>
-      <div id="pvChars"></div>
-      <div style="font-weight:700;margin:12px 0 4px">🎬 Scenes &amp; Dialogue</div>
-      <div id="pvScenes"></div>
-      <button class="btn btn-primary" style="margin-top:12px" id="pvGenBtn" onclick="confirmGenerate()">🚀 Confirm &amp; Generate Video</button>
+    <div class="inspector-panel" data-inspector-step="3">
+      <details class="acc" open><summary>Story Mode</summary><div class="accbody"><div class="seg stacked-seg" id="storySeg"><button type="button" data-v="blender3d" class="on">3D Characters</button><button type="button" data-v="puppet">Puppet 2D</button><button type="button" data-v="cinematic">Cinematic</button></div><label class="chk"><input type="checkbox" id="multiChar" checked> Multi-character frame (3D)</label></div></details>
+      <details class="acc" open><summary>Style &amp; Format</summary><div class="accbody"><div class="inline"><select id="style"></select><button type="button" class="btn btn-secondary btn-sm" onclick="suggestStyle()">AI suggest</button></div><label>Aspect ratio</label><div class="seg" id="aspectSeg"><button type="button" data-v="landscape" class="on">Landscape</button><button type="button" data-v="portrait">Portrait</button><button type="button" data-v="square">Square</button></div><label for="quality">Quality</label><select id="quality"><option>720p</option><option selected>1080p</option><option>2K</option><option>4K</option></select></div></details>
+      <details class="acc"><summary>Subtitles</summary><div class="accbody"><label class="chk"><input type="checkbox" id="cap_enabled"> Burn subtitles into video</label><div class="row"><div><label for="cap_words">Words/group</label><input type="number" id="cap_words" value="3" min="1" max="6"></div><div><label for="cap_size">Font size</label><input type="number" id="cap_size" value="58"></div></div><label>Position</label><div class="seg" id="posSeg"><button type="button" data-v="bottom" class="on">Bottom</button><button type="button" data-v="center">Center</button><button type="button" data-v="top">Top</button></div><label>Highlight color</label><div class="color-row"><input type="color" id="cap_hl" value="#FFE000"><span class="hint">current word</span></div><label>Highlight style</label><div class="seg" id="hlSeg"><button type="button" data-v="color" class="on">Color</button><button type="button" data-v="box">Box</button><button type="button" data-v="scale">Scale</button></div><label class="chk"><input type="checkbox" id="cap_perspk" checked> Per-speaker color</label></div></details>
+      <details class="acc" open><summary>Voice &amp; Audio</summary><div class="accbody"><label for="tts_provider">TTS provider</label><select id="tts_provider"><option value="edge">Edge TTS (free)</option><option value="elevenlabs">ElevenLabs</option></select><div id="edge_voice_group"><label for="urdu_accent">Urdu accent</label><select id="urdu_accent"><option value="pakistani">Pakistani (Asad / Uzma)</option><option value="indian">Indian (Salman / Gul)</option></select><p class="hint">Gender ke mutabiq voice automatically assign hoti hai.</p></div><div id="eleven_voice_group" class="hidden"><label for="elevenlabs_voice_id">ElevenLabs story voice</label><select id="elevenlabs_voice_id" disabled><option value="">Loading voices…</option></select><div id="eleven_voice_status" class="hint">Account voices load hongi.</div><button type="button" class="btn btn-secondary btn-sm" id="refresh_eleven_voices">Refresh voices</button></div><div class="row"><div><label for="voice_volume">Voice volume</label><input type="text" id="voice_volume" value="+0%"></div><div><label for="music_volume">Music volume</label><input type="number" id="music_volume" value="0.12" step="0.01" min="0" max="1"></div></div></div></details>
     </div>
 
-    <div class="card hidden" id="progressCard">
-      <h3>⏳ Progress</h3>
-      <ul class="steps" id="steps">
-        <li data-s="story"><span class="sdot"></span> Story analyze <span class="msg"></span></li>
-        <li data-s="voice"><span class="sdot"></span> Voices <span class="msg"></span></li>
-        <li data-s="asset"><span class="sdot"></span> Backgrounds + Characters <span class="msg"></span></li>
-        <li data-s="render"><span class="sdot"></span> Compositing + Render <span class="msg"></span></li>
-      </ul>
-      <button class="btn btn-sm" id="stopBtn" style="background:#dc2626;color:#fff;margin-top:6px" onclick="stopJob()">⏹ STOP Generation</button>
-      <div class="hint" style="margin-top:4px">Rukega — jitna ban chuka wo safe (baad mein Resume kar sakte).</div>
-      <p class="err hidden" id="errMsg"></p>
+    <div class="inspector-panel" data-inspector-step="4">
+      <div class="inspector-section"><h3>Render setup</h3><label for="render_engine">Render engine</label><select id="render_engine"><option value="threejs">Three.js — fast WebGL</option><option value="blender">Blender Eevee</option></select><label for="fps">Frame rate</label><select id="fps"><option>30</option><option>60</option></select><label class="chk"><input type="checkbox" id="gpu_encode" checked> GPU encoding (NVENC)</label><label class="chk"><input type="checkbox" id="fast_preview"> Fast preview (480p draft)</label></div>
+      <details class="acc"><summary>Advanced render options</summary><div class="accbody"><label>Motion preset</label><div class="seg" id="motionSeg"><button type="button" data-v="subtle">Subtle</button><button type="button" data-v="dynamic" class="on">Dynamic</button><button type="button" data-v="cinematic">Cinematic</button></div><label>Render mode</label><div class="seg" id="modeSeg"><button type="button" data-v="draft" class="on">Draft</button><button type="button" data-v="cinematic">Cinematic</button></div><label class="chk"><input type="checkbox" id="vignette" checked> Cinematic vignette</label><label class="chk"><input type="checkbox" id="intro_on"> Opening title card</label><p class="hint">Closing card remains enabled.</p></div></details>
     </div>
-
-    <div class="card hidden" id="resultCard">
-      <h3>✅ <span id="rTitle">Video Ready</span></h3>
-      <video id="rVideo" controls></video>
-      <div style="margin-top:10px"><a class="btn btn-green" id="rDownload" download style="display:block;text-align:center;text-decoration:none">⬇️ Download MP4</a></div>
-    </div>
-  </div>
-
-  <!-- RIGHT: settings -->
-  <div class="right">
-    <details class="acc" open>
-      <summary>🎨 Style / Look</summary>
-      <div class="accbody">
-      <div class="inline">
-        <select id="style"></select>
-        <button class="btn btn-primary btn-sm" onclick="suggestStyle()">✨ AI</button>
-      </div>
-      <div class="hint" style="margin-top:6px">🧊 <b>3D mode</b> mein ye video ka <b>rang/roshni ka mahaul</b> control karta hai (warm/night/pastel/cinematic/vivid...). Cinematic/Puppet mode mein poora art-style. </div>
-      </div>
-    </details>
-
-    <details class="acc" open>
-      <summary>📐 Resolution &amp; Format</summary>
-      <div class="accbody">
-      <label>Aspect</label>
-      <div class="seg" id="aspectSeg">
-        <button data-v="landscape" class="on">🖥️ Landscape</button>
-        <button data-v="portrait">📱 Portrait</button>
-        <button data-v="square">⬜ Square</button>
-      </div>
-      <div class="row">
-        <div><label>Quality</label><select id="quality">
-          <option>720p</option><option selected>1080p</option><option>2K</option><option>4K</option></select></div>
-        <div><label>FPS</label><select id="fps"><option>30</option><option>60</option></select></div>
-      </div>
-      <label class="chk"><input type="checkbox" id="fast_preview"> Fast preview (480p draft)</label>
-      <label class="chk"><input type="checkbox" id="gpu_encode" checked> ⚡ GPU encoding (NVENC)</label>
-      <div class="hint">Video encoding GPU (NVIDIA) par — CPU se tez, PC light rehta. Off = CPU (libx264).</div>
-      </div>
-    </details>
-
-    <details class="acc">
-      <summary>🎞️ Motion &amp; Render</summary>
-      <div class="accbody">
-      <label>Motion preset</label>
-      <div class="seg" id="motionSeg">
-        <button data-v="subtle">Subtle</button>
-        <button data-v="dynamic" class="on">Dynamic</button>
-        <button data-v="cinematic">Cinematic</button>
-      </div>
-      <label>Render mode</label>
-      <div class="seg" id="modeSeg">
-        <button data-v="draft" class="on">⚡ Draft (free)</button>
-        <button data-v="cinematic">🎥 Cinematic ($)</button>
-      </div>
-      <label class="chk"><input type="checkbox" id="vignette" checked> Cinematic vignette</label>
-      <label class="chk"><input type="checkbox" id="intro_on"> Show opening title card</label>
-      <div class="hint">Off starts directly with the story hook. The closing card stays enabled.</div>
-      </div>
-    </details>
-
-    <details class="acc">
-      <summary>💬 Subtitles / Captions</summary>
-      <div class="accbody">
-      <label class="chk"><input type="checkbox" id="cap_enabled"> Burn subtitles into video</label>
-      <div class="hint">Optional per video. In 3D mode this controls Urdu subtitles; in 2D mode it controls karaoke captions.</div>
-      <div class="row">
-        <div><label>Words/group</label><input type="number" id="cap_words" value="3" min="1" max="6"></div>
-        <div><label>Font size</label><input type="number" id="cap_size" value="58"></div>
-      </div>
-      <label>Position</label>
-      <div class="seg" id="posSeg">
-        <button data-v="bottom" class="on">Bottom</button>
-        <button data-v="center">Center</button>
-        <button data-v="top">Top</button>
-      </div>
-      <label>Highlight color</label>
-      <div class="color-row"><input type="color" id="cap_hl" value="#FFE000"><span class="hint">current word</span></div>
-      <label>Highlight style</label>
-      <div class="seg" id="hlSeg">
-        <button data-v="color" class="on">Color</button>
-        <button data-v="box">Box</button>
-        <button data-v="scale">Scale-pop</button>
-      </div>
-      <label class="chk"><input type="checkbox" id="cap_perspk" checked> Per-speaker color</label>
-      </div>
-    </details>
-
-    <details class="acc" open>
-      <summary>🎤 Voice &amp; Audio</summary>
-      <div class="accbody">
-      <label>TTS provider</label>
-      <select id="tts_provider"><option value="edge">edge-tts (free)</option><option value="elevenlabs">ElevenLabs</option></select>
-      <div id="edge_voice_group">
-        <label>Urdu Accent (lehja)</label>
-        <select id="urdu_accent">
-          <option value="pakistani">🇵🇰 Pakistani (Asad / Uzma)</option>
-          <option value="indian">🇮🇳 Indian (Salman / Gul)</option>
-        </select>
-        <div class="hint" style="margin-bottom:8px">Indian ya Pakistani Urdu voices (edge-tts, free). Har character ko gender ke hisab se voice milti.</div>
-      </div>
-      <div id="eleven_voice_group" class="hidden">
-        <label>ElevenLabs Children / Story Voice</label>
-        <select id="elevenlabs_voice_id" disabled>
-          <option value="">ElevenLabs voices load ho rahi hain...</option>
-        </select>
-        <div id="eleven_voice_status" class="hint" style="margin-bottom:6px">Account voices load hongi.</div>
-        <button type="button" id="refresh_eleven_voices" style="padding:6px 10px;font-size:11px;margin-bottom:8px">↻ Refresh ElevenLabs voices</button>
-        <div class="hint">⭐ Children, young, narrator, storytelling, animation aur expressive labels wali voices pehle. Urdu stories ke liye Eleven v3 use hota hai.</div>
-      </div>
-      <div class="row">
-        <div><label>Voice volume</label><input type="text" id="voice_volume" value="+0%"></div>
-        <div><label>Music vol</label><input type="number" id="music_volume" value="0.12" step="0.01" min="0" max="1"></div>
-      </div>
-      <div class="hint">Music: assets/music/&lt;mood&gt;/ mein daalein (auto mood-select).</div>
-      </div>
-    </details>
-
-    <details class="acc">
-      <summary>🔧 Advanced / API Tester</summary>
-      <div class="accbody">
-      <div class="hint">LLM + Image endpoints check karo (504/timeout, key, latency).</div>
-      <label class="chk" style="margin-top:8px"><input type="checkbox" id="test_img" checked> Image test bhi karo (thodi cost)</label>
-      <button class="btn btn-primary btn-sm" style="margin-top:8px" id="testBtn" onclick="testRunware()">🔎 Test API</button>
-      <div id="testResult" style="margin-top:10px;font-size:13px"></div>
-      </div>
-    </details>
-  </div>
+  </aside>
 </div>
+
+<div class="inspector-backdrop" id="inspectorBackdrop" onclick="toggleInspector(false)"></div>
 
 <script src="{{ url_for('static', filename='js/studio.js') }}?v=20260713-phase1"></script>
 </body>
