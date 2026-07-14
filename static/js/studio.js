@@ -5,11 +5,43 @@ function escHtml(value){
   return String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 function uiIcon(name){
-  return `<svg class="icon" aria-hidden="true"><use href="/static/icons/icons.svg?v=20260714-phase9#icon-${name}"></use></svg>`;
+  return `<svg class="icon" aria-hidden="true"><use href="/static/icons/icons.svg?v=20260714-phase10#icon-${name}"></use></svg>`;
 }
 function feedbackMarkup(type,message,icon){
   const iconName=icon||(type==='success'?'check':type==='warning'?'warning':type==='loading'?'render':'info');
   return `<span class="feedback-inline ${type}">${uiIcon(iconName)}<span>${escHtml(message)}</span></span>`;
+}
+function setButtonLoading(button,loading,label='Working…'){
+  if(!button) return;
+  if(loading){
+    if(!button.dataset.idleLabel) button.dataset.idleLabel=button.textContent.trim();
+    button.disabled=true; button.dataset.loading='true'; button.classList.add('is-loading');
+    button.setAttribute('aria-busy','true'); button.textContent=label;
+  }else{
+    button.disabled=false; button.classList.remove('is-loading'); button.removeAttribute('data-loading');
+    button.removeAttribute('aria-busy');
+    if(button.dataset.idleLabel){button.textContent=button.dataset.idleLabel;delete button.dataset.idleLabel;}
+  }
+}
+function showStudioToast(message,type='info',title='Notice',allowUndo=false){
+  const toast=document.getElementById('generationToast'); if(!toast) return;
+  const types=['success','warning','danger','info']; type=types.includes(type)?type:'info';
+  toast.classList.remove('success','warning','danger','info','hidden'); toast.classList.add(type);
+  toast.setAttribute('role',type==='danger'?'alert':'status');
+  toast.setAttribute('aria-live',type==='danger'?'assertive':'polite');
+  const icon=document.getElementById('generationToastIcon');
+  if(icon) icon.innerHTML=uiIcon(type==='success'?'check':type==='warning'||type==='danger'?'warning':'info');
+  const heading=document.getElementById('generationToastTitle'); if(heading) heading.textContent=title;
+  const copy=document.getElementById('generationToastMessage'); if(copy) copy.textContent=message;
+  const undo=document.getElementById('undoGeneratedScriptBtn'); if(undo) undo.classList.toggle('hidden',!allowUndo);
+  clearTimeout(TOAST_TIMER); TOAST_TIMER=setTimeout(()=>acceptGeneratedScript(),allowUndo?12000:6000);
+}
+function notifyValidation(message,focusId='',regionId=''){
+  showStudioToast(message,'warning','Action needed');
+  const region=regionId?document.getElementById(regionId):null;
+  if(region){region.innerHTML=feedbackMarkup('warning',message);region.classList.remove('hidden');}
+  const field=focusId?document.getElementById(focusId):null;
+  if(field){field.setAttribute('aria-invalid','true');field.focus();}
 }
 function elevenVoiceLabel(voice){
   const labels=voice.labels||{};
@@ -305,22 +337,24 @@ function renderCharList(){
   LIB_CHARS.forEach(c=>{
     const chip=document.createElement('div');
     chip.style.cssText='background:rgba(255,255,255,.06);border-radius:14px;padding:3px 8px;font-size:12px;display:flex;align-items:center;gap:6px';
-    chip.innerHTML='<b>'+c.name+'</b><span style="color:var(--muted)">'+(c.trait?('· '+c.trait.slice(0,24)):'')+'</span><span style="cursor:pointer;color:var(--err)" onclick="delChar(\''+c.id+'\')">✕</span>';
+    const safeName=escHtml(c.name), safeTrait=c.trait?('· '+escHtml(c.trait.slice(0,24))):'';
+    chip.innerHTML='<b>'+safeName+'</b><span style="color:var(--muted)">'+safeTrait+'</span><button type="button" class="icon-button chip-delete" aria-label="Delete '+safeName+'" data-character-id="'+escHtml(c.id)+'" data-character-name="'+safeName+'">'+uiIcon('trash')+'</button>';
+    chip.querySelector('.chip-delete').addEventListener('click',event=>delChar(event.currentTarget.dataset.characterId,event.currentTarget.dataset.characterName));
     chip.title=(c.trait||'')+(c.catchphrase?(' — "'+c.catchphrase+'"'):'');
     el.appendChild(chip);
   });
 }
 async function addChar(){
   const name=document.getElementById('chName').value.trim();
-  if(!name){ alert('Character ka naam likhein'); return; }
+  if(!name){ notifyValidation('Character ka naam likhein.','chName'); return; }
   await fetch('/api/characters-lib',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({name, gender:document.getElementById('chGender').value,
       trait:document.getElementById('chTrait').value, catchphrase:document.getElementById('chPhrase').value})});
   document.getElementById('chName').value='';document.getElementById('chTrait').value='';document.getElementById('chPhrase').value='';
   await loadLib();
 }
-async function delChar(cid){
-  await fetch('/api/characters-lib/'+cid,{method:'DELETE'}); await loadLib();
+async function delChar(cid,name='character'){
+  requestCharacterDelete(cid,name);
 }
 function renderSeriesSel(){
   const sel=document.getElementById('serSel'); const cur=sel.value;
@@ -343,13 +377,13 @@ function renderCastPicker(){
 function toggleNewSeries(){ document.getElementById('newSeriesBox').classList.toggle('hidden'); NEW_CAST=new Set(); renderCastPicker(); }
 async function createSeries(){
   const name=document.getElementById('serName').value.trim();
-  if(!name){ alert('Series naam likhein'); return; }
-  if(NEW_CAST.size<1){ alert('Kam az kam 1 cast character chuno'); return; }
+  if(!name){ notifyValidation('Series naam likhein.','serName'); return; }
+  if(NEW_CAST.size<1){ notifyValidation('Kam az kam 1 cast character chuno.','','epMsg'); return; }
   const r=await (await fetch('/api/series',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({name, premise:document.getElementById('serPremise').value,
       genre:document.getElementById('serGenre').value, language:document.getElementById('serLang').value,
       cast:[...NEW_CAST]})})).json();
-  if(r.error){ alert(r.error); return; }
+  if(r.error){ showStudioToast(r.error,'danger','Series could not be created'); return; }
   document.getElementById('newSeriesBox').classList.add('hidden');
   document.getElementById('serName').value='';document.getElementById('serPremise').value='';
   await loadLib();
@@ -512,6 +546,23 @@ function toggleAdvancedSettings(force,section=''){
   }else if(ADVANCED_RETURN_FOCUS && typeof ADVANCED_RETURN_FOCUS.focus==='function'){
     ADVANCED_RETURN_FOCUS.focus(); ADVANCED_RETURN_FOCUS=null;
   }
+}
+
+function modalFocusable(container){
+  return [...container.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])')]
+    .filter(element=>element.getClientRects().length>0);
+}
+
+function trapModalFocus(event){
+  if(event.key!=='Tab') return;
+  const deleteDialog=document.getElementById('deleteProjectDialog');
+  const activeDialog=deleteDialog&&!deleteDialog.classList.contains('hidden')?deleteDialog:
+    document.body.classList.contains('advanced-settings-open')?document.getElementById('advancedSettingsDrawer'):null;
+  if(!activeDialog) return;
+  const focusable=modalFocusable(activeDialog); if(!focusable.length) return;
+  const first=focusable[0],last=focusable[focusable.length-1];
+  if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+  else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
 }
 
 function showStudioView(view,persist=true){
@@ -681,12 +732,7 @@ function replaceScriptWithGenerated(script,title,source='AI'){
 }
 
 function showGenerationToast(message,allowUndo=false){
-  const toast=document.getElementById('generationToast'); if(!toast) return;
-  const copy=document.getElementById('generationToastMessage'); if(copy) copy.textContent=message;
-  const undo=document.getElementById('undoGeneratedScriptBtn'); if(undo) undo.classList.toggle('hidden',!allowUndo);
-  toast.classList.remove('hidden');
-  clearTimeout(TOAST_TIMER);
-  TOAST_TIMER=setTimeout(()=>acceptGeneratedScript(),allowUndo?12000:5000);
+  showStudioToast(message,'success',allowUndo?'Script ready':'Success',allowUndo);
 }
 
 function undoGeneratedScript(){
@@ -827,10 +873,10 @@ function initStudioWorkspace(){
   document.querySelectorAll('.nav-item[data-view]').forEach(item=>item.addEventListener('click',()=>showStudioView(item.dataset.view)));
   document.querySelectorAll('.workflow-step[data-step]').forEach(item=>item.addEventListener('click',()=>setCreateStep(item.dataset.step)));
   document.getElementById('script')?.addEventListener('input',updateScriptCount);
-  document.addEventListener('input',event=>{if(event.target.closest('#studioShell,#advancedSettingsDrawer')){syncAdvancedSettingsUI();scheduleWorkspaceAutosave();}},true);
+  document.addEventListener('input',event=>{if(event.target.hasAttribute('aria-invalid'))event.target.removeAttribute('aria-invalid');if(event.target.closest('#studioShell,#advancedSettingsDrawer')){syncAdvancedSettingsUI();scheduleWorkspaceAutosave();}},true);
   document.addEventListener('change',event=>{if(event.target.closest('#studioShell,#advancedSettingsDrawer')){renderWorkflowSummary();scheduleWorkspaceAutosave();}},true);
   document.addEventListener('click',event=>{if(!event.target.closest('.popover-wrap'))closeTopPopovers();if(!event.target.closest('.project-overflow'))closeProjectMenus();});
-  document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeTopPopovers();closeProjectMenus();closeDeleteProjectDialog();toggleInspector(false);toggleAdvancedSettings(false);}});
+  document.addEventListener('keydown',event=>{trapModalFocus(event);if(event.key==='Escape'){closeTopPopovers();closeProjectMenus();closeDeleteProjectDialog();toggleInspector(false);toggleAdvancedSettings(false);}});
   window.addEventListener('resize',()=>{if(window.innerWidth>=1280)document.body.classList.remove('inspector-open');});
   bindCastInspector();
   restoreWorkspaceDraft();
@@ -881,7 +927,7 @@ function collectSettings(){
 
 async function suggestStyle(){
   const script=document.getElementById('script').value.trim();
-  if(script.length<10){alert('Pehle script likhein');return;}
+  if(script.length<10){notifyValidation('Pehle script likhein.','script','scriptFeedback');return;}
   const r=await (await fetch('/api/suggest-style',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({script})})).json();
   if(r.style) document.getElementById('style').value=r.style;
@@ -998,10 +1044,10 @@ let PLAN=null;
 let COSTUMES=[], ACCESSORIES=[], HELD=[];
 async function preview(){
   const script=document.getElementById('script').value.trim();
-  if(script.length<10){alert('Script likhein');return;}
+  if(script.length<10){notifyValidation('Script likhein.','script','scriptFeedback');return;}
   showStudioView('create',false); setCreateStep(2,false);
   const btn=document.getElementById('previewBtn');
-  btn.disabled=true; btn.textContent='Building plan…';
+  setButtonLoading(btn,true,'Building plan…');
   document.getElementById('errMsg').classList.add('hidden');
   document.getElementById('previewError').classList.add('hidden');
   try{
@@ -1014,7 +1060,7 @@ async function preview(){
     if(j.error){ showPreviewError(j.error); }
     else { PLAN=j; renderPreview(j); }
   }catch(e){ showPreviewError('Preview fail: '+e); }
-  btn.disabled=false; btn.textContent='Build Cast & Scene Plan';
+  setButtonLoading(btn,false);
 }
 
 function previewDuration(scene){
@@ -1268,6 +1314,10 @@ function recentProjectMarkup(project){
 }
 
 async function loadProjectsList(){
+  const el=document.getElementById('projList');
+  const recent=document.getElementById('dashboardRecentProjects');
+  if(el&&!el.children.length) el.innerHTML=Array.from({length:3},()=>'<div class="project-skeleton" aria-hidden="true"><span></span><i></i><i></i><b></b></div>').join('');
+  if(recent&&!recent.children.length) recent.innerHTML=Array.from({length:2},()=>'<div class="recent-skeleton" aria-hidden="true"><span></span><i></i></div>').join('');
   try{
     const list=await (await fetch('/api/projects')).json();
     document.getElementById('projCount').textContent='('+list.length+')';
@@ -1275,8 +1325,6 @@ async function loadProjectsList(){
     const completed=list.filter(project=>project.has_video).length;
     const completedCount=document.getElementById('dashboardCompletedCount'); if(completedCount) completedCount.textContent=completed;
     const sceneCount=document.getElementById('dashboardSceneCount'); if(sceneCount) sceneCount.textContent=list.reduce((total,project)=>total+Number(project.scenes||0),0);
-    const el=document.getElementById('projList');
-    const recent=document.getElementById('dashboardRecentProjects');
     if(!list.length){
       el.innerHTML='<div class="empty-state large project-empty"><span>'+uiIcon('projects')+'</span><div><h2>No projects yet</h2><p>Create your first video to start the local library.</p><button type="button" class="btn btn-primary" onclick="showStudioView(\'create\')">Create New Video</button></div></div>';
       if(recent) recent.innerHTML='<div class="empty-state compact"><span>'+uiIcon('projects')+'</span><div><strong>No recent work</strong><p>Your first project will appear here.</p></div></div>';
@@ -1284,7 +1332,10 @@ async function loadProjectsList(){
     }
     el.innerHTML=list.map(projectCardMarkup).join('');
     if(recent) recent.innerHTML=list.slice(0,4).map(recentProjectMarkup).join('');
-  }catch(e){}
+  }catch(e){
+    if(el) el.innerHTML='<div class="empty-state compact project-empty"><span>'+uiIcon('warning')+'</span><div><strong>Projects unavailable</strong><p>Local project list load nahi hui. Dobara view open karke retry karein.</p></div></div>';
+    if(recent) recent.innerHTML='<div class="empty-state compact"><span>'+uiIcon('warning')+'</span><div><strong>Recent work unavailable</strong><p>Projects view se retry karein.</p></div></div>';
+  }
 }
 function toggleProjects(){
   const el=document.getElementById('projList');
@@ -1314,7 +1365,7 @@ function handleProjectAction(button,event){
 }
 async function openProject(name){
   const p=await (await fetch('/api/project/'+encodeURIComponent(name))).json();
-  if(p.error){ alert(p.error); return; }
+  if(p.error){ showStudioToast(p.error,'danger','Project could not be opened'); return; }
   showStudioView('create',false); setCreateStep(1,false); setCurrentProject(p.title||name);
   document.getElementById('script').value=p.script||'';
   PLAN = p.parsed ? {parsed:p.parsed} : null;   // preview/generate isi plan par
@@ -1358,11 +1409,24 @@ async function dropProject(name,elBtn){
 
 function requestProjectDelete(name,title){
   const dialog=document.getElementById('deleteProjectDialog');
-  DELETE_PENDING={name,title,returnFocus:document.activeElement};
+  DELETE_PENDING={type:'project',name,title,returnFocus:document.activeElement};
+  document.getElementById('deleteDialogEyebrow').textContent='Delete project';
   document.getElementById('deleteProjectDialogTitle').textContent=`Delete “${title}”?`;
   document.getElementById('deleteProjectDialogMessage').textContent='Video, cached clips aur project data permanently remove ho jayega.';
+  document.getElementById('confirmProjectDeleteButton').textContent='Delete project';
   dialog.classList.remove('hidden'); dialog.setAttribute('aria-hidden','false');
-  document.getElementById('confirmProjectDeleteButton')?.focus();
+  document.getElementById('cancelDeleteButton')?.focus();
+}
+
+function requestCharacterDelete(id,name){
+  const dialog=document.getElementById('deleteProjectDialog');
+  DELETE_PENDING={type:'character',id,name,returnFocus:document.activeElement};
+  document.getElementById('deleteDialogEyebrow').textContent='Delete character';
+  document.getElementById('deleteProjectDialogTitle').textContent=`Delete “${name}”?`;
+  document.getElementById('deleteProjectDialogMessage').textContent='Saved character library se remove ho jayega. Existing rendered projects safe rahenge.';
+  document.getElementById('confirmProjectDeleteButton').textContent='Delete character';
+  dialog.classList.remove('hidden'); dialog.setAttribute('aria-hidden','false');
+  document.getElementById('cancelDeleteButton')?.focus();
 }
 
 function closeDeleteProjectDialog(){
@@ -1375,22 +1439,25 @@ function closeDeleteProjectDialog(){
 async function confirmProjectDelete(){
   if(!DELETE_PENDING) return;
   const pending=DELETE_PENDING, button=document.getElementById('confirmProjectDeleteButton');
-  button.disabled=true; button.textContent='Deleting…';
+  setButtonLoading(button,true,'Deleting…');
   try{
-    const response=await fetch('/api/projects/'+encodeURIComponent(pending.name),{method:'DELETE'});
-    const result=await response.json(); if(!response.ok||result.error) throw new Error(result.error||'Project delete nahi hua');
-    closeDeleteProjectDialog(); await Promise.all([loadProjectsList(),checkResumable()]);
-    showGenerationToast('Project delete ho gaya.',false);
+    const url=pending.type==='character'?'/api/characters-lib/'+encodeURIComponent(pending.id):'/api/projects/'+encodeURIComponent(pending.name);
+    const response=await fetch(url,{method:'DELETE'});
+    const result=await response.json(); if(!response.ok||result.error) throw new Error(result.error||'Item delete nahi hua');
+    closeDeleteProjectDialog();
+    if(pending.type==='character') await loadLib();
+    else await Promise.all([loadProjectsList(),checkResumable()]);
+    showStudioToast(pending.type==='character'?'Character delete ho gaya.':'Project delete ho gaya.','success','Deleted');
   }catch(error){document.getElementById('deleteProjectDialogMessage').textContent=error.message;}
-  button.disabled=false; button.textContent='Delete project';
+  setButtonLoading(button,false);
 }
 async function startJob(parsed){
   const script=document.getElementById('script').value.trim();
-  if(!parsed && script.length<10){alert('Script likhein');return;}
+  if(!parsed && script.length<10){notifyValidation('Script likhein.','script','scriptFeedback');return;}
   showStudioView('create',false); setCreateStep(4,false);
   const btn=document.getElementById('genBtn');
-  btn.disabled=true;
-  document.getElementById('pvGenBtn').disabled=true;
+  setButtonLoading(btn,true,'Starting render…');
+  setButtonLoading(document.getElementById('pvGenBtn'),true,'Starting render…');
   setGenerationExperience('progress'); startGenerationClock();
   document.getElementById('errMsg').classList.add('hidden');
   setStages('story',0,1,'');
@@ -1427,9 +1494,9 @@ function showResult(res){
 }
 function showErr(m){stopGenerationClock();const e=document.getElementById('errMsg');e.textContent=m;e.classList.remove('hidden');reset();}
 function reset(){
-  const b=document.getElementById('genBtn');b.disabled=false;b.textContent='Generate directly from script';
-  const pb=document.getElementById('previewBtn');pb.disabled=false;pb.textContent='Build Cast & Scene Plan';
-  const pg=document.getElementById('pvGenBtn');if(pg)pg.disabled=(document.getElementById('script')?.value.trim().length||0)<10;
+  const b=document.getElementById('genBtn');setButtonLoading(b,false);b.textContent='Generate directly from script';
+  const pb=document.getElementById('previewBtn');setButtonLoading(pb,false);pb.textContent='Build Cast & Scene Plan';
+  const pg=document.getElementById('pvGenBtn');if(pg){setButtonLoading(pg,false);pg.disabled=(document.getElementById('script')?.value.trim().length||0)<10;}
 }
 
 async function openProjectFolder(){

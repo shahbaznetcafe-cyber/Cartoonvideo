@@ -150,7 +150,7 @@ class UIContractTests(unittest.TestCase):
         self.assertIn("url_for('static', filename='css/studio.css')", self.template)
         self.assertIn("url_for('static', filename='js/studio.js')", self.template)
         self.assertIn("url_for('static', filename='icons/favicon.svg')", self.template)
-        self.assertIn("?v=20260714-phase9", self.template)
+        self.assertIn("?v=20260714-phase10", self.template)
         self.assertIsNone(re.search(r"<style\b", self.template, re.IGNORECASE))
         self.assertIsNone(re.search(
             r"<script(?![^>]*\bsrc=)[^>]*>", self.template, re.IGNORECASE))
@@ -351,6 +351,22 @@ class UIContractTests(unittest.TestCase):
         self.assertIn("grid-template-columns:minmax(0,1fr);padding-bottom:64px", self.css)
         self.assertIn("overscroll-behavior:contain", self.css)
 
+    def test_phase_ten_accessibility_feedback_and_loading_states_are_contractual(self):
+        for function in (
+            "setButtonLoading", "showStudioToast", "notifyValidation",
+            "modalFocusable", "trapModalFocus", "requestCharacterDelete",
+        ):
+            self.assertRegex(self.js, rf"function\s+{function}\s*\(")
+        self.assertNotIn("alert(", self.js)
+        self.assertIn('aria-describedby="deleteProjectDialogMessage"', self.template)
+        self.assertIn('aria-live="polite"', self.template)
+        self.assertIn('aria-label="Character name"', self.template)
+        self.assertIn("project-skeleton", self.css + self.js)
+        self.assertIn("technical-tooltip-hint", self.css + self.template)
+        self.assertIn("prefers-reduced-motion:reduce", self.css)
+        self.assertIn("aria-invalid", self.css + self.js)
+        self.assertIn("is-loading", self.css + self.js)
+
     def test_local_svg_sprite_is_valid_and_uses_current_color(self):
         source = ICONS.read_text(encoding="utf-8")
         root = ET.fromstring(source)
@@ -369,8 +385,8 @@ class UIContractTests(unittest.TestCase):
         try:
             self.assertEqual(page.status_code, 200)
             html = page.get_data(as_text=True)
-            self.assertIn("/static/css/studio.css?v=20260714-phase9", html)
-            self.assertIn("/static/js/studio.js?v=20260714-phase9", html)
+            self.assertIn("/static/css/studio.css?v=20260714-phase10", html)
+            self.assertIn("/static/js/studio.js?v=20260714-phase10", html)
         finally:
             page.close()
         for asset in (
