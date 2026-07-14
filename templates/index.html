@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SBZ AI Video Studio</title>
 <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icons/favicon.svg') }}?v=20260713-phase1">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/studio.css') }}?v=20260714-phase8">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/studio.css') }}?v=20260714-phase9">
 </head>
 <body>
 {% macro icon(name) -%}
-<svg class="icon" aria-hidden="true"><use href="{{ url_for('static', filename='icons/icons.svg') }}?v=20260714-phase8#icon-{{ name }}"></use></svg>
+<svg class="icon" aria-hidden="true"><use href="{{ url_for('static', filename='icons/icons.svg') }}?v=20260714-phase9#icon-{{ name }}"></use></svg>
 {%- endmacro %}
 
 <header class="appbar">
@@ -335,6 +335,6 @@
   <div class="toast-actions"><button type="button" class="text-button" id="undoGeneratedScriptBtn" onclick="undoGeneratedScript()">Undo</button><button type="button" class="icon-button" id="keepGeneratedScriptBtn" onclick="acceptGeneratedScript()" aria-label="Dismiss notification">{{ icon('close') }}</button></div>
 </div>
 
-<script src="{{ url_for('static', filename='js/studio.js') }}?v=20260714-phase8"></script>
+<script src="{{ url_for('static', filename='js/studio.js') }}?v=20260714-phase9"></script>
 </body>
 </html>

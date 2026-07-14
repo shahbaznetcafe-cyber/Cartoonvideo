@@ -150,7 +150,7 @@ class UIContractTests(unittest.TestCase):
         self.assertIn("url_for('static', filename='css/studio.css')", self.template)
         self.assertIn("url_for('static', filename='js/studio.js')", self.template)
         self.assertIn("url_for('static', filename='icons/favicon.svg')", self.template)
-        self.assertIn("?v=20260714-phase8", self.template)
+        self.assertIn("?v=20260714-phase9", self.template)
         self.assertIsNone(re.search(r"<style\b", self.template, re.IGNORECASE))
         self.assertIsNone(re.search(
             r"<script(?![^>]*\bsrc=)[^>]*>", self.template, re.IGNORECASE))
@@ -336,6 +336,21 @@ class UIContractTests(unittest.TestCase):
         self.assertIsNone(decorative_emoji.search(self.template))
         self.assertIsNone(decorative_emoji.search(self.js))
 
+    def test_phase_nine_responsive_desktop_and_mobile_contracts_are_present(self):
+        for breakpoint in (
+            "@media (max-width:1399px)", "@media (max-width:1279px)",
+            "@media (max-width:1100px)", "@media (max-width:900px)",
+            "@media (max-width:720px)", "@media (max-width:460px)",
+            "@media (max-height:760px) and (min-width:901px)",
+        ):
+            self.assertIn(breakpoint, self.css)
+        self.assertIn("overflow-x:hidden", self.css)
+        self.assertIn("position:sticky", self.css)
+        self.assertIn("bottom:-1px", self.css)
+        self.assertIn("grid-template-columns:76px minmax(0,1fr)", self.css)
+        self.assertIn("grid-template-columns:minmax(0,1fr);padding-bottom:64px", self.css)
+        self.assertIn("overscroll-behavior:contain", self.css)
+
     def test_local_svg_sprite_is_valid_and_uses_current_color(self):
         source = ICONS.read_text(encoding="utf-8")
         root = ET.fromstring(source)
@@ -354,8 +369,8 @@ class UIContractTests(unittest.TestCase):
         try:
             self.assertEqual(page.status_code, 200)
             html = page.get_data(as_text=True)
-            self.assertIn("/static/css/studio.css?v=20260714-phase8", html)
-            self.assertIn("/static/js/studio.js?v=20260714-phase8", html)
+            self.assertIn("/static/css/studio.css?v=20260714-phase9", html)
+            self.assertIn("/static/js/studio.js?v=20260714-phase9", html)
         finally:
             page.close()
         for asset in (

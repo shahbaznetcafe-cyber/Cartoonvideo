@@ -5,7 +5,7 @@ function escHtml(value){
   return String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 function uiIcon(name){
-  return `<svg class="icon" aria-hidden="true"><use href="/static/icons/icons.svg?v=20260714-phase8#icon-${name}"></use></svg>`;
+  return `<svg class="icon" aria-hidden="true"><use href="/static/icons/icons.svg?v=20260714-phase9#icon-${name}"></use></svg>`;
 }
 function feedbackMarkup(type,message,icon){
   const iconName=icon||(type==='success'?'check':type==='warning'?'warning':type==='loading'?'render':'info');
