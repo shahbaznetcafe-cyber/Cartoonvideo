@@ -72,6 +72,7 @@ REQUIRED_ICON_IDS = {
     "icon-download", "icon-folder", "icon-trash", "icon-sparkles",
     "icon-script", "icon-preview", "icon-volume", "icon-captions", "icon-render",
     "icon-arrow-up", "icon-arrow-down", "icon-warning", "icon-clock",
+    "icon-check", "icon-info",
 }
 
 PHASE_TWO_IDS = {
@@ -126,6 +127,17 @@ PHASE_SEVEN_IDS = {
     "deleteProjectDialogMessage", "confirmProjectDeleteButton",
 }
 
+PHASE_EIGHT_TOKENS = {
+    "--bg:#090D14", "--sidebar:#0D131E", "--surface:#121A27",
+    "--surface-raised:#182233", "--border:#243149", "--primary:#4F8CFF",
+    "--primary-hover:#3478F6", "--success:#22C55E",
+    "--warning:#F59E0B", "--danger:#EF4444", "--text:#F1F5F9",
+    "--text-muted:#94A3B8", "--space-1:4px", "--space-2:8px",
+    "--space-3:12px", "--space-4:16px", "--space-6:24px",
+    "--space-8:32px", "--radius-card:14px", "--radius-button:10px",
+    "--input-height:44px",
+}
+
 
 class UIContractTests(unittest.TestCase):
     @classmethod
@@ -138,7 +150,7 @@ class UIContractTests(unittest.TestCase):
         self.assertIn("url_for('static', filename='css/studio.css')", self.template)
         self.assertIn("url_for('static', filename='js/studio.js')", self.template)
         self.assertIn("url_for('static', filename='icons/favicon.svg')", self.template)
-        self.assertIn("?v=20260714-phase7", self.template)
+        self.assertIn("?v=20260714-phase8", self.template)
         self.assertIsNone(re.search(r"<style\b", self.template, re.IGNORECASE))
         self.assertIsNone(re.search(
             r"<script(?![^>]*\bsrc=)[^>]*>", self.template, re.IGNORECASE))
@@ -313,6 +325,17 @@ class UIContractTests(unittest.TestCase):
             self.assertIn(selector, self.template + self.css + self.js)
         self.assertNotIn("if(!confirm('", self.js)
 
+    def test_phase_eight_design_system_tokens_typography_and_icons_are_consistent(self):
+        for token in PHASE_EIGHT_TOKENS:
+            self.assertIn(token, self.css)
+        self.assertIn("font-family:var(--font-ui)", self.css)
+        self.assertIn("font-size:14px", self.css)
+        self.assertIn("feedback-inline", self.css + self.js)
+        self.assertIn("template-chip-icon", self.css + self.js)
+        decorative_emoji = re.compile(r"[🎬⭐⚠⏳✅❌▶🗑📁🔍✨📦📌📝📄🔖💡🏷⏹📼]")
+        self.assertIsNone(decorative_emoji.search(self.template))
+        self.assertIsNone(decorative_emoji.search(self.js))
+
     def test_local_svg_sprite_is_valid_and_uses_current_color(self):
         source = ICONS.read_text(encoding="utf-8")
         root = ET.fromstring(source)
@@ -331,8 +354,8 @@ class UIContractTests(unittest.TestCase):
         try:
             self.assertEqual(page.status_code, 200)
             html = page.get_data(as_text=True)
-            self.assertIn("/static/css/studio.css?v=20260714-phase7", html)
-            self.assertIn("/static/js/studio.js?v=20260714-phase7", html)
+            self.assertIn("/static/css/studio.css?v=20260714-phase8", html)
+            self.assertIn("/static/js/studio.js?v=20260714-phase8", html)
         finally:
             page.close()
         for asset in (

@@ -5,13 +5,17 @@ function escHtml(value){
   return String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 function uiIcon(name){
-  return `<svg class="icon" aria-hidden="true"><use href="/static/icons/icons.svg?v=20260714-phase7#icon-${name}"></use></svg>`;
+  return `<svg class="icon" aria-hidden="true"><use href="/static/icons/icons.svg?v=20260714-phase8#icon-${name}"></use></svg>`;
+}
+function feedbackMarkup(type,message,icon){
+  const iconName=icon||(type==='success'?'check':type==='warning'?'warning':type==='loading'?'render':'info');
+  return `<span class="feedback-inline ${type}">${uiIcon(iconName)}<span>${escHtml(message)}</span></span>`;
 }
 function elevenVoiceLabel(voice){
   const labels=voice.labels||{};
   const traits=[labels.gender,labels.age,labels.accent,labels['use case']||labels.use_case]
     .filter(Boolean).slice(0,3);
-  return `${voice.recommended?'⭐ ':''}${voice.name}${traits.length?' · '+traits.join(' · '):''}`;
+  return `${voice.recommended?'Recommended · ':''}${voice.name}${traits.length?' · '+traits.join(' · '):''}`;
 }
 async function loadElevenLabsVoices(force=false){
   if(ELEVEN_VOICES_LOADED && !force) return;
@@ -36,7 +40,7 @@ async function loadElevenLabsVoices(force=false){
       });
       sel.appendChild(group);
     };
-    addGroup('⭐ Children & Storytelling — Recommended',recommended);
+    addGroup('Children & Storytelling — Recommended',recommended);
     addGroup('All ElevenLabs account voices',others);
     if(!data.voices || !data.voices.length){
       const option=document.createElement('option'); option.value='';
@@ -50,7 +54,7 @@ async function loadElevenLabsVoices(force=false){
     ELEVEN_VOICES_LOADED=true;
   }catch(error){
     sel.innerHTML='<option value="">ElevenLabs voices unavailable</option>';
-    status.textContent='⚠️ '+error.message;
+    status.textContent='Voice service: '+error.message;
     sel.disabled=true; ELEVEN_VOICES_LOADED=false;
   }
 }
@@ -184,7 +188,7 @@ async function loadTemplates(){
   TPLS.forEach(t=>{
     const b=document.createElement('button');
     b.className='tplChip'; b.dataset.id=t.id;
-    b.innerHTML=`<div style="font-size:18px">${t.emoji}</div><div style="font-size:11px;line-height:1.2">${t.name}</div>`;
+    b.innerHTML=`<span class="template-chip-icon">${uiIcon('templates')}</span><span>${escHtml(t.name)}</span>`;
     b.title=t.desc;
     b.onclick=()=>selectTemplate(t.id);
     g.appendChild(b);
@@ -193,7 +197,7 @@ async function loadTemplates(){
   CHARS.forEach(c=>{
     const b=document.createElement('button');
     b.className='tplChip'; b.dataset.cid=c.id; b.style.padding='6px 2px';
-    b.innerHTML=`<div style="font-size:15px">${c.emoji}</div><div style="font-size:10px">${c.name}</div>`;
+    b.innerHTML=`<span class="template-chip-icon">${uiIcon('characters')}</span><span>${escHtml(c.name)}</span>`;
     b.onclick=()=>toggleChar(c.id);
     cg.appendChild(b);
   });
@@ -206,7 +210,7 @@ function selectTemplate(id){
   TPL_SEL=TPLS.find(t=>t.id===id);
   document.querySelectorAll('#tplGrid .tplChip').forEach(c=>c.classList.toggle('on',c.dataset.id===id));
   document.getElementById('tplPanel').classList.remove('hidden');
-  document.getElementById('tplName').textContent=`${TPL_SEL.emoji} ${TPL_SEL.name_en}`;
+  document.getElementById('tplName').textContent=TPL_SEL.name_en;
   document.getElementById('tplTopic').placeholder='e.g. '+TPL_SEL.sample_topic;
   // template ke default characters pre-select karo
   CHAR_SEL=new Set(TPL_SEL.chars);
@@ -217,8 +221,8 @@ async function genFromTemplate(){
   if(!TPL_SEL) return;
   const btn=document.getElementById('tplGenBtn'), msg=document.getElementById('tplMsg');
   if(CHAR_SEL.size<2){ msg.innerHTML='<span class="err">Kam az kam 2 characters chuno.</span>'; return; }
-  btn.disabled=true; btn.textContent='⏳ Likh raha hoon...';
-  msg.textContent='AI script likh raha hai...';
+  btn.disabled=true; btn.textContent='Writing script…';
+  msg.innerHTML=feedbackMarkup('loading','AI script likh raha hai…');
   try{
     const body={template_id:TPL_SEL.id, topic:document.getElementById('tplTopic').value,
       language:document.getElementById('tplLang').value,
@@ -228,7 +232,7 @@ async function genFromTemplate(){
     if(j.error){ msg.innerHTML='<span class="err">'+j.error+'</span>'; }
     else{
       replaceScriptWithGenerated(j.script,TPL_SEL?.name_en||'Template story','Template');
-      msg.innerHTML='<span style="color:var(--green)">✅ Script ready — upar Script box mein aa gaya. Edit kar sakte ho, phir Generate Video.</span>';
+      msg.innerHTML=feedbackMarkup('success','Script ready hai. Editor mein review karke Generate Video karein.');
     }
   }catch(e){ msg.innerHTML='<span class="err">Fail: '+e+'</span>'; }
   btn.disabled=false; btn.textContent='Generate Script';
@@ -240,8 +244,8 @@ async function genFreeform(){
   const idea=document.getElementById('ffIdea').value.trim();
   if(!idea){ msg.innerHTML='<span class="err">Pehle apna idea likhein.</span>'; return; }
   const pro=document.getElementById('ffPro').checked;
-  btn.disabled=true; btn.textContent=pro?'⏳ Plan → Draft → Polish...':'⏳ Soch raha hoon...';
-  msg.innerHTML='<span style="color:var(--muted)">'+(pro?'Pro pipeline: plan, hook variants, draft, polish...':'AI story bana raha hai...')+'</span>';
+  btn.disabled=true; btn.textContent=pro?'Plan → Draft → Polish…':'Creating story…';
+  msg.innerHTML=feedbackMarkup('loading',pro?'Pro pipeline: plan, hook variants, draft and polish.':'AI story bana raha hai.');
   try{
     const body={idea, genre:document.getElementById('ffGenre').value,
       language:document.getElementById('ffLang').value,
@@ -252,10 +256,7 @@ async function genFreeform(){
     else{
       replaceScriptWithGenerated(j.script||'',j.title||'AI story','Quick Idea');
       const cast=(j.cast||[]).join(', ');
-      msg.innerHTML='<span style="color:var(--green)">✅ '+(j.title?('“'+j.title+'” '):'')
-        +'</span><span style="color:var(--muted)">'
-        +(j.genre?('['+j.genre+'] '):'')+(cast?('· '+cast):'')
-        +' — Script box mein aa gaya. Edit karke Generate.</span>';
+      msg.innerHTML=feedbackMarkup('success',`${j.title?`“${j.title}” · `:''}${j.genre?`${j.genre} · `:''}${cast?`${cast} · `:''}Script editor mein ready hai.`);
     }
   }catch(e){ msg.innerHTML='<span class="err">Fail: '+e+'</span>'; }
   btn.disabled=false; btn.textContent='Generate Script';
@@ -267,8 +268,8 @@ async function genLongform(){
     out=document.getElementById('lfOutline');
   const idea=document.getElementById('lfIdea').value.trim();
   if(!idea){ msg.innerHTML='<span class="err">Pehle apna idea likhein.</span>'; return; }
-  btn.disabled=true; btn.textContent='⏳ Kahani ban rahi hai...';
-  msg.innerHTML='<span style="color:var(--muted)">Outline + scenes likhe ja rahe hain (~20–40s)...</span>';
+  btn.disabled=true; btn.textContent='Building long story…';
+  msg.innerHTML=feedbackMarkup('loading','Outline aur scenes likhe ja rahe hain.');
   out.innerHTML='';
   try{
     const body={idea, genre:document.getElementById('lfGenre').value,
@@ -280,15 +281,11 @@ async function genLongform(){
     else{
       replaceScriptWithGenerated(j.script||'',j.title||'Long-form story','Long-form');
       const cast=(j.cast||[]).join(', ');
-      msg.innerHTML='<span style="color:var(--green)">✅ '+(j.title?('“'+j.title+'” '):'')
-        +'</span><span style="color:var(--muted)">'+(j.genre?('['+j.genre+'] '):'')
-        +(cast?('· '+cast):'')+'</span>';
-      if(j.logline) msg.innerHTML+='<div style="color:var(--muted);margin-top:4px">'+j.logline+'</div>';
+      msg.innerHTML=feedbackMarkup('success',`${j.title?`“${j.title}” · `:''}${j.genre?`${j.genre} · `:''}${cast||'Long-form story ready'}`);
+      if(j.logline) msg.innerHTML+=`<div class="feedback-detail">${escHtml(j.logline)}</div>`;
       // scene outline chips
       if(j.scenes&&j.scenes.length){
-        out.innerHTML='<div style="font-weight:700;margin-bottom:4px">🎬 '+j.scenes.length
-          +' Scenes:</div>'+j.scenes.map((s,i)=>'<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,.06)"><b style="color:var(--green)">'
-          +(i+1)+'. '+(s.location||'')+'</b> <span style="color:var(--muted)">— '+(s.goal||'')+'</span></div>').join('');
+        out.innerHTML=`<div class="outline-heading">${uiIcon('render')} ${j.scenes.length} scenes</div><div class="outline-list">`+j.scenes.map((s,i)=>`<div><b>${i+1}. ${escHtml(s.location||'')}</b><span>${escHtml(s.goal||'')}</span></div>`).join('')+'</div>';
       }
     }
   }catch(e){ msg.innerHTML='<span class="err">Fail: '+e+'</span>'; }
@@ -367,15 +364,15 @@ async function selectSeries(sid){
     +(CUR_SERIES.premise?('<br>'+CUR_SERIES.premise):'');
   const eps=CUR_SERIES.episodes||[];
   document.getElementById('epHistory').innerHTML = eps.length
-    ? '<b>📼 '+eps.length+' Episodes:</b>'+eps.map(e=>'<div style="padding:2px 0"><b>Ep '+e.num+':</b> '+e.title+' <span style="color:var(--muted)">— '+(e.summary||'').slice(0,80)+'</span></div>').join('')
+    ? '<b>'+eps.length+' Episodes:</b>'+eps.map(e=>'<div style="padding:2px 0"><b>Ep '+e.num+':</b> '+e.title+' <span style="color:var(--muted)">— '+(e.summary||'').slice(0,80)+'</span></div>').join('')
     : '<span style="color:var(--muted)">Abhi koi episode nahi — Ep 1 banao.</span>';
-  document.getElementById('epGenBtn').textContent='🎬 Generate Episode '+(eps.length+1);
+  document.getElementById('epGenBtn').textContent='Generate Episode '+(eps.length+1);
 }
 async function genEpisode(){
   if(!CUR_SERIES) return;
   const btn=document.getElementById('epGenBtn'), msg=document.getElementById('epMsg');
-  btn.disabled=true; btn.textContent='⏳ Episode ban raha...';
-  msg.innerHTML='<span style="color:var(--muted)">Cast + pichhle episodes ka continuity use ho raha hai...</span>';
+  btn.disabled=true; btn.textContent='Creating episode…';
+  msg.innerHTML=feedbackMarkup('loading','Cast aur previous episodes ki continuity use ho rahi hai.');
   try{
     const j=await (await fetch('/api/series/'+CUR_SERIES.id+'/episode',{method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -383,8 +380,8 @@ async function genEpisode(){
     if(j.error){ msg.innerHTML='<span class="err">'+j.error+'</span>'; }
     else{
       replaceScriptWithGenerated(j.script||'',j.title||CUR_SERIES.name,'Series episode');
-      msg.innerHTML='<span style="color:var(--green)">✅ Episode '+j.episode_num+': “'+j.title+'”</span>'
-        +'<div style="color:var(--muted);margin-top:3px">'+(j.summary||'')+'</div>';
+      msg.innerHTML=feedbackMarkup('success',`Episode ${j.episode_num}: “${j.title}”`)
+        +`<div class="feedback-detail">${escHtml(j.summary||'')}</div>`;
       document.getElementById('epIdea').value='';
       await selectSeries(CUR_SERIES.id);  // history refresh
     }
@@ -896,7 +893,7 @@ async function analyzeScript(){
   const script=document.getElementById('script').value.trim();
   const fb=document.getElementById('scriptFeedback');
   if(script.length<10){fb.innerHTML='<span class="err">Pehle script likhein</span>';return;}
-  fb.innerHTML='<span style="color:var(--muted)">🔍 Analyze ho raha...</span>';
+  fb.innerHTML=feedbackMarkup('loading','Script analyze ho raha hai.','info');
   try{
     const r=await (await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({script,language:_scriptLang()})})).json();
@@ -904,9 +901,9 @@ async function analyzeScript(){
     let h='<div style="border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px">';
     if(r.hook_score!=null){const c=r.hook_score>=7?'var(--green)':(r.hook_score>=5?'#FBBF24':'var(--red)');
       h+=`<div><b>Hook:</b> <span style="color:${c}">${r.hook_score}/10</span> &nbsp; <b>Pacing:</b> ${r.pacing||'-'} &nbsp; <b>Music:</b> ${r.music_mood||'-'}</div>`;}
-    if(r.title_ideas&&r.title_ideas.length){h+='<div style="margin-top:5px"><b>📌 Title ideas:</b><ul style="margin:3px 0 0 16px;padding:0">'+r.title_ideas.map(t=>`<li style="cursor:pointer" onclick="navigator.clipboard.writeText('${(t+'').replace(/'/g,"")}')">${t}</li>`).join('')+'</ul></div>';}
-    if(r.improvements&&r.improvements.length){h+='<div style="margin-top:5px"><b>💡 Behtari:</b><ul style="margin:3px 0 0 16px;padding:0">'+r.improvements.map(t=>`<li>${t}</li>`).join('')+'</ul></div>';}
-    if(r.strong_points&&r.strong_points.length){h+='<div style="margin-top:5px;color:var(--green)"><b>✅ Achha:</b> '+r.strong_points.join(', ')+'</div>';}
+    if(r.title_ideas&&r.title_ideas.length){h+='<div style="margin-top:5px"><b>Title ideas:</b><ul style="margin:3px 0 0 16px;padding:0">'+r.title_ideas.map(t=>`<li style="cursor:pointer" onclick="navigator.clipboard.writeText('${(t+'').replace(/'/g,"")}')">${t}</li>`).join('')+'</ul></div>';}
+    if(r.improvements&&r.improvements.length){h+='<div style="margin-top:5px"><b>Improvements:</b><ul style="margin:3px 0 0 16px;padding:0">'+r.improvements.map(t=>`<li>${t}</li>`).join('')+'</ul></div>';}
+    if(r.strong_points&&r.strong_points.length){h+='<div class="analysis-strength"><b>Strong points:</b> '+r.strong_points.join(', ')+'</div>';}
     h+='</div>';
     fb.innerHTML=h;
   }catch(e){fb.innerHTML='<span class="err">Analyze fail: '+e+'</span>';}
@@ -916,13 +913,13 @@ async function improveScript(){
   const el=document.getElementById('script'); const script=el.value.trim();
   const fb=document.getElementById('scriptFeedback');
   if(script.length<10){fb.innerHTML='<span class="err">Pehle script likhein</span>';return;}
-  fb.innerHTML='<span style="color:var(--muted)">✨ Behtar likha ja raha...</span>';
+  fb.innerHTML=feedbackMarkup('loading','Script improve ho raha hai.');
   try{
     const r=await (await fetch('/api/improve',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({script,language:_scriptLang()})})).json();
     if(r.script&&!r.script.startsWith('[error]')){
       el.value=r.script;
-      fb.innerHTML='<span style="color:var(--green)">✅ Script behtar ho gaya (upar box mein). Analyze karke dekh lein.</span>';
+      fb.innerHTML=feedbackMarkup('success','Improved script editor mein ready hai.');
     } else { fb.innerHTML='<span class="err">'+(r.script||'fail')+'</span>'; }
   }catch(e){fb.innerHTML='<span class="err">Improve fail: '+e+'</span>';}
 }
@@ -933,7 +930,7 @@ async function genPackage(){
   const script=document.getElementById('script').value.trim();
   const pk=document.getElementById('pkgPanel');
   if(script.length<20){ pk.innerHTML='<span class="err">Pehle script banayein.</span>'; return; }
-  pk.innerHTML='<span style="color:var(--muted)">📦 YouTube package ban raha (titles, description, tags, thumbnail)...</span>';
+  pk.innerHTML=feedbackMarkup('loading','YouTube titles, description, tags aur thumbnail copy ban rahi hai.');
   try{
     const m=await (await fetch('/api/metadata',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({script,language:_scriptLang()})})).json();
@@ -943,12 +940,12 @@ async function genPackage(){
     const tags=(m.tags||[]).map(t=>`<span style="background:var(--card2,rgba(255,255,255,.06));border-radius:12px;padding:2px 8px;font-size:11px;margin:2px;display:inline-block">${t}</span>`).join('');
     const chapters=(m.chapters||[]).length?box('Chapters',(m.chapters||[]).map(c=>`<div style="font-size:12px">${c}</div>`).join('')):'';
     pk.innerHTML='<div style="border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 12px;font-size:13px">'
-      +'<div style="font-weight:700;color:#a78bfa">📦 YouTube Package</div>'
-      +box('🏷️ Thumbnail text','<div style="font-weight:800;font-size:18px;letter-spacing:.02em">'+(m.thumbnail_text||'')+'</div>')
-      +box('📝 Titles (5)',titles)
-      +box('📄 Description','<div style="white-space:pre-wrap">'+(m.description||'')+'</div><button class="btn btn-sm" style="margin-top:4px;padding:1px 8px" onclick="_copy('+JSON.stringify(m.description||'').replace(/"/g,'&quot;')+')">copy description</button>')
-      +box('🔖 Tags',tags+'<div><button class="btn btn-sm" style="margin-top:5px;padding:1px 8px" onclick="_copy('+JSON.stringify((m.tags||[]).join(', ')).replace(/"/g,'&quot;')+')">copy all tags</button></div>')
-      +box('📌 Pinned comment',(m.pinned_comment||''))
+      +'<div class="package-heading">'+uiIcon('download')+' YouTube Package</div>'
+      +box('Thumbnail text','<div style="font-weight:800;font-size:18px;letter-spacing:.02em">'+(m.thumbnail_text||'')+'</div>')
+      +box('Titles (5)',titles)
+      +box('Description','<div style="white-space:pre-wrap">'+(m.description||'')+'</div><button class="btn btn-sm" style="margin-top:4px;padding:1px 8px" onclick="_copy('+JSON.stringify(m.description||'').replace(/"/g,'&quot;')+')">copy description</button>')
+      +box('Tags',tags+'<div><button class="btn btn-sm" style="margin-top:5px;padding:1px 8px" onclick="_copy('+JSON.stringify((m.tags||[]).join(', ')).replace(/"/g,'&quot;')+')">copy all tags</button></div>')
+      +box('Pinned comment',(m.pinned_comment||''))
       +chapters
       +'</div>';
   }catch(e){ pk.innerHTML='<span class="err">Package fail: '+e+'</span>'; }
@@ -1329,7 +1326,7 @@ async function openProject(name){
   updateScriptCount(); renderWorkflowSummary(); scheduleWorkspaceAutosave();
   document.getElementById('script').scrollIntoView({behavior:'smooth',block:'center'});
   const fb=document.getElementById('scriptFeedback');
-  if(fb) fb.innerHTML='<span style="color:var(--green)">✅ "'+(p.title||name)+'" load ho gaya — script box mein. Edit karke Preview/Generate karo'+(p.has_video?', ya ▶ Video se purani dekho.':'.')+'</span>';
+  if(fb) fb.innerHTML=feedbackMarkup('success',`“${p.title||name}” load ho gaya. Script edit karke Preview ya Generate karein${p.has_video?', ya completed video open karein.':'.'}`);
   if(p.has_video) playProject(name);
 }
 function playProject(name){
@@ -1413,7 +1410,7 @@ async function poll(id){
   if(j.state==='running') setStages(j.stage,j.i,j.total,j.message);
   else if(j.state==='done'){clearInterval(polling);stopGenerationClock();setStages('render',1,1,'',true);showResult(j.result);checkResumable();loadProjectsList();}
   else if(j.state==='stopped'){clearInterval(polling);stopGenerationClock();reset();setGenerationExperience('ready');
-    const fb=document.getElementById('scriptFeedback'); if(fb)fb.innerHTML='<span style="color:#f59e0b">⏹ Generation ruk gaya — jitna bana wo safe. 📁 My Projects se ▶ Resume kar sakte.</span>';
+    const fb=document.getElementById('scriptFeedback'); if(fb)fb.innerHTML=feedbackMarkup('warning','Generation ruk gayi. Completed work safe hai aur Projects se resume ho sakta hai.');
     checkResumable();loadProjectsList();}
   else if(j.state==='error'){clearInterval(polling);showErr(j.error||'error');checkResumable();}
 }
@@ -1484,7 +1481,7 @@ function createAnotherVideo(){
 
 async function testRunware(){
   const btn=document.getElementById('testBtn'), out=document.getElementById('testResult');
-  btn.disabled=true; btn.textContent='⏳ Testing...';
+  btn.disabled=true; btn.textContent='Testing providers…';
   out.innerHTML='<span style="color:var(--muted)">Runware ko test kiya ja raha hai...</span>';
   try{
     const img=document.getElementById('test_img').checked;
@@ -1500,8 +1497,7 @@ async function testRunware(){
     if(t.image){h+=`<div>${dot(t.image.ok)} <b>Image</b> <span style="color:var(--muted)">(${t.image.model})</span> — ${t.image.ms}ms</div>`;
       if(t.image.ok&&t.image.url) h+=`<div style="margin-top:5px"><img src="${t.image.url}" style="width:80px;height:80px;border-radius:8px;object-fit:cover"></div>`;
       if(!t.image.ok) h+=`<div class="err">${t.image.error}</div>`;}
-    h+=`<div style="margin-top:8px;font-weight:700;color:${j.ok?'var(--green)':'var(--red)'}">`
-      + (j.ok?'✅ Runware theek chal raha hai':'⚠️ Masla — upar detail dekho')+`</div>`;
+    h+=`<div class="provider-test-summary ${j.ok?'success':'danger'}">${uiIcon(j.ok?'check':'warning')}<span>${j.ok?'Providers are working':'Provider issue found — review the details above'}</span></div>`;
     out.innerHTML=h;
   }catch(e){ out.innerHTML='<div class="err">Test fail: '+e+'</div>'; }
   btn.disabled=false; btn.textContent='🔎 Test API';
