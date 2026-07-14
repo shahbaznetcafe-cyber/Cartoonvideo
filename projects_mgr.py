@@ -25,7 +25,8 @@ def list_projects():
         meta_path = os.path.join(pdir, "project_metadata.json")
         story_path = os.path.join(pdir, "story.json")
         info = {"name": name, "title": name, "scenes": 0, "characters": 0,
-                "created": "", "has_video": os.path.exists(os.path.join(pdir, "final.mp4"))}
+                "created": "", "duration": 0,
+                "has_video": os.path.exists(os.path.join(pdir, "final.mp4"))}
         if os.path.exists(meta_path):
             try:
                 info.update(json.load(open(meta_path, encoding="utf-8")))
@@ -39,6 +40,18 @@ def list_projects():
                 info["characters"] = len(s.get("characters", []))
             except Exception:
                 pass
+        timeline_path = os.path.join(pdir, "timeline.json")
+        if os.path.exists(timeline_path):
+            try:
+                timeline = json.load(open(timeline_path, encoding="utf-8"))
+                info["duration"] = round(sum(float(item.get("duration", 0) or 0)
+                                             for item in timeline), 2)
+            except (OSError, ValueError, TypeError, json.JSONDecodeError):
+                pass
+        job = load_job(name) or {}
+        info["state"] = "complete" if info["has_video"] else job.get("state", "draft")
+        info["stage"] = job.get("stage", "")
+        info["updated"] = job.get("updated", "")
         info["mtime"] = os.path.getmtime(pdir)
         out.append(info)
     out.sort(key=lambda x: x.get("mtime", 0), reverse=True)

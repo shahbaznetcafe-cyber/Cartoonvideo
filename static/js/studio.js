@@ -5,7 +5,7 @@ function escHtml(value){
   return String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 function uiIcon(name){
-  return `<svg class="icon" aria-hidden="true"><use href="/static/icons/icons.svg?v=20260714-phase6#icon-${name}"></use></svg>`;
+  return `<svg class="icon" aria-hidden="true"><use href="/static/icons/icons.svg?v=20260714-phase7#icon-${name}"></use></svg>`;
 }
 function elevenVoiceLabel(voice){
   const labels=voice.labels||{};
@@ -102,6 +102,11 @@ async function load(){
   document.getElementById('provStatus').textContent=providerSummary;
   const advancedProviders=document.getElementById('advancedProviderDetails');
   if(advancedProviders) advancedProviders.textContent=providerSummary;
+  const providerHealth=document.getElementById('dashboardProviderHealth');
+  const providerDetail=document.getElementById('dashboardEngineDetail');
+  const providerCount=(p.llm?.length||0)+(p.image?.length||0)+(p.tts?.length||0);
+  if(providerHealth) providerHealth.textContent=providerCount?'Engine ready':'Setup required';
+  if(providerDetail) providerDetail.textContent=providerCount?`${p.llm.length} text · ${p.image.length} image · ${p.tts.length} voice providers available`:'Open Settings to configure providers.';
   if(OPTS.defaults && OPTS.defaults.urdu_accent){ const ua=document.getElementById('urdu_accent'); if(ua) ua.value=OPTS.defaults.urdu_accent; }
   const tts=document.getElementById('tts_provider');
   if(OPTS.defaults && OPTS.defaults.tts_provider) tts.value=OPTS.defaults.tts_provider;
@@ -403,7 +408,7 @@ const STUDIO_SESSION_KEY='sbz-studio-session-v2';
 const STUDIO_STEP_TITLES=['','Script setup','Cast & scene focus','Style & audio','Render setup'];
 let STUDIO_UI={view:'dashboard',step:1,projectName:'Untitled video',scriptMode:'write',aiTab:'quick'};
 let WORKSPACE_INITIALIZED=false, AUTOSAVE_TIMER=null, GENERATED_SCRIPT_UNDO=null, TOAST_TIMER=null, ADVANCED_RETURN_FOCUS=null;
-let GENERATION_STARTED_AT=0, ELAPSED_TIMER=null, RENDER_ESTIMATE_TOKEN=0, CURRENT_RESULT_PROJECT='';
+let GENERATION_STARTED_AT=0, ELAPSED_TIMER=null, RENDER_ESTIMATE_TOKEN=0, CURRENT_RESULT_PROJECT='', DELETE_PENDING=null;
 
 function setAutosaveState(state,label){
   const el=document.getElementById('autosaveStatus');
@@ -827,8 +832,8 @@ function initStudioWorkspace(){
   document.getElementById('script')?.addEventListener('input',updateScriptCount);
   document.addEventListener('input',event=>{if(event.target.closest('#studioShell,#advancedSettingsDrawer')){syncAdvancedSettingsUI();scheduleWorkspaceAutosave();}},true);
   document.addEventListener('change',event=>{if(event.target.closest('#studioShell,#advancedSettingsDrawer')){renderWorkflowSummary();scheduleWorkspaceAutosave();}},true);
-  document.addEventListener('click',event=>{if(!event.target.closest('.popover-wrap'))closeTopPopovers();});
-  document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeTopPopovers();toggleInspector(false);toggleAdvancedSettings(false);}});
+  document.addEventListener('click',event=>{if(!event.target.closest('.popover-wrap'))closeTopPopovers();if(!event.target.closest('.project-overflow'))closeProjectMenus();});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeTopPopovers();closeProjectMenus();closeDeleteProjectDialog();toggleInspector(false);toggleAdvancedSettings(false);}});
   window.addEventListener('resize',()=>{if(window.innerWidth>=1280)document.body.classList.remove('inspector-open');});
   bindCastInspector();
   restoreWorkspaceDraft();
@@ -1230,47 +1235,85 @@ async function checkResumable(){
     const card=document.getElementById('resumeCard'), el=document.getElementById('resumeList');
     const notice=document.getElementById('resumeNotice'), count=document.getElementById('resumeNoticeCount');
     if(count) count.textContent=list.length;
+    const dashboardUnfinished=document.getElementById('dashboardUnfinishedCount'); if(dashboardUnfinished) dashboardUnfinished.textContent=list.length;
     if(notice) notice.classList.toggle('hidden',!list.length);
     if(!list.length){ card.classList.add('hidden'); return; }
-    el.innerHTML=list.map(p=>{
-      const st=p.state==='error'?'⚠️ ruk gaya':'⏳ adhoora';
-      return `<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)">
-        <div style="flex:1"><b>${p.title||p.name}</b> <span style="color:var(--muted);font-size:11px">${st} · stage: ${p.stage||'?'} · ${p.done_clips||0} clips · ${p.updated||''}</span></div>
-        <button class="btn btn-green btn-sm" onclick="resumeProject('${p.name}')">▶ Resume</button>
-        <button class="btn btn-sm" style="background:var(--err,#b33)" onclick="dropProject('${p.name}',this)">🗑</button>
-      </div>`;
-    }).join('');
+    el.innerHTML=list.map(p=>`<article class="resume-project-row"><span class="resume-project-icon">${uiIcon('projects')}</span><div><strong>${escHtml(p.title||p.name)}</strong><span>${escHtml(p.stage||'Paused')} · ${Number(p.done_clips||0)} cached clips · ${escHtml(p.updated||'Recently updated')}</span></div><button type="button" class="btn btn-secondary btn-sm" data-project-name="${escHtml(p.name)}" onclick="resumeProject(this.dataset.projectName)">Resume</button><button type="button" class="icon-button resume-delete" data-project-name="${escHtml(p.name)}" data-project-title="${escHtml(p.title||p.name)}" onclick="dropProject(this.dataset.projectName,this)" aria-label="Delete unfinished project">${uiIcon('trash')}</button></article>`).join('');
     card.classList.remove('hidden');
   }catch(e){}
 }
 let PROJECTS_SHOWN=true;
+
+function formatProjectDuration(seconds){
+  const value=Math.max(0,Math.round(Number(seconds)||0));
+  if(!value) return 'Duration pending';
+  return value>=60?`${Math.floor(value/60)}m ${String(value%60).padStart(2,'0')}s`:`${value}s`;
+}
+
+function formatProjectDate(project){
+  if(project.created) return project.created;
+  if(project.updated) return project.updated;
+  return new Date(Number(project.mtime||0)*1000).toLocaleString();
+}
+
+function projectCardMarkup(project){
+  const complete=!!project.has_video;
+  const status=complete?'Complete':project.state==='error'?'Needs attention':'In progress';
+  const statusClass=complete?'success':project.state==='error'?'danger':'warning';
+  const name=escHtml(project.name), title=escHtml(project.title||project.name);
+  const primaryAction=complete?'play':'resume', primaryLabel=complete?'Open video':'Resume project';
+  return `<article class="project-card"><div class="project-thumbnail ${complete?'complete':''}"><span>${uiIcon(complete?'play':'projects')}</span><small>${complete?'MP4 ready':'Work in progress'}</small></div><div class="project-card-body"><div class="project-card-title"><div><span class="status-pill ${statusClass}">${status}</span><h3>${title}</h3></div><div class="project-overflow"><button type="button" class="icon-button project-menu-button" aria-label="Project actions" aria-expanded="false" onclick="toggleProjectMenu(this,event)">•••</button><div class="project-menu hidden" data-project-menu><button type="button" data-action="open" data-project-name="${name}" onclick="handleProjectAction(this,event)">${uiIcon('folder')} Load project</button>${complete?`<button type="button" data-action="play" data-project-name="${name}" onclick="handleProjectAction(this,event)">${uiIcon('play')} Preview video</button>`:`<button type="button" data-action="resume" data-project-name="${name}" onclick="handleProjectAction(this,event)">${uiIcon('render')} Resume render</button>`}<button type="button" class="danger" data-action="delete" data-project-name="${name}" data-project-title="${title}" onclick="handleProjectAction(this,event)">${uiIcon('trash')} Delete</button></div></div></div><div class="project-card-meta"><span>${Number(project.scenes||0)} scenes</span><span>${Number(project.characters||0)} characters</span><span>${formatProjectDuration(project.duration)}</span></div><div class="project-modified">Modified ${escHtml(formatProjectDate(project))}</div><button type="button" class="btn ${complete?'btn-primary':'btn-secondary'} project-open-button" data-action="${primaryAction}" data-project-name="${name}" onclick="handleProjectAction(this,event)">${primaryLabel}</button></div></article>`;
+}
+
+function recentProjectMarkup(project){
+  const complete=!!project.has_video, name=escHtml(project.name);
+  return `<article class="recent-project-card"><span class="recent-project-thumb">${uiIcon(complete?'play':'projects')}</span><div><strong>${escHtml(project.title||project.name)}</strong><span>${complete?'Complete':'In progress'} · ${formatProjectDuration(project.duration)}</span></div><button type="button" class="text-button" data-action="${complete?'play':'resume'}" data-project-name="${name}" onclick="handleProjectAction(this,event)">${complete?'Open':'Resume'} →</button></article>`;
+}
+
 async function loadProjectsList(){
   try{
     const list=await (await fetch('/api/projects')).json();
     document.getElementById('projCount').textContent='('+list.length+')';
     const dashboardCount=document.getElementById('dashboardProjectCount'); if(dashboardCount) dashboardCount.textContent=list.length;
+    const completed=list.filter(project=>project.has_video).length;
+    const completedCount=document.getElementById('dashboardCompletedCount'); if(completedCount) completedCount.textContent=completed;
+    const sceneCount=document.getElementById('dashboardSceneCount'); if(sceneCount) sceneCount.textContent=list.reduce((total,project)=>total+Number(project.scenes||0),0);
     const el=document.getElementById('projList');
-    if(!list.length){ el.innerHTML='<div style="color:var(--muted);font-size:12px">Abhi koi project nahi.</div>'; return; }
-    el.innerHTML=list.map(p=>{
-      const d=p.created||new Date((p.mtime||0)*1000).toLocaleString();
-      // complete -> Video; adhoora -> Resume (usi project ko jahan tak bana wahin se aage)
-      const act=p.has_video
-        ? `<button class="btn btn-sm" style="background:#2563eb" onclick="playProject('${p.name}')">▶ Video</button>`
-        : `<button class="btn btn-sm" style="background:#f59e0b;color:#000" onclick="resumeProject('${p.name}')">▶ Resume</button>`;
-      return `<div style="display:flex;gap:6px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)">
-        <div style="flex:1;min-width:0"><b>${p.title||p.name}</b> ${p.has_video?'':'<span style="color:#f59e0b;font-size:10px">● adhoora</span>'}<br><span style="color:var(--muted);font-size:11px">${p.characters||0} chars · ${p.scenes||0} scenes · ${d}</span></div>
-        <button class="btn btn-green btn-sm" onclick="openProject('${p.name}')">📂 Load</button>
-        ${act}
-        <button class="btn btn-sm" style="background:var(--err,#b33)" onclick="delProject('${p.name}',event)">🗑</button>
-      </div>`;
-    }).join('');
+    const recent=document.getElementById('dashboardRecentProjects');
+    if(!list.length){
+      el.innerHTML='<div class="empty-state large project-empty"><span>'+uiIcon('projects')+'</span><div><h2>No projects yet</h2><p>Create your first video to start the local library.</p><button type="button" class="btn btn-primary" onclick="showStudioView(\'create\')">Create New Video</button></div></div>';
+      if(recent) recent.innerHTML='<div class="empty-state compact"><span>'+uiIcon('projects')+'</span><div><strong>No recent work</strong><p>Your first project will appear here.</p></div></div>';
+      return;
+    }
+    el.innerHTML=list.map(projectCardMarkup).join('');
+    if(recent) recent.innerHTML=list.slice(0,4).map(recentProjectMarkup).join('');
   }catch(e){}
 }
 function toggleProjects(){
   const el=document.getElementById('projList');
   PROJECTS_SHOWN=!PROJECTS_SHOWN;
   el.classList.toggle('hidden',!PROJECTS_SHOWN);
+  const button=document.getElementById('projectListToggle'); if(button) button.textContent=PROJECTS_SHOWN?'Collapse list':'Show projects';
   if(PROJECTS_SHOWN) loadProjectsList();
+}
+
+function closeProjectMenus(){
+  document.querySelectorAll('[data-project-menu]').forEach(menu=>menu.classList.add('hidden'));
+  document.querySelectorAll('.project-menu-button').forEach(button=>button.setAttribute('aria-expanded','false'));
+}
+
+function toggleProjectMenu(button,event){
+  event?.stopPropagation(); const menu=button.parentElement.querySelector('[data-project-menu]');
+  const open=menu.classList.contains('hidden'); closeProjectMenus();
+  menu.classList.toggle('hidden',!open); button.setAttribute('aria-expanded',String(open));
+}
+
+function handleProjectAction(button,event){
+  event?.stopPropagation(); const name=button.dataset.projectName, action=button.dataset.action; closeProjectMenus();
+  if(action==='open') return openProject(name);
+  if(action==='play') return playProject(name);
+  if(action==='resume') return resumeProject(name);
+  if(action==='delete') return requestProjectDelete(name,button.dataset.projectTitle||name);
 }
 async function openProject(name){
   const p=await (await fetch('/api/project/'+encodeURIComponent(name))).json();
@@ -1299,9 +1342,7 @@ function playProject(name){
 }
 async function delProject(name,ev){
   if(ev) ev.stopPropagation();
-  if(!confirm('"'+name+'" delete karein? (video + saara data)')) return;
-  await fetch('/api/projects/'+encodeURIComponent(name),{method:'DELETE'});
-  loadProjectsList();
+  requestProjectDelete(name,name);
 }
 async function resumeProject(name){
   showStudioView('create',false); setCreateStep(4,false); setCurrentProject(name);
@@ -1315,9 +1356,36 @@ async function resumeProject(name){
   polling=setInterval(()=>poll(r.job_id),1500);
 }
 async function dropProject(name,elBtn){
-  if(!confirm('Ye adhoora project delete karein?')) return;
-  await fetch('/api/projects/'+name,{method:'DELETE'});
-  checkResumable();
+  requestProjectDelete(name,elBtn?.dataset.projectTitle||name);
+}
+
+function requestProjectDelete(name,title){
+  const dialog=document.getElementById('deleteProjectDialog');
+  DELETE_PENDING={name,title,returnFocus:document.activeElement};
+  document.getElementById('deleteProjectDialogTitle').textContent=`Delete “${title}”?`;
+  document.getElementById('deleteProjectDialogMessage').textContent='Video, cached clips aur project data permanently remove ho jayega.';
+  dialog.classList.remove('hidden'); dialog.setAttribute('aria-hidden','false');
+  document.getElementById('confirmProjectDeleteButton')?.focus();
+}
+
+function closeDeleteProjectDialog(){
+  const dialog=document.getElementById('deleteProjectDialog'); if(!dialog||dialog.classList.contains('hidden')) return;
+  dialog.classList.add('hidden'); dialog.setAttribute('aria-hidden','true');
+  const focus=DELETE_PENDING?.returnFocus; DELETE_PENDING=null;
+  if(focus&&typeof focus.focus==='function') focus.focus();
+}
+
+async function confirmProjectDelete(){
+  if(!DELETE_PENDING) return;
+  const pending=DELETE_PENDING, button=document.getElementById('confirmProjectDeleteButton');
+  button.disabled=true; button.textContent='Deleting…';
+  try{
+    const response=await fetch('/api/projects/'+encodeURIComponent(pending.name),{method:'DELETE'});
+    const result=await response.json(); if(!response.ok||result.error) throw new Error(result.error||'Project delete nahi hua');
+    closeDeleteProjectDialog(); await Promise.all([loadProjectsList(),checkResumable()]);
+    showGenerationToast('Project delete ho gaya.',false);
+  }catch(error){document.getElementById('deleteProjectDialogMessage').textContent=error.message;}
+  button.disabled=false; button.textContent='Delete project';
 }
 async function startJob(parsed){
   const script=document.getElementById('script').value.trim();

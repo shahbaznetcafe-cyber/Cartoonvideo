@@ -118,6 +118,14 @@ PHASE_SIX_IDS = {
     "exportResult",
 }
 
+PHASE_SEVEN_IDS = {
+    "dashboardProviderHealth", "dashboardEngineDetail",
+    "dashboardCompletedCount", "dashboardUnfinishedCount",
+    "dashboardSceneCount", "dashboardRecentProjects", "projectListToggle",
+    "deleteProjectDialog", "deleteProjectDialogTitle",
+    "deleteProjectDialogMessage", "confirmProjectDeleteButton",
+}
+
 
 class UIContractTests(unittest.TestCase):
     @classmethod
@@ -130,7 +138,7 @@ class UIContractTests(unittest.TestCase):
         self.assertIn("url_for('static', filename='css/studio.css')", self.template)
         self.assertIn("url_for('static', filename='js/studio.js')", self.template)
         self.assertIn("url_for('static', filename='icons/favicon.svg')", self.template)
-        self.assertIn("?v=20260714-phase6", self.template)
+        self.assertIn("?v=20260714-phase7", self.template)
         self.assertIsNone(re.search(r"<style\b", self.template, re.IGNORECASE))
         self.assertIsNone(re.search(
             r"<script(?![^>]*\bsrc=)[^>]*>", self.template, re.IGNORECASE))
@@ -287,6 +295,24 @@ class UIContractTests(unittest.TestCase):
         self.assertIn("aspect-ratio:16/9", self.css)
         self.assertIn("role=\"progressbar\"", self.template)
 
+    def test_phase_seven_dashboard_projects_and_delete_dialog_are_contractual(self):
+        ids = set(re.findall(r'\bid=["\']([^"\']+)["\']', self.template))
+        self.assertTrue(PHASE_SEVEN_IDS.issubset(ids),
+                        f"Missing Phase 7 IDs: {sorted(PHASE_SEVEN_IDS - ids)}")
+        for function in (
+            "formatProjectDuration", "formatProjectDate", "projectCardMarkup",
+            "recentProjectMarkup", "closeProjectMenus", "toggleProjectMenu",
+            "handleProjectAction", "requestProjectDelete",
+            "closeDeleteProjectDialog", "confirmProjectDelete",
+        ):
+            self.assertRegex(self.js, rf"function\s+{function}\s*\(")
+        for selector in (
+            "dashboard-hero-grid", "dashboard-stats", "project-card-grid",
+            "project-thumbnail", "project-menu", "confirm-dialog",
+        ):
+            self.assertIn(selector, self.template + self.css + self.js)
+        self.assertNotIn("if(!confirm('", self.js)
+
     def test_local_svg_sprite_is_valid_and_uses_current_color(self):
         source = ICONS.read_text(encoding="utf-8")
         root = ET.fromstring(source)
@@ -305,8 +331,8 @@ class UIContractTests(unittest.TestCase):
         try:
             self.assertEqual(page.status_code, 200)
             html = page.get_data(as_text=True)
-            self.assertIn("/static/css/studio.css?v=20260714-phase6", html)
-            self.assertIn("/static/js/studio.js?v=20260714-phase6", html)
+            self.assertIn("/static/css/studio.css?v=20260714-phase7", html)
+            self.assertIn("/static/js/studio.js?v=20260714-phase7", html)
         finally:
             page.close()
         for asset in (

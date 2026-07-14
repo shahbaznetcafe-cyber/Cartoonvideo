@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🎬 SBZ AI Video Studio</title>
 <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icons/favicon.svg') }}?v=20260713-phase1">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/studio.css') }}?v=20260714-phase6">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/studio.css') }}?v=20260714-phase7">
 </head>
 <body>
 {% macro icon(name) -%}
-<svg class="icon" aria-hidden="true"><use href="{{ url_for('static', filename='icons/icons.svg') }}?v=20260714-phase6#icon-{{ name }}"></use></svg>
+<svg class="icon" aria-hidden="true"><use href="{{ url_for('static', filename='icons/icons.svg') }}?v=20260714-phase7#icon-{{ name }}"></use></svg>
 {%- endmacro %}
 
 <header class="appbar">
@@ -83,26 +83,27 @@
   <main class="workspace" id="workspace">
     <section class="studio-view active" id="view-dashboard" data-view-panel="dashboard">
       <div class="view-header">
-        <div><span class="eyebrow">Workspace</span><h1>Dashboard</h1><p>Continue a project or start a new cartoon video.</p></div>
+        <div><span class="eyebrow">Workspace</span><h1>Dashboard</h1><p>Continue recent work or start a new cartoon video.</p></div>
         <button type="button" class="btn btn-primary view-primary" onclick="showStudioView('create')">{{ icon('create') }} New Video</button>
       </div>
-      <div class="dashboard-grid">
-        <button type="button" class="dashboard-new" onclick="showStudioView('create')">
-          <span class="dashboard-new-icon">{{ icon('sparkles') }}</span>
-          <span><strong>Create a new video</strong><small>Script se final MP4 tak guided workflow</small></span>
-          <span class="dashboard-arrow" aria-hidden="true">→</span>
-        </button>
+      <div class="dashboard-hero-grid">
+        <button type="button" class="dashboard-new dashboard-primary-card" onclick="showStudioView('create')"><span class="dashboard-new-icon">{{ icon('sparkles') }}</span><span><span class="eyebrow">Start creating</span><strong>Create a new video</strong><small>Script se final MP4 tak guided workflow</small></span><span class="dashboard-arrow" aria-hidden="true">→</span></button>
+        <div class="dashboard-health-card"><div class="dashboard-health-heading"><span class="status-dot ready"></span><div><span class="eyebrow">System health</span><strong id="dashboardProviderHealth">Engine ready</strong></div></div><p id="dashboardEngineDetail">Checking providers and render engine…</p><button type="button" class="text-button" onclick="showStudioView('settings')">View diagnostics →</button></div>
+      </div>
+      <div class="dashboard-stats" aria-label="Workspace statistics">
         <div class="metric-card"><span>Projects</span><strong id="dashboardProjectCount">—</strong><small>saved locally</small></div>
-        <div class="metric-card"><span>Engine</span><strong class="success-text">Ready</strong><small>providers connected</small></div>
+        <div class="metric-card"><span>Completed</span><strong id="dashboardCompletedCount">—</strong><small>ready videos</small></div>
+        <div class="metric-card"><span>Unfinished</span><strong id="dashboardUnfinishedCount">—</strong><small>safe to resume</small></div>
+        <div class="metric-card"><span>Scenes</span><strong id="dashboardSceneCount">—</strong><small>across all projects</small></div>
       </div>
       <div class="card hidden resume-dashboard-card" id="resumeCard">
         <div class="section-heading"><div><span class="warning-kicker">Recovery</span><h2>Unfinished projects</h2></div><span class="status-pill warning">Safe to resume</span></div>
-        <p class="section-copy">Voices, backgrounds aur completed clips dobara nahi banenge.</p>
-        <div id="resumeList"></div>
+        <p class="section-copy">Completed clips cached hain; wahi se kaam continue hoga.</p>
+        <div id="resumeList" class="resume-project-list"></div>
       </div>
       <div class="dashboard-section">
         <div class="section-heading"><div><span class="eyebrow">Library</span><h2>Recent work</h2></div><button type="button" class="text-button" onclick="showStudioView('projects')">View all projects →</button></div>
-        <div class="empty-state compact"><span>{{ icon('projects') }}</span><div><strong>Your local projects are ready</strong><p>Projects page par completed aur resumable videos manage karein.</p></div></div>
+        <div id="dashboardRecentProjects" class="recent-project-grid"><div class="empty-state compact"><span>{{ icon('projects') }}</span><div><strong>Loading recent projects</strong><p>Your local workspace is being checked.</p></div></div></div>
       </div>
     </section>
 
@@ -262,7 +263,8 @@
 
     <section class="studio-view" id="view-projects" data-view-panel="projects">
       <div class="view-header"><div><span class="eyebrow">Local workspace</span><h1>Projects</h1><p>Completed aur unfinished videos load, preview, resume ya delete karein.</p></div><button type="button" class="btn btn-primary view-primary" onclick="showStudioView('create')">{{ icon('create') }} New Video</button></div>
-      <div class="card" id="projCardTop"><div class="section-heading"><div><span class="eyebrow">All projects</span><h2>My Projects <span id="projCount" class="muted-inline"></span></h2></div><button type="button" class="btn btn-secondary btn-sm" onclick="toggleProjects()">Show / Hide</button></div><div id="projList" class="project-list"></div></div>
+      <div class="projects-toolbar"><div><span class="eyebrow">All projects</span><h2>My Projects <span id="projCount" class="muted-inline"></span></h2></div><button type="button" class="btn btn-secondary btn-sm" id="projectListToggle" onclick="toggleProjects()">Collapse list</button></div>
+      <div id="projCardTop"><div id="projList" class="project-card-grid" aria-live="polite"></div></div>
     </section>
 
     <section class="studio-view" id="view-templates" data-view-panel="templates">
@@ -323,12 +325,16 @@
   </div>
 </aside>
 
+<div class="dialog-backdrop hidden" id="deleteProjectDialog" role="dialog" aria-modal="true" aria-labelledby="deleteProjectDialogTitle" aria-hidden="true">
+  <div class="confirm-dialog"><span class="confirm-dialog-icon">{{ icon('trash') }}</span><div><span class="eyebrow danger-text">Delete project</span><h2 id="deleteProjectDialogTitle">Delete this project?</h2><p id="deleteProjectDialogMessage">Video aur project data permanently remove ho jayega.</p></div><div class="confirm-dialog-actions"><button type="button" class="btn btn-secondary" onclick="closeDeleteProjectDialog()">Cancel</button><button type="button" class="btn btn-danger" id="confirmProjectDeleteButton" onclick="confirmProjectDelete()">Delete project</button></div></div>
+</div>
+
 <div class="studio-toast hidden" id="generationToast" role="status" aria-live="polite" aria-atomic="true">
   <span class="toast-icon">{{ icon('sparkles') }}</span>
   <div class="toast-copy"><strong>Script ready</strong><span id="generationToastMessage">AI script editor mein add ho gaya.</span></div>
   <div class="toast-actions"><button type="button" class="text-button" id="undoGeneratedScriptBtn" onclick="undoGeneratedScript()">Undo</button><button type="button" class="icon-button" id="keepGeneratedScriptBtn" onclick="acceptGeneratedScript()" aria-label="Dismiss notification">{{ icon('close') }}</button></div>
 </div>
 
-<script src="{{ url_for('static', filename='js/studio.js') }}?v=20260714-phase6"></script>
+<script src="{{ url_for('static', filename='js/studio.js') }}?v=20260714-phase7"></script>
 </body>
 </html>
