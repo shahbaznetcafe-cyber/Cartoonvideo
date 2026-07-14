@@ -69,7 +69,12 @@ class CharacterValidatorTests(unittest.TestCase):
         self.assertTrue(report["valid_glb"])
         self.assertEqual(report["tier"], "LEGACY_JAW")
         self.assertEqual(report["body"]["legacy"]["missing"], [])
-        self.assertIn("legacy_jaw_fallback", [w["code"] for w in report["warnings"]])
+        warning_codes = [w["code"] for w in report["warnings"]]
+        self.assertIn("legacy_jaw_fallback", warning_codes)
+        self.assertIn("missing_blink_controls", warning_codes)
+        self.assertIn("missing_eye_gaze_controls", warning_codes)
+        self.assertEqual(report["blink_eye_emotion"]["blink_mode"], "none")
+        self.assertEqual(report["blink_eye_emotion"]["gaze_mode"], "none")
 
     def test_mixamo_skeleton_without_visemes_is_skeletal_basic(self):
         path = self.path()
@@ -95,6 +100,18 @@ class CharacterValidatorTests(unittest.TestCase):
         self.assertEqual(report["tier"], "FULL_FACIAL")
         self.assertEqual(report["facial"]["missing"], [])
         self.assertFalse(report["talkinghead_compatible"])
+        self.assertEqual(report["blink_eye_emotion"]["blink_mode"], "morph")
+
+    def test_eye_bones_enable_gaze_without_claiming_blink_support(self):
+        path = self.path()
+        bones = validator.LEGACY_BODY_BONES + validator.EYE_BONES
+        _write_glb(path, bones)
+        report = validator.validate_glb(path)
+        self.assertEqual(report["blink_eye_emotion"]["gaze_mode"], "bones")
+        self.assertEqual(report["blink_eye_emotion"]["blink_mode"], "none")
+        warning_codes = [warning["code"] for warning in report["warnings"]]
+        self.assertNotIn("missing_eye_gaze_controls", warning_codes)
+        self.assertIn("missing_blink_controls", warning_codes)
 
     def test_talkinghead_strict_requires_full_body_arkit_and_visemes(self):
         path = self.path()

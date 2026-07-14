@@ -51,6 +51,7 @@ EYE_MORPHS = (
     "eyeLookDownLeft", "eyeLookDownRight", "eyeLookInLeft", "eyeLookInRight",
     "eyeLookOutLeft", "eyeLookOutRight", "eyeLookUpLeft", "eyeLookUpRight",
 )
+EYE_BONES = ("LeftEye", "RightEye")
 
 LEGACY_BODY_BONES = ("body", "jaw", "arm_L", "arm_R", "leg_L", "leg_R")
 
@@ -320,7 +321,17 @@ def validate_glb(path: os.PathLike[str] | str, character: dict[str, Any] | None 
     }
     report["visemes"] = visemes
     report["facial"] = facial
-    report["blink_eye_emotion"] = {"blink": blink, "eye_look": eyes, "emotion": emotion}
+    eye_bones = _coverage(EYE_BONES, report["skeleton_bones"])
+    has_eye_bones = not eye_bones["missing"]
+    has_eye_look_morphs = bool(eyes["present"])
+    report["blink_eye_emotion"] = {
+        "blink": blink,
+        "eye_look": eyes,
+        "emotion": emotion,
+        "eye_bones": eye_bones,
+        "blink_mode": "morph" if not blink["missing"] else "none",
+        "gaze_mode": "morph" if has_eye_look_morphs else ("bones" if has_eye_bones else "none"),
+    }
 
     has_skinned_mesh = bool(skinned_rows)
     has_jaw = not _coverage(("jaw",), report["skeleton_bones"])["missing"]
@@ -371,6 +382,12 @@ def validate_glb(path: os.PathLike[str] | str, character: dict[str, Any] | None 
     elif report["tier"] == "VISEME_FACE":
         report["warnings"].append(_issue(
             "incomplete_facial_set", "Visemes are complete, but blink/emotion morphs are incomplete"))
+    if blink["missing"]:
+        report["warnings"].append(_issue(
+            "missing_blink_controls", "Character has no paired eyelid morphs; natural blinking is unavailable"))
+    if not has_eye_look_morphs and not has_eye_bones:
+        report["warnings"].append(_issue(
+            "missing_eye_gaze_controls", "Character has no eye-look morphs or eye bones; gaze remains static"))
 
     return report
 

@@ -217,6 +217,10 @@ export class FacialRuntime {
     this.canDriveVisemes = this.usesVisemes && Boolean(
       this.timeline && Array.isArray(this.timeline.frames) && this.timeline.frames.length);
     this.hasBlink = this.morphs.has('eyeBlinkLeft') && this.morphs.has('eyeBlinkRight');
+    this.hasEyeBones = Boolean(boneByName(this.bones, 'LeftEye') && boneByName(this.bones, 'RightEye'));
+    this.hasEyeLookMorphs = EYE_LOOK.some(name => this.morphs.has(name));
+    this.blinkMode = this.hasBlink ? 'morph' : 'none';
+    this.gazeMode = this.hasEyeLookMorphs ? 'morph' : (this.hasEyeBones ? 'bones' : 'none');
     this.states = new Map();
     for (const [name, bindings] of this.morphs) {
       const initial = clamp(Number(bindings[0].influences[bindings[0].index]) || 0);

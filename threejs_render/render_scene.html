@@ -11,6 +11,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { FacialRuntime, useJawFallback } from './facial_runtime.js';
 import { gestureEnvelope, listenerReaction, sampleActingState } from './acting_state_runtime.js';
+import { applyLegacyPose, captureBoneBases, jawOpenDelta } from './bone_pose_runtime.js';
 window.__error = null;
 window.addEventListener('error', e => { window.__error = String(e.message || e); });
 
@@ -109,17 +110,30 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
   }
 
   // ---- characters (actual bbox se: feet floor par, x slot par; NO rotation — +Z pehle se camera) ----
-  const TH = 1.5, SPACING = 1.55, NC = spec.chars.length;
+  const TH = 1.5, SPACING = 1.55, GROUND_CLEARANCE = 0.018, NC = spec.chars.length;
   const chars = [];
   for (const c of spec.chars) {
     const root = (await load(c.glb)).scene;
+    // Some legacy exports store a current skeleton pose that differs from the
+    // inverse bind matrices. Three.js then folds lower-body vertices into the
+    // torso even though Blender displays the GLB correctly. Restore the true
+    // bind pose before measuring, grounding, or capturing animation bases.
+    root.traverse(o => {
+      if (o.isSkinnedMesh && o.skeleton) o.skeleton.pose();
+    });
+    root.updateMatrixWorld(true);
+    root.traverse(o => {
+      if (o.isSkinnedMesh && o.skeleton) o.skeleton.update();
+    });
     let box = new THREE.Box3().setFromObject(root);
     const sz = new THREE.Vector3(); box.getSize(sz);
-    const cs = TH / (sz.y || 1); root.scale.setScalar(cs); root.updateMatrixWorld(true);
+    const cs = TH / (sz.y || 1); root.scale.multiplyScalar(cs); root.updateMatrixWorld(true);
     box = new THREE.Box3().setFromObject(root);        // scale ke baad asli box
     const ctr = new THREE.Vector3(); box.getCenter(ctr);
     // root ko local origin par center karo, feet y=0 par (holder-space)
-    root.position.set(-ctr.x, -box.min.y, -ctr.z);
+    root.position.x += -ctr.x;
+    root.position.y += -box.min.y + GROUND_CLEARANCE;
+    root.position.z += -ctr.z;
     // HOLDER group: placement (slot x, z aage) + squash-stretch yahin lagti hai.
     // Holder origin = feet, isliye squash se feet planted rehte + SkinnedMesh scale untouched.
     const holder = new THREE.Group();
@@ -138,6 +152,7 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
         if (col && o.material.color) o.material.color.multiply(new THREE.Color(col[0], col[1], col[2]));
       }
     });
+    const boneBases = captureBoneBases(bones);
     const acting = actingEnabled ? (c.acting || {}) : {};
     const stableSeed = Number(acting.seed) || (c.slot * 2701 + 601);
     const facial = facialEnabled
@@ -145,7 +160,7 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
           emotion: c.emotion || 'neutral', seed: stableSeed, fps })
       : { tier: 'LEGACY_JAW', canDriveVisemes: false, hasBlink: false,
           frameCount: 0, update() {} };
-    chars.push({ root, holder, bones, mesh, facial, speaking: c.speaking, op: c.openness || [0],
+    chars.push({ root, holder, bones, boneBases, mesh, facial, speaking: c.speaking, op: c.openness || [0],
                  id: c.id || `slot_${c.slot}`, emo: c.emotion || 'neutral',
                  phase: (stableSeed % 10000) / 1379, slot: c.slot,
                  baseX: holder.position.x, baseZ: holder.position.z,
@@ -187,6 +202,9 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
   window.__nframes = NF;
   window.__debug = { cc: [cc.x, cc.y, cc.z], NC,
     tiers: chars.map(c => c.facial.tier || 'UNSUPPORTED'),
+    facial: chars.map(c => ({ id: c.id, tier: c.facial.tier || 'UNSUPPORTED',
+      blinkMode: c.facial.blinkMode || 'none', gazeMode: c.facial.gazeMode || 'none',
+      visemes: Boolean(c.facial.canDriveVisemes) })),
     animationStateSchema: spec.animationStateSchema || 0, timeOffset,
     features: { facialRuntime: facialEnabled, persistentActing: actingEnabled } };
 
@@ -262,8 +280,7 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
       // jaw open-amount: op pehle se gated (silence=0) + attack/release smoothed.
       // pow(0.85) low-mid ko halka lift (visible movement) par op=0 -> poori band.
       // Complete viseme rigs use morphs; every other rig keeps the proven jaw path.
-      if (b.jaw) b.jaw.rotation.x = useJawFallback(c.facial, speaking)
-        ? -0.19 * Math.pow(Math.max(0, op), 0.85) : 0;
+      const jaw = useJawFallback(c.facial, speaking) ? jawOpenDelta(op) : 0;
       if (speaking) {
         const g = 0.6 * Math.sin((t + ph) * 1.7 * E.spd) + 0.4 * Math.sin((t + ph) * 0.9 + 1);
         aL += lineGesture * ((E.spd * 6) * g + op * 16);        // eased gesticulation
@@ -364,11 +381,9 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
       }
 
       // ---- APPLY ----
-      if (b.arm_L) b.arm_L.rotation.z = aL * DEG;
-      if (b.arm_R) b.arm_R.rotation.z = aR * DEG;
-      if (b.leg_L) b.leg_L.rotation.x = legL * DEG;
-      if (b.leg_R) b.leg_R.rotation.x = legR * DEG;
-      if (b.body) { b.body.rotation.set(bX * DEG, bY * DEG, bZ * DEG); }
+      applyLegacyPose(b, c.boneBases, {
+        armL: aL, armR: aR, legL, legR, bodyX: bX, bodyY: bY, bodyZ: bZ, jaw,
+      });
       // dy kabhi 0 se neeche nahi (feet floor par — koi animation zameen mein na dhansaye)
       c.holder.position.set(c.baseX + dx, Math.max(0, dy), c.baseZ + dz);
       // breathing + emotion crouch (sqExtra) — feet holder-origin par, planted rehte

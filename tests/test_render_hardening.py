@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import tempfile
 import unittest
 import json
@@ -10,6 +11,19 @@ import config
 
 
 class RenderHardeningTests(unittest.TestCase):
+    def test_threejs_restores_bind_pose_before_grounding_and_animation(self):
+        html = (Path(__file__).parents[1] / "threejs_render" / "render_scene.html").read_text(
+            encoding="utf-8"
+        )
+        bind_pose = html.index("o.skeleton.pose()")
+        grounding = html.index("new THREE.Box3().setFromObject(root)")
+        capture = html.index("captureBoneBases(bones)")
+        self.assertLess(bind_pose, grounding)
+        self.assertLess(grounding, capture)
+        self.assertIn("applyLegacyPose(b, c.boneBases", html)
+        self.assertNotIn("b.leg_L.rotation.x =", html)
+        self.assertNotIn("b.jaw.rotation.x =", html)
+
     def test_speaker_is_never_dropped_from_full_cast(self):
         cast = blender3d._cast_with_speaker(["a", "b", "c"], "d")
         self.assertEqual(len(cast), 3)

@@ -47,6 +47,8 @@ test('detects legacy jaw rigs and full facial rigs', () => {
   }) });
   assert.equal(legacy.tier, 'LEGACY_JAW');
   assert.equal(legacy.usesVisemes, false);
+  assert.equal(legacy.blinkMode, 'none');
+  assert.equal(legacy.gazeMode, 'none');
 
   const full = new FacialRuntime({ root: mockRoot({
     morphs: [...REQUIRED_VISEMES, ...REQUIRED_FACIAL],
@@ -124,6 +126,7 @@ test('gaze mapping is bounded and drives eye bones smoothly', () => {
   assert.equal(gaze.eyeLookDownLeft, 0.28);
   const root = mockRoot({ bones: ['LeftEye', 'RightEye', 'Head'] });
   const runtime = new FacialRuntime({ root });
+  assert.equal(runtime.gazeMode, 'bones');
   runtime.update(0, 1 / 24, { gazeX: 1, gazeY: -1 });
   assert.ok(Math.abs(root.boneObjects[0].rotation.y) <= 6 * Math.PI / 180);
   assert.ok(Math.abs(root.boneObjects[2].rotation.y) <= 2.5 * Math.PI / 180);
