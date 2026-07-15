@@ -65,10 +65,21 @@ class RenderHardeningTests(unittest.TestCase):
     def test_final_duration_must_match_assembled_timeline(self):
         self.assertTrue(blender3d._duration_matches(10.08, 10.0, 24))
         self.assertFalse(blender3d._duration_matches(9.70, 10.0, 24))
-        with mock.patch.object(blender3d, "_probe_duration", return_value=7.5):
-            with self.assertRaisesRegex(RuntimeError, "final duration mismatch"):
+        with (mock.patch.object(blender3d, "_probe_duration", return_value=7.5),
+              mock.patch.object(blender3d, "_stream_duration", return_value=7.5)):
+            with self.assertRaisesRegex(RuntimeError, "duration mismatch"):
                 blender3d._validate_final_duration("final.mp4", 8.0, 24)
-        with mock.patch.object(blender3d, "_probe_duration", return_value=8.04):
+        with (mock.patch.object(blender3d, "_probe_duration", return_value=8.24),
+              mock.patch.object(blender3d, "_stream_duration",
+                                side_effect=[8.04, 8.24])):
+            self.assertEqual(blender3d._validate_final_duration("final.mp4", 8.0, 24), 8.24)
+        with (mock.patch.object(blender3d, "_probe_duration", return_value=8.0),
+              mock.patch.object(blender3d, "_stream_duration",
+                                side_effect=[7.5, 8.0])):
+            with self.assertRaisesRegex(RuntimeError, "video stream duration mismatch"):
+                blender3d._validate_final_duration("final.mp4", 8.0, 24)
+        with mock.patch.object(blender3d, "_probe_duration", return_value=8.04), \
+                mock.patch.object(blender3d, "_stream_duration", return_value=0.0):
             self.assertEqual(blender3d._validate_final_duration("final.mp4", 8.0, 24), 8.04)
 
     def test_subtitle_wraps_to_two_lines(self):

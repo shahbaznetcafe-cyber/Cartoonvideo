@@ -79,6 +79,26 @@ python character_validator.py path\to\character.glb
 python character_validator.py first.glb second.glb --output report.json
 ```
 
+## Local Mixamo humanoid import
+
+Mixamo FBX characters and animations can be converted into one Three.js GLB
+with named animation clips. Raw/downloaded character media stays inside ignored
+local asset folders and must not be committed or redistributed.
+
+```powershell
+& "C:\Program Files\Blender Foundation\Blender 5.1\blender.exe" --background `
+  --python blender\import_mixamo_humanoid.py -- `
+  assets\humanoids\amy\source\Amy_TPose.fbx `
+  threejs_render\assets\chars\amy_humanoid.glb `
+  blender\rigged\blend\amy_humanoid.blend `
+  "Idle=assets\humanoids\amy\animations\Idle.fbx" `
+  "Talking=assets\humanoids\amy\animations\Talking.fbx"
+```
+
+The renderer selects `Talking` for the current speaker and `Idle` for listeners.
+Mixamo body rigs validate as `SKELETAL_BASIC`; professional facial lip-sync,
+blinking, gaze and emotions still require the configured facial morph targets.
+
 TalkingHead attribution and the preserved MIT license are recorded in
 `THIRD_PARTY_NOTICES.md`. Character/model files and generated reports must not
 be committed.

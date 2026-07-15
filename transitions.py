@@ -149,9 +149,22 @@ def build_av_filter_graph(durations: Sequence[float], plan: Sequence[dict]):
         raise ValueError("transition plan must contain one item per clip boundary")
 
     filters = []
-    for i in range(len(durations)):
-        filters.append(f"[{i}:v]settb=AVTB,setpts=PTS-STARTPTS[vin{i}]")
-        filters.append(f"[{i}:a]asetpts=PTS-STARTPTS[ain{i}]")
+    for i, raw_duration in enumerate(durations):
+        # MP4/AAC line clips commonly have audio a few milliseconds longer than
+        # their last video frame.  Xfade offsets are calculated from container
+        # durations, so normalize both streams first; otherwise a late xfade can
+        # start after the video stream has ended and silently discard every shot
+        # after that boundary.
+        duration = max(0.05, float(raw_duration))
+        filters.append(
+            f"[{i}:v]settb=AVTB,setpts=PTS-STARTPTS,"
+            f"tpad=stop_mode=clone:stop_duration=1,"
+            f"trim=duration={duration:.6f},setpts=PTS-STARTPTS[vin{i}]"
+        )
+        filters.append(
+            f"[{i}:a]asetpts=PTS-STARTPTS,apad=pad_dur=1,"
+            f"atrim=duration={duration:.6f},asetpts=PTS-STARTPTS[ain{i}]"
+        )
 
     video_label, audio_label = "vin0", "ain0"
     current_duration = float(durations[0])

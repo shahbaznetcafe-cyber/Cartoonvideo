@@ -439,10 +439,33 @@ def _duration_matches(actual, expected, fps, tolerance_seconds=0.12):
     return abs(float(actual) - float(expected)) <= tolerance
 
 
+def _stream_duration(path, selector):
+    """Return one encoded stream duration; zero means unavailable."""
+    try:
+        out = subprocess.check_output(
+            ["ffprobe", "-v", "error", "-select_streams", selector,
+             "-show_entries", "stream=duration",
+             "-of", "default=noprint_wrappers=1:nokey=1", path], text=True)
+        return float(out.strip())
+    except Exception:
+        return 0.0
+
+
 def _validate_final_duration(video_path, expected_duration, fps):
-    """Reject an assembled file whose duration no longer matches its clip timeline."""
+    """Reject timeline drift or an independently truncated A/V stream."""
     actual = _probe_duration(video_path)
-    if not _duration_matches(actual, expected_duration, fps):
+    video_duration = _stream_duration(video_path, "v:0") or actual
+    audio_duration = _stream_duration(video_path, "a:0") or actual
+    # AAC priming/mux rounding may extend format/audio duration by roughly a
+    # quarter-second. Video remains frame-accurate and gets the tighter limit.
+    video_tolerance = max(0.15, 3.0 / max(1, int(fps or 24)))
+    container_tolerance = max(0.35, 4.0 / max(1, int(fps or 24)))
+    if abs(video_duration - float(expected_duration)) > video_tolerance:
+        raise RuntimeError(
+            f"final video stream duration mismatch: expected {expected_duration:.3f}s, "
+            f"got {video_duration:.3f}s")
+    if (abs(audio_duration - float(expected_duration)) > container_tolerance or
+            abs(actual - float(expected_duration)) > container_tolerance):
         raise RuntimeError(
             f"final duration mismatch: expected {expected_duration:.3f}s, got {actual:.3f}s")
     return actual

@@ -44,8 +44,11 @@ def apply_settings(s):
         "fast_preview": ("FAST_PREVIEW", bool), "gpu": ("GPU_ENCODE", str),
         "music_volume": ("MUSIC_VOLUME", float), "vignette": ("VIGNETTE", bool),
         "voice_volume": ("VOICE_VOLUME", str), "tts_provider": ("TTS_PROVIDER", str),
+        "voice_speed": ("VOICE_SPEED", float), "edge_voice": ("EDGE_VOICE", str),
+        "google_tts_voice": ("GOOGLE_TTS_VOICE", str),
         "elevenlabs_voice_id": ("ELEVENLABS_VOICE_ID", str),
-        "llm_provider": ("LLM_PROVIDER", str), "image_provider": ("IMAGE_PROVIDER", str),
+        "llm_provider": ("LLM_PROVIDER", str), "llm_model": ("LLM_MODEL", str),
+        "image_provider": ("IMAGE_PROVIDER", str),
         "render_workers": ("RENDER_WORKERS", int), "story_mode": ("STORY_MODE", str),
         "multi_char": ("BLENDER3D_MULTI", bool), "render_engine": ("RENDER_ENGINE", str),
         "subtitles_on": ("SUBTITLES_ON", bool), "intro_on": ("INTRO_ON", bool),
@@ -57,6 +60,7 @@ def apply_settings(s):
                 setattr(config, attr, typ(s[k]))
             except Exception:
                 pass
+    config.VOICE_SPEED = max(0.7, min(1.2, float(getattr(config, "VOICE_SPEED", 1.0))))
     # Urdu accent (Indian ur-IN / Pakistani ur-PK) -> VOICE_MAP switch
     if s.get("urdu_accent"):
         try:

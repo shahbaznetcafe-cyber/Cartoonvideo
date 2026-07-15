@@ -51,7 +51,8 @@ def _run(job_id, script, settings, parsed=None, proj_name=None):
         result = builder.build(script, proj_name=proj_name, on_progress=on_progress,
                                settings=settings, parsed=parsed,
                                should_cancel=lambda: JOBS.get(job_id, {}).get("cancel"))
-        JOBS[job_id].update(state="done", result=result)
+        JOBS[job_id].update(state="done", result=result, error=None,
+                            message="Video complete")
         if proj_dir:
             title = None
             try:
@@ -61,7 +62,7 @@ def _run(job_id, script, settings, parsed=None, proj_name=None):
                 pass
             try:
                 projects_mgr.save_job(proj_dir, state="done", title=title or proj_name,
-                                      result=result)
+                                      result=result, error=None, message="Video complete")
             except Exception:
                 pass
     except Exception as e:
@@ -97,6 +98,9 @@ def api_options():
         "styles": styles.list_styles(),
         "voices": URDU_VOICES + ENG_VOICES,
         "providers": providers.status(),
+        "llm_models": providers.llm_model_options(),
+        "edge_voices": providers.EDGE_VOICE_FALLBACK,
+        "google_voices": providers.GOOGLE_HINDI_VOICES,
         "urdu_accents": list(config.VOICE_SETS.keys()),
         "render_engines": ["threejs", "blender"],
         "defaults": {
@@ -105,14 +109,31 @@ def api_options():
             "motion_preset": config.MOTION_PRESET, "render_mode": config.RENDER_MODE,
             "captions": config.CAPTIONS, "urdu_accent": config.URDU_ACCENT,
             "tts_provider": getattr(config, "TTS_PROVIDER", "edge"),
+            "voice_speed": getattr(config, "VOICE_SPEED", 1.0),
+            "edge_voice": getattr(config, "EDGE_VOICE", ""),
+            "google_tts_voice": getattr(config, "GOOGLE_TTS_VOICE", "hi-IN-Standard-B"),
             "elevenlabs_voice_id": getattr(config, "ELEVENLABS_VOICE_ID", ""),
             "elevenlabs_model": getattr(config, "ELEVENLABS_MODEL", "eleven_v3"),
+            "llm_provider": getattr(config, "LLM_PROVIDER", "runware"),
+            "llm_model": getattr(config, "LLM_MODEL", ""),
             "render_engine": getattr(config, "RENDER_ENGINE", "threejs"),
             "subtitles_on": getattr(config, "SUBTITLES_ON", True),
             "intro_on": getattr(config, "INTRO_ON", False),
             "outro_on": getattr(config, "OUTRO_ON", True),
         },
     })
+
+
+@app.route("/api/voices/edge")
+def api_edge_voices():
+    """Current free Hindi/Urdu Edge voices with an offline fallback list."""
+    return jsonify(providers.edge_voice_options(force=request.args.get("refresh") == "1"))
+
+
+@app.route("/api/voices/google")
+def api_google_voices():
+    """Supported Hindi Google Cloud voice presets and configuration status."""
+    return jsonify(providers.google_voice_options())
 
 
 @app.route("/api/voices/elevenlabs")
@@ -643,6 +664,11 @@ def api_test_runware():
     from runware_client import post_tasks, new_uuid
     d = request.get_json(silent=True) or {}
     do_img = d.get("image", True)
+    requested_model = str(d.get("model") or "").strip()
+    available_models = {item["model"] for item in providers.llm_model_options()
+                        if item.get("provider") == "runware"}
+    llm_model = requested_model if requested_model in available_models else providers._selected_model(
+        "runware", config.TEXT_MODEL)
 
     key = config.RUNWARE_API_KEY
     tests = {"key": {"ok": bool(key and key != "your_runware_key_here"),
@@ -654,16 +680,16 @@ def api_test_runware():
     t0 = time.time()
     try:
         r = post_tasks([{"taskType": "textInference", "taskUUID": new_uuid(),
-                         "model": config.TEXT_MODEL,
+                         "model": llm_model,
                          "settings": {"maxTokens": 24, "temperature": 0.1},
                          "messages": [{"role": "user", "content": "Reply with exactly: API OK"}]}],
                        timeout=60)
         tests["llm"] = {"ok": True, "ms": int((time.time() - t0) * 1000),
-                        "model": config.TEXT_MODEL,
+                        "model": llm_model,
                         "sample": (r[0].get("text", "") or "").strip()[:40]}
     except Exception as e:
         tests["llm"] = {"ok": False, "ms": int((time.time() - t0) * 1000),
-                        "model": config.TEXT_MODEL, "error": str(e)[:400]}
+                        "model": llm_model, "error": str(e)[:400]}
 
     # --- Image (imageInference) — chhoti 512 test ---
     if do_img:

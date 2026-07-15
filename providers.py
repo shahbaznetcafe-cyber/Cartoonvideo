@@ -5,6 +5,7 @@ Jis provider ki key .env mein hogi woh available; configured fail ho to agla try
 Sirf woh providers chalenge jinki key hai (Runware + edge abhi mojood).
 """
 import asyncio
+import base64
 import os
 import re
 import time
@@ -50,7 +51,7 @@ def _llm_runware_av():
 def _llm_runware(system, user, max_tokens, temperature):
     task = {
         "taskType": "textInference", "taskUUID": new_uuid(),
-        "model": config.TEXT_MODEL,
+        "model": _selected_model("runware", config.TEXT_MODEL),
         "settings": {"systemPrompt": system, "temperature": temperature,
                      "maxTokens": max_tokens},
         "messages": [{"role": "user", "content": user}],
@@ -60,12 +61,47 @@ def _llm_runware(system, user, max_tokens, temperature):
 
 # OpenAI-compatible providers (base_url, key_env, model_env, default_model)
 _OAI = {
+    "deepseek":   ("https://api.deepseek.com", "DEEPSEEK_API_KEY", "DEEPSEEK_MODEL", "deepseek-v4-flash"),
+    "zai":        ("https://api.z.ai/api/paas/v4", "ZAI_API_KEY", "ZAI_MODEL", "glm-4.7-flash"),
     "groq":       ("https://api.groq.com/openai/v1", "GROQ_API_KEY", "GROQ_MODEL", "llama-3.1-8b-instant"),
     "openai":     ("https://api.openai.com/v1", "OPENAI_API_KEY", "OPENAI_MODEL", "gpt-4o-mini"),
     "openrouter": ("https://openrouter.ai/api/v1", "OPENROUTER_API_KEY", "OPENROUTER_MODEL", "meta-llama/llama-3.1-8b-instruct"),
     "together":   ("https://api.together.xyz/v1", "TOGETHER_API_KEY", "TOGETHER_MODEL", "meta-llama/Llama-3-8b-chat-hf"),
     "gemini":     ("https://generativelanguage.googleapis.com/v1beta/openai", "GOOGLE_API_KEY", "GEMINI_MODEL", "gemini-1.5-flash"),
 }
+
+LLM_MODEL_CATALOG = [
+    # A single Runware key/gateway serves every vendor model below.
+    {"provider": "runware", "vendor": "DeepSeek", "model": "deepseek-v4-flash", "label": "DeepSeek V4 Flash", "cost": "lowest cost", "description": "Fast, economical multilingual script drafting"},
+    {"provider": "runware", "vendor": "DeepSeek", "model": "deepseek-v4-pro", "label": "DeepSeek V4 Pro", "cost": "best value", "description": "Strong long-form reasoning and story structure"},
+    {"provider": "runware", "vendor": "Z.AI", "model": "zai-glm-4-7", "label": "GLM 4.7", "cost": "low cost", "description": "Economical multilingual writing"},
+    {"provider": "runware", "vendor": "Z.AI", "model": "zai-glm-5-1", "label": "GLM 5.1", "cost": "high quality", "description": "Long-form planning and polished scripts"},
+    {"provider": "runware", "vendor": "OpenAI", "model": "openai-gpt-5-4-mini", "label": "GPT-5.4 Mini", "cost": "balanced", "description": "Recommended balance of quality, speed and cost"},
+    {"provider": "runware", "vendor": "OpenAI", "model": "openai-gpt-5-4", "label": "GPT-5.4", "cost": "premium", "description": "Higher-quality story writing and revision"},
+    {"provider": "runware", "vendor": "Google", "model": "google-gemini-3-5-flash", "label": "Gemini 3.5 Flash", "cost": "fast", "description": "Fast multilingual scripts and analysis"},
+    {"provider": "runware", "vendor": "Google", "model": "google-gemini-3-1-pro", "label": "Gemini 3.1 Pro", "cost": "premium", "description": "High-quality long-form multilingual stories"},
+]
+
+_RUNWARE_MODEL_ALIASES = {
+    "openai:gpt@5.4-mini": "openai-gpt-5-4-mini",
+    "deepseek:v4@flash": "deepseek-v4-flash",
+    "deepseek:v4@pro": "deepseek-v4-pro",
+    "zai:glm@4.7": "zai-glm-4-7",
+    "zai:glm@5.1": "zai-glm-5-1",
+}
+
+
+def _selected_model(provider, fallback):
+    selected = str(getattr(config, "LLM_MODEL", "") or "").strip()
+    if provider == "runware":
+        selected = _RUNWARE_MODEL_ALIASES.get(selected, selected)
+        fallback = _RUNWARE_MODEL_ALIASES.get(str(fallback), str(fallback))
+    valid = {item["model"] for item in LLM_MODEL_CATALOG if item["provider"] == provider}
+    return selected if selected in valid else fallback
+
+
+def llm_model_options():
+    return [dict(item) for item in LLM_MODEL_CATALOG]
 
 
 def _oai_av(name):
@@ -76,11 +112,12 @@ def _oai_gen(name):
     base, keyenv, modelenv, default = _OAI[name]
 
     def fn(system, user, max_tokens, temperature):
+        model = _selected_model(name, os.getenv(modelenv, default))
         r = requests.post(
             base + "/chat/completions",
             headers={"Authorization": f"Bearer {_key(keyenv)}",
                      "Content-Type": "application/json"},
-            json={"model": os.getenv(modelenv, default),
+            json={"model": model,
                   "messages": [{"role": "system", "content": system},
                                {"role": "user", "content": user}],
                   "temperature": temperature, "max_tokens": max_tokens},
@@ -105,7 +142,7 @@ def _llm_hf_av():
 
 def _llm_hf(system, user, max_tokens, temperature):
     from huggingface_hub import InferenceClient
-    model = os.getenv("HF_MODEL", "meta-llama/Meta-Llama-3-8B-Instruct")
+    model = _selected_model("huggingface", os.getenv("HF_MODEL", config.HF_MODEL))
     cli = _hf_clients.get(model)
     if cli is None:
         cli = InferenceClient(model, token=_hf_token())
@@ -201,17 +238,90 @@ def image_generate(prompt, width, height, out_path, negative=""):
 
 
 # ============================ TTS ============================
+EDGE_VOICE_FALLBACK = [
+    {"name": "hi-IN-AaravNeural", "locale": "hi-IN", "gender": "Male"},
+    {"name": "hi-IN-AnanyaNeural", "locale": "hi-IN", "gender": "Female"},
+    {"name": "hi-IN-ArjunNeural", "locale": "hi-IN", "gender": "Male"},
+    {"name": "hi-IN-KavyaNeural", "locale": "hi-IN", "gender": "Female"},
+    {"name": "hi-IN-KunalNeural", "locale": "hi-IN", "gender": "Male"},
+    {"name": "hi-IN-MadhurNeural", "locale": "hi-IN", "gender": "Male"},
+    {"name": "hi-IN-RehaanNeural", "locale": "hi-IN", "gender": "Male"},
+    {"name": "hi-IN-SwaraNeural", "locale": "hi-IN", "gender": "Female"},
+    {"name": "ur-IN-GulNeural", "locale": "ur-IN", "gender": "Female"},
+    {"name": "ur-IN-SalmanNeural", "locale": "ur-IN", "gender": "Male"},
+    {"name": "ur-PK-AsadNeural", "locale": "ur-PK", "gender": "Male"},
+    {"name": "ur-PK-UzmaNeural", "locale": "ur-PK", "gender": "Female"},
+]
+GOOGLE_HINDI_VOICES = [
+    {"name": "hi-IN-Standard-A", "gender": "Female", "tier": "Standard"},
+    {"name": "hi-IN-Standard-B", "gender": "Male", "tier": "Standard"},
+    {"name": "hi-IN-Standard-C", "gender": "Male", "tier": "Standard"},
+    {"name": "hi-IN-Standard-D", "gender": "Female", "tier": "Standard"},
+    {"name": "hi-IN-Standard-E", "gender": "Female", "tier": "Standard"},
+    {"name": "hi-IN-Standard-F", "gender": "Male", "tier": "Standard"},
+    {"name": "hi-IN-Wavenet-A", "gender": "Female", "tier": "WaveNet"},
+    {"name": "hi-IN-Wavenet-B", "gender": "Male", "tier": "WaveNet"},
+    {"name": "hi-IN-Wavenet-C", "gender": "Male", "tier": "WaveNet"},
+    {"name": "hi-IN-Wavenet-D", "gender": "Female", "tier": "WaveNet"},
+]
+_EDGE_VOICE_CACHE = {"at": 0.0, "voices": None}
+
+
+def edge_voice_options(force=False):
+    """Fetch current Edge voice inventory, with an offline Hindi/Urdu fallback."""
+    now = time.monotonic()
+    cached = _EDGE_VOICE_CACHE.get("voices")
+    if cached and not force and now - _EDGE_VOICE_CACHE.get("at", 0) < 3600:
+        return {"available": True, "voices": cached, "selected": config.EDGE_VOICE}
+    voices = []
+    try:
+        raw = asyncio.run(__import__("edge_tts").list_voices())
+        for voice in raw:
+            short = str(voice.get("ShortName") or "")
+            locale = str(voice.get("Locale") or "")
+            if locale not in {"hi-IN", "ur-IN", "ur-PK"}:
+                continue
+            voices.append({"name": short, "locale": locale,
+                           "gender": str(voice.get("Gender") or "")})
+    except Exception:
+        voices = [dict(voice) for voice in EDGE_VOICE_FALLBACK]
+    voices.sort(key=lambda voice: (voice["locale"], voice["gender"], voice["name"]))
+    _EDGE_VOICE_CACHE.update(at=now, voices=voices)
+    return {"available": True, "voices": voices, "selected": config.EDGE_VOICE}
+
+
+def google_voice_options():
+    return {"available": _tts_google_av(), "voices": [dict(v) for v in GOOGLE_HINDI_VOICES],
+            "selected": config.GOOGLE_TTS_VOICE,
+            "note": "Google Cloud billing setup required; monthly free quota may apply."}
+
+
+def _speed(value):
+    try:
+        return max(0.7, min(1.2, float(value)))
+    except (TypeError, ValueError):
+        return 1.0
+
+
+def _edge_rate(rate, speed):
+    match = re.search(r"([+-]?\d+)", str(rate or "+0%"))
+    character_rate = int(match.group(1)) if match else 0
+    combined = max(-50, min(100, character_rate + round((_speed(speed) - 1) * 100)))
+    return f"{combined:+d}%"
+
+
 def _tts_edge_av():
     return True
 
 
-def _tts_edge(text, voice, out_path, rate, pitch, volume):
+def _tts_edge(text, voice, out_path, rate, pitch, volume, speed=1.0):
     """edge-tts synth. Audio ke saath WordBoundary timestamps bhi capture karo
     (lip-sync Tier 1: TTS se word-level timings) -> <out_path>.words.json sidecar.
     Urdu voices bhi word boundaries dete hain. .save() ye metadata phenk deta tha."""
     async def run():
+        selected = config.EDGE_VOICE or voice
         comm = __import__("edge_tts").Communicate(
-            text, voice, rate=rate, pitch=pitch, volume=volume)
+            text, selected, rate=_edge_rate(rate, speed), pitch=pitch, volume=volume)
         words, sents = [], []
         with open(out_path, "wb") as f:
             async for chunk in comm.stream():
@@ -228,8 +338,9 @@ def _tts_edge(text, voice, out_path, rate, pitch, volume):
         spans = words or sents
         if spans:
             import json as _j
-            _j.dump({"words": spans, "level": ("word" if words else "sentence")},
-                    open(out_path + ".words.json", "w", encoding="utf-8"), ensure_ascii=False)
+            with open(out_path + ".words.json", "w", encoding="utf-8") as handle:
+                _j.dump({"words": spans, "level": ("word" if words else "sentence")},
+                        handle, ensure_ascii=False)
     asyncio.run(run())
     return out_path
 
@@ -342,7 +453,7 @@ def _tts_eleven_av():
     return bool(_eleven_key())
 
 
-def _tts_eleven(text, voice, out_path, rate, pitch, volume):
+def _tts_eleven(text, voice, out_path, rate, pitch, volume, speed=1.0):
     # Edge voice names must never leak into the ElevenLabs URL.  A per-character
     # ElevenLabs ID may override the global UI selection when one is supplied.
     voice_id = (voice if re.fullmatch(r"[A-Za-z0-9]{20,64}", str(voice or ""))
@@ -351,7 +462,8 @@ def _tts_eleven(text, voice, out_path, rate, pitch, volume):
         f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
         headers={"xi-api-key": _eleven_key(), "Content-Type": "application/json"},
         json={"text": text,
-              "model_id": getattr(config, "ELEVENLABS_MODEL", "eleven_v3")},
+              "model_id": getattr(config, "ELEVENLABS_MODEL", "eleven_v3"),
+              "voice_settings": {"speed": _speed(speed)}},
         timeout=120)
     r.raise_for_status()
     with open(out_path, "wb") as f:
@@ -359,11 +471,42 @@ def _tts_eleven(text, voice, out_path, rate, pitch, volume):
     return out_path
 
 
+def _google_tts_key():
+    return _key("GOOGLE_TTS_API_KEY") or _key("GOOGLE_API_KEY")
+
+
+def _tts_google_av():
+    return bool(_google_tts_key())
+
+
+def _tts_google(text, voice, out_path, rate, pitch, volume, speed=1.0):
+    hz = re.search(r"([+-]?\d+)", str(pitch or "+0Hz"))
+    pitch_semitones = max(-20.0, min(20.0, (int(hz.group(1)) / 10 if hz else 0)))
+    response = requests.post(
+        "https://texttospeech.googleapis.com/v1/text:synthesize",
+        params={"key": _google_tts_key()},
+        headers={"Content-Type": "application/json; charset=utf-8"},
+        json={
+            "input": {"text": text},
+            "voice": {"languageCode": "hi-IN", "name": config.GOOGLE_TTS_VOICE},
+            "audioConfig": {"audioEncoding": "MP3", "speakingRate": _speed(speed),
+                            "pitch": pitch_semitones},
+        }, timeout=120)
+    response.raise_for_status()
+    audio = response.json().get("audioContent")
+    if not audio:
+        raise RuntimeError("Google TTS ne audioContent return nahi kiya")
+    with open(out_path, "wb") as handle:
+        handle.write(base64.b64decode(audio))
+    return out_path
+
+
 _TTS = {"edge": (_tts_edge_av, _tts_edge),
+        "google": (_tts_google_av, _tts_google),
         "elevenlabs": (_tts_eleven_av, _tts_eleven)}
 
 
-def tts_synthesize(text, voice, out_path, rate="+0%", pitch="+0Hz", volume="+0%"):
+def tts_synthesize(text, voice, out_path, rate="+0%", pitch="+0Hz", volume="+0%", speed=None):
     order = [config.TTS_PROVIDER] + [p for p in config.TTS_FALLBACK
                                      if p != config.TTS_PROVIDER]
     errs = []
@@ -372,7 +515,8 @@ def tts_synthesize(text, voice, out_path, rate="+0%", pitch="+0Hz", volume="+0%"
         if not pr or not pr[0]():
             continue
         try:
-            return pr[1](text, voice, out_path, rate, pitch, volume)
+            return pr[1](text, voice, out_path, rate, pitch, volume,
+                         config.VOICE_SPEED if speed is None else speed)
         except Exception as e:
             errs.append(f"{name}: {e}")
     raise RuntimeError("TTS providers fail: " + ("; ".join(errs) or "koi available nahi"))

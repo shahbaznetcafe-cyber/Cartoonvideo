@@ -16,7 +16,9 @@ FAVICON = ROOT / "static" / "icons" / "favicon.svg"
 REQUIRED_IDS = {
     "aspectSeg", "cap_enabled", "cap_hl", "cap_perspk", "cap_size",
     "cap_words", "charList", "chGender", "chName", "chPhrase", "chTrait",
-    "costEst", "edge_voice_group", "eleven_voice_group", "eleven_voice_status",
+    "costEst", "edge_voice_group", "edge_voice", "edge_voice_status",
+    "refresh_edge_voices", "google_voice_group", "google_tts_voice",
+    "voice_speed", "voiceSpeedValue", "eleven_voice_group", "eleven_voice_status",
     "elevenlabs_voice_id", "epBox", "epGenBtn", "epHistory", "epIdea",
     "epLenSeg", "epMsg", "errMsg", "fast_preview", "ffGenBtn", "ffGenre",
     "ffIdea", "ffLang", "ffLenSeg", "ffMsg", "ffPro", "fps", "genBtn",
@@ -36,7 +38,8 @@ REQUIRED_IDS = {
 }
 
 REQUIRED_ENDPOINT_MARKERS = {
-    "/api/options", "/api/voices/elevenlabs", "/api/characters3d/validation",
+    "/api/options", "/api/voices/edge", "/api/voices/google",
+    "/api/voices/elevenlabs", "/api/characters3d/validation",
     "/api/story-templates", "/api/characters", "/api/story-templates/generate",
     "/api/freeform", "/api/longform", "/api/characters-lib", "/api/series",
     "/api/suggest-style", "/api/analyze", "/api/improve", "/api/metadata",
@@ -53,14 +56,16 @@ REQUIRED_FUNCTIONS = {
     "loadProjectsList", "openProject", "playProject", "delProject",
     "resumeProject", "genFreeform", "genLongform", "genFromTemplate",
     "analyzeScript", "improveScript", "genPackage", "testRunware",
-    "loadElevenLabsVoices", "syncVoiceProviderUI",
+    "loadElevenLabsVoices", "loadEdgeVoices", "loadGoogleVoices",
+    "syncLLMModels", "syncVoiceProviderUI",
 }
 
 REQUIRED_SETTING_KEYS = {
     "style", "aspect", "quality", "fps", "fast_preview", "motion_preset",
     "render_mode", "story_mode", "multi_char", "render_engine", "gpu",
     "vignette", "subtitles_on", "intro_on", "outro_on", "tts_provider",
-    "urdu_accent", "elevenlabs_voice_id", "voice_volume", "music_volume",
+    "urdu_accent", "edge_voice", "google_tts_voice", "elevenlabs_voice_id",
+    "voice_speed", "llm_provider", "llm_model", "voice_volume", "music_volume",
     "enabled", "words_per_group", "font_size", "position", "highlight_color",
     "highlight_style", "per_speaker_color",
 }
@@ -150,7 +155,7 @@ class UIContractTests(unittest.TestCase):
         self.assertIn("url_for('static', filename='css/studio.css')", self.template)
         self.assertIn("url_for('static', filename='js/studio.js')", self.template)
         self.assertIn("url_for('static', filename='icons/favicon.svg')", self.template)
-        self.assertIn("?v=20260714-phase10", self.template)
+        self.assertIn("?v=20260714-scriptvoice", self.template)
         self.assertIsNone(re.search(r"<style\b", self.template, re.IGNORECASE))
         self.assertIsNone(re.search(
             r"<script(?![^>]*\bsrc=)[^>]*>", self.template, re.IGNORECASE))
@@ -386,7 +391,7 @@ class UIContractTests(unittest.TestCase):
             self.assertEqual(page.status_code, 200)
             html = page.get_data(as_text=True)
             self.assertIn("/static/css/studio.css?v=20260714-phase10", html)
-            self.assertIn("/static/js/studio.js?v=20260714-phase10", html)
+            self.assertIn("/static/js/studio.js?v=20260714-scriptvoice", html)
         finally:
             page.close()
         for asset in (

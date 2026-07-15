@@ -10,7 +10,9 @@ Returns dict: {script, title, genre, cast, hook, logline, beats, cta, plan}.
 import json
 import re
 
-LANG_NAME = {"urdu": "Urdu (Urdu script)", "roman_urdu": "Roman Urdu", "english": "English"}
+import dialogue_style
+
+LANG_NAME = dialogue_style.LANGUAGE_NAMES
 LENGTH_LINES = {"short": 6, "medium": 10, "long": 16}
 
 # Few-shot: ye "kaisा GREAT lagta hai" ka floor set karta hai (Roman Urdu exemplar)
@@ -43,7 +45,7 @@ def _json_obj(raw):
     return json.loads(raw[s:e + 1])
 
 
-def _plan(providers, idea, lang_name, n, genre, cast_rule, continuity, structure_hint):
+def _plan(providers, idea, language, lang_name, n, genre, cast_rule, continuity, structure_hint):
     genre_rule = ("Auto-detect the single best genre." if genre in ("", "auto")
                   else f"Genre: {genre}.")
     struct = f"\nSTRUCTURE to follow: {structure_hint}" if structure_hint else ""
@@ -52,6 +54,7 @@ def _plan(providers, idea, lang_name, n, genre, cast_rule, continuity, structure
     sysp = (
         "You are a world-class viral short-video story architect. Plan a script BEFORE writing it.\n"
         f"{genre_rule}\n{cast_rule}{struct}\n"
+        f"{dialogue_style.full_prompt_policy(language)}\n"
         "Design a tight arc for a ~{}-line video: strong hook -> escalation -> turn -> "
         "satisfying payoff. The FIRST 2 seconds decide retention.\n".format(n) +
         "Write 3 DISTINCT opening hook lines (different angles: shock / question / funny "
@@ -66,13 +69,14 @@ def _plan(providers, idea, lang_name, n, genre, cast_rule, continuity, structure
     return _json_obj(providers.llm_generate(sysp, user, max_tokens=900, temperature=0.9))
 
 
-def _draft(providers, plan, idea, lang_name, n, cast_rule):
+def _draft(providers, plan, idea, language, lang_name, n, cast_rule):
     beats = " -> ".join(plan.get("beats", []))
     voices = "; ".join(f"{c.get('name')}: {c.get('voice','')}" for c in plan.get("cast", []))
     sysp = (
         "You are a professional cartoon dialogue writer. Write the FULL script from this plan.\n"
         f"{EXEMPLAR}\n"
         f"LANGUAGE: write ALL dialogue in {lang_name}.\n"
+        f"{dialogue_style.full_prompt_policy(language)}\n"
         f"{cast_rule}\n"
         f"CHARACTER VOICES (keep each DISTINCT): {voices}\n"
         f"ARC (beats): {beats}\n"
@@ -87,7 +91,7 @@ def _draft(providers, plan, idea, lang_name, n, cast_rule):
     return _clean(providers.llm_generate(sysp, user, max_tokens=1400, temperature=0.85))
 
 
-def _polish(providers, draft, lang_name):
+def _polish(providers, draft, language, lang_name):
     sysp = (
         "You are a ruthless script editor. Improve this cartoon script. Silently CHECK:\n"
         "- Is line 1 an instant, scroll-stopping hook? If weak, make it punchier.\n"
@@ -95,6 +99,7 @@ def _polish(providers, draft, lang_name):
         "- Any repeated words/phrases/ideas across lines? Remove repetition.\n"
         "- Is the pacing tight (no filler) and the ending a satisfying payoff?\n"
         "- Does every line sound natural spoken aloud in " + lang_name + "?\n"
+        + dialogue_style.full_prompt_policy(language) + "\n"
         "Keep the SAME characters, language, scene headers, and 'Name: (emotion) line' format.\n"
         "Output ONLY the final improved script text — no commentary.")
     return _clean(providers.llm_generate(sysp, f"Script:\n{draft}", max_tokens=1400, temperature=0.7))
@@ -123,9 +128,9 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
         cast_rule = ("CAST: choose 2-3 characters that fit the idea (animals, food, people, "
                      "mascots, objects). Short memorable names. Keep cast small.")
 
-    plan = _plan(providers, idea, lang_name, n, g, cast_rule, continuity, structure_hint)
-    draft = _draft(providers, plan, idea, lang_name, n, cast_rule)
-    script = _polish(providers, draft, lang_name) if polish else draft
+    plan = _plan(providers, idea, language, lang_name, n, g, cast_rule, continuity, structure_hint)
+    draft = _draft(providers, plan, idea, language, lang_name, n, cast_rule)
+    script = _polish(providers, draft, language, lang_name) if polish else draft
 
     return {
         "script": script,

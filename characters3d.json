@@ -450,5 +450,17 @@
     ],
     "blend": "waterdrop.blend",
     "thumb": "waterdrop.png"
+  },
+  {
+    "name": "Amy Humanoid",
+    "keywords": [
+      "amy",
+      "girl",
+      "child",
+      "kid",
+      "humanoid"
+    ],
+    "blend": "amy_humanoid.blend",
+    "thumb": "amy_humanoid.png"
   }
 ]

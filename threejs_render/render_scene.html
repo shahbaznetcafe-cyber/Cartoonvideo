@@ -12,6 +12,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { FacialRuntime, useJawFallback } from './facial_runtime.js';
 import { gestureEnvelope, listenerReaction, sampleActingState } from './acting_state_runtime.js';
 import { applyLegacyPose, captureBoneBases, jawOpenDelta } from './bone_pose_runtime.js';
+import { humanoidClipTime, isHumanoidPositionTrack, selectHumanoidClip } from './humanoid_motion_runtime.js';
 window.__error = null;
 window.addEventListener('error', e => { window.__error = String(e.message || e); });
 
@@ -113,7 +114,8 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
   const TH = 1.5, SPACING = 1.55, GROUND_CLEARANCE = 0.018, NC = spec.chars.length;
   const chars = [];
   for (const c of spec.chars) {
-    const root = (await load(c.glb)).scene;
+    const gltf = await load(c.glb);
+    const root = gltf.scene;
     // Some legacy exports store a current skeleton pose that differs from the
     // inverse bind matrices. Three.js then folds lower-body vertices into the
     // torso even though Blender displays the GLB correctly. Restore the true
@@ -123,10 +125,23 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
     });
     root.updateMatrixWorld(true);
     root.traverse(o => {
-      if (o.isSkinnedMesh && o.skeleton) o.skeleton.update();
+      if (o.isSkinnedMesh && o.skeleton) {
+        o.skeleton.update();
+        // Mixamo geometry is commonly stored in centimetres while the rig
+        // root carries a 0.01 scale. Static geometry bounds therefore report
+        // a character roughly 100x too large. Skinned bounds evaluate the
+        // actual bind-pose vertices and give reliable height/feet placement.
+        if (typeof o.computeBoundingBox === 'function') o.computeBoundingBox();
+        if (typeof o.computeBoundingSphere === 'function') o.computeBoundingSphere();
+      }
     });
     let box = new THREE.Box3().setFromObject(root);
     const sz = new THREE.Vector3(); box.getSize(sz);
+    const placementDebug = {
+      sourceSize: [sz.x, sz.y, sz.z],
+      sourceMin: [box.min.x, box.min.y, box.min.z],
+      sourceMax: [box.max.x, box.max.y, box.max.z],
+    };
     const cs = TH / (sz.y || 1); root.scale.multiplyScalar(cs); root.updateMatrixWorld(true);
     box = new THREE.Box3().setFromObject(root);        // scale ke baad asli box
     const ctr = new THREE.Vector3(); box.getCenter(ctr);
@@ -160,6 +175,21 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
           emotion: c.emotion || 'neutral', seed: stableSeed, fps })
       : { tier: 'LEGACY_JAW', canDriveVisemes: false, hasBlink: false,
           frameCount: 0, update() {} };
+    // Mixamo/SKELETAL_BASIC characters carry professional full-body clips.
+    // Legacy mascot rigs keep the existing procedural six-bone animation path.
+    const sourceMotionClip = facial.tier === 'SKELETAL_BASIC'
+      ? selectHumanoidClip(gltf.animations || [], { speaking: c.speaking, action: c.action })
+      : null;
+    // SBZ owns skeleton rest translations and world locomotion through the
+    // grounded holder. Blender 5 exports redundant Mixamo position tracks in
+    // FBX centimetres; rotations contain the usable body performance.
+    const motionClip = sourceMotionClip ? new THREE.AnimationClip(
+      sourceMotionClip.name,
+      sourceMotionClip.duration,
+      sourceMotionClip.tracks.filter(track => !isHumanoidPositionTrack(track.name)),
+    ) : null;
+    const mixer = motionClip ? new THREE.AnimationMixer(root) : null;
+    if (mixer) mixer.clipAction(motionClip).play();
     chars.push({ root, holder, bones, boneBases, mesh, facial, speaking: c.speaking, op: c.openness || [0],
                  id: c.id || `slot_${c.slot}`, emo: c.emotion || 'neutral',
                  phase: (stableSeed % 10000) / 1379, slot: c.slot,
@@ -167,7 +197,9 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
                  action: c.action || 'none', target: (c.target == null ? -1 : c.target),
                  acting, reaction: actingEnabled ? (acting.reaction || 'none') : 'none',
                  reactionStrength: Number(acting.reactionStrength) || 0,
-                 seed: stableSeed });
+                 seed: stableSeed, mixer, motionClip,
+                 placementDebug: { ...placementDebug, scale: cs,
+                   groundedMinY: box.min.y, groundedMaxY: box.max.y } });
   }
 
   // ---- camera framing: KNOWN placement se (skinned-mesh bbox reliable nahi) ----
@@ -206,6 +238,8 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
       blinkMode: c.facial.blinkMode || 'none', gazeMode: c.facial.gazeMode || 'none',
       visemes: Boolean(c.facial.canDriveVisemes) })),
     animationStateSchema: spec.animationStateSchema || 0, timeOffset,
+    motionClips: chars.map(c => c.motionClip ? c.motionClip.name : null),
+    placements: chars.map(c => c.placementDebug),
     features: { facialRuntime: facialEnabled, persistentActing: actingEnabled } };
 
   function smooth(op, idx) {   // light ±1 (track pehle se attack/release smoothed hai)
@@ -247,6 +281,9 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
     for (const c of chars) {
       const ph = c.phase, sd = c.seed, b = c.bones, E = emoOf(c);
       const speaking = c.speaking;
+      if (c.mixer && c.motionClip) {
+        c.mixer.setTime(humanoidClipTime(t, c.motionClip.duration, ph));
+      }
       const op = speaking ? smooth(c.op, Math.min(f, c.op.length - 1)) : 0;
       const persistent = c.acting && c.acting.start ? sampleActingState(c.acting, prog) : {
         position: { x: 0, y: 0, z: 0 },

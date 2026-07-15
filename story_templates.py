@@ -7,6 +7,8 @@ Har template: id, name (roman), name_en, emoji, desc, mood, structure (beat shee
 chars (library characters), lines (approx dialogue count), sample_topic.
 """
 
+import dialogue_style
+
 TEMPLATES = [
     {
         "id": "moral", "name": "Akhlaqi Kahani", "name_en": "Moral Story", "emoji": "📖",
@@ -215,8 +217,7 @@ def generate_from_template(template_id, topic="", language="roman_urdu",
             topic, language=language, characters=chars, length=length, lines=lines,
             genre=t["name_en"], structure_hint=t["structure"])["script"]
 
-    lang_name = {"urdu": "Urdu (Urdu script)", "roman_urdu": "Roman Urdu",
-                 "english": "English"}.get(language, "Roman Urdu")
+    lang_name = dialogue_style.language_name(language)
     names = ", ".join(c.title() for c in chars)
 
     sysp = (
@@ -230,6 +231,7 @@ def generate_from_template(template_id, topic="", language="roman_urdu",
         f"LENGTH: exactly about {n} dialogue lines (roughly a {approx_sec}-second video). "
         "Do not go over.\n"
         f"LANGUAGE: write ALL dialogue in {lang_name}.\n"
+        f"{dialogue_style.full_prompt_policy(language)}\n"
         "QUALITY BAR:\n"
         "- Line 1 must be a STRONG hook that grabs attention instantly.\n"
         "- Give each character a distinct voice/personality consistent with the genre.\n"
@@ -288,8 +290,7 @@ def generate_freeform(idea, language="roman_urdu", characters=None,
     chars = [c for c in (characters or []) if c and c.strip()]
     n = int(lines) if lines else LENGTH_LINES.get(length, 10)
     approx_sec = n * 5
-    lang_name = {"urdu": "Urdu (Urdu script)", "roman_urdu": "Roman Urdu",
-                 "english": "English"}.get(language, "Roman Urdu")
+    lang_name = dialogue_style.language_name(language)
     g = (genre or "auto").lower()
 
     if cast_bios:
@@ -314,6 +315,7 @@ def generate_freeform(idea, language="roman_urdu", characters=None,
         f"{genre_rule}\n{cast_rule}\n"
         f"LENGTH: about {n} dialogue lines (~{approx_sec}s video). Do not go over.\n"
         f"LANGUAGE: write ALL dialogue in {lang_name}.\n"
+        f"{dialogue_style.full_prompt_policy(language)}\n"
         "STORY CRAFT:\n"
         "- Infer a clear arc from the idea: hook -> build -> turn -> satisfying ending.\n"
         "- Line 1 must be a STRONG hook that grabs attention in the first 2 seconds.\n"
@@ -383,8 +385,7 @@ def generate_longform(idea, language="roman_urdu", characters=None,
         raise ValueError("Idea chahiye (kis cheez par lambi video?)")
     chars = [c for c in (characters or []) if c and c.strip()]
     n_scenes, lines_per = LONGFORM_PLANS.get(minutes, LONGFORM_PLANS["5min"])
-    lang_name = {"urdu": "Urdu (Urdu script)", "roman_urdu": "Roman Urdu",
-                 "english": "English"}.get(language, "Roman Urdu")
+    lang_name = dialogue_style.language_name(language)
     g = (genre or "auto").lower()
 
     def prog(i, msg):
@@ -414,6 +415,7 @@ def generate_longform(idea, language="roman_urdu", characters=None,
         "You are a professional long-form animated-story planner for a kids' cartoon channel. "
         "From one idea you design a coherent multi-scene story with a clear dramatic arc.\n"
         f"{genre_rule}\n{cast_rule}\n"
+        f"{dialogue_style.full_prompt_policy(language)}\n"
         f"Plan EXACTLY {n_scenes} scenes forming a full arc: "
         "setup -> rising action -> midpoint turn -> climax -> resolution "
         "(distribute these beats across the scenes).\n"
@@ -451,6 +453,7 @@ def generate_longform(idea, language="roman_urdu", characters=None,
     scene_sys = (
         "You are a professional cartoon dialogue writer. Write ONE scene of an ongoing story. "
         f"Write ALL dialogue in {lang_name}. Keep continuity with what came before.\n"
+        f"{dialogue_style.full_prompt_policy(language)}\n"
         f"CAST (use consistent personalities): {cast_desc}\n"
         f"STORY LOGLINE: {logline}\n"
         "RULES:\n"

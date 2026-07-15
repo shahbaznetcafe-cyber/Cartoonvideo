@@ -1,5 +1,5 @@
 let polling=null, OPTS=null, CUR_JOB=null, CHAR_CAPS={};
-let ELEVEN_VOICES_LOADED=false;
+let ELEVEN_VOICES_LOADED=false, EDGE_VOICES_LOADED=false;
 const ORDER=['story','voice','asset','render'];
 function escHtml(value){
   return String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -90,10 +90,78 @@ async function loadElevenLabsVoices(force=false){
     sel.disabled=true; ELEVEN_VOICES_LOADED=false;
   }
 }
+function ensureProviderControls(){
+  const tts=document.getElementById('tts_provider');
+  if(tts && ![...tts.options].some(option=>option.value==='google')){
+    const option=document.createElement('option'); option.value='google';
+    option.textContent='Google Cloud TTS (free quota)';
+    tts.insertBefore(option,[...tts.options].find(item=>item.value==='elevenlabs')||null);
+  }
+  const body=document.querySelector('#advancedProviderGroup .advanced-group-body');
+  if(body && !document.getElementById('llm_provider')){
+    const controls=document.createElement('div'); controls.className='provider-model-controls';
+    controls.innerHTML='<label for="llm_provider">Text API gateway</label><select id="llm_provider"></select>'
+      +'<label for="llm_model">Runware script model</label><select id="llm_model"></select>'
+      +'<div id="llm_model_status" class="hint">Available models load ho rahe hain.</div>';
+    body.prepend(controls);
+  }
+}
+function voiceOptionLabel(voice){
+  return `${voice.name} · ${voice.gender||'Voice'}`;
+}
+async function loadEdgeVoices(force=false){
+  if(EDGE_VOICES_LOADED && !force) return;
+  const sel=document.getElementById('edge_voice'), status=document.getElementById('edge_voice_status');
+  if(!sel || !status) return;
+  sel.disabled=true; status.textContent='Free Hindi and Urdu voices load ho rahi hain...';
+  try{
+    const response=await fetch('/api/voices/edge'+(force?'?refresh=1':''));
+    const data=await response.json();
+    if(!response.ok || !data.available) throw new Error(data.error||'voices load nahi huin');
+    sel.innerHTML='<option value="">Auto by character</option>';
+    const locales={};
+    (data.voices||[]).forEach(voice=>(locales[voice.locale]??=[]).push(voice));
+    Object.entries(locales).forEach(([locale,voices])=>{
+      const group=document.createElement('optgroup'); group.label=locale;
+      voices.forEach(voice=>{const option=document.createElement('option');option.value=voice.name;option.textContent=voiceOptionLabel(voice);group.appendChild(option);});
+      sel.appendChild(group);
+    });
+    const selected=(OPTS.defaults&&OPTS.defaults.edge_voice)||data.selected||'';
+    if([...sel.options].some(option=>option.value===selected)) sel.value=selected;
+    sel.disabled=false; status.textContent=`${data.voices.length} free Hindi/Urdu voices available`; EDGE_VOICES_LOADED=true;
+  }catch(error){sel.disabled=false;status.textContent='Voice list: '+error.message;EDGE_VOICES_LOADED=false;}
+}
+async function loadGoogleVoices(){
+  const sel=document.getElementById('google_tts_voice'); if(!sel) return;
+  const status=document.getElementById('google_voice_status');
+  let data={voices:(OPTS&&OPTS.google_voices)||[],available:false,selected:OPTS?.defaults?.google_tts_voice};
+  try{const response=await fetch('/api/voices/google');if(response.ok)data=await response.json();}catch(error){}
+  const voices=data.voices||[]; sel.innerHTML='';
+  voices.forEach(voice=>{const option=document.createElement('option');option.value=voice.name;option.textContent=`${voice.name} · ${voice.gender} · ${voice.tier}`;sel.appendChild(option);});
+  const configured=OPTS?.defaults?.google_tts_voice||data.selected;
+  if(configured && [...sel.options].some(option=>option.value===configured)) sel.value=configured;
+  if(status) status.textContent=data.available?'Google Cloud TTS configured · free quota may apply':'API key/billing setup required · monthly free quota may apply';
+}
+function syncLLMModels(){
+  const provider=document.getElementById('llm_provider'), model=document.getElementById('llm_model'), status=document.getElementById('llm_model_status');
+  if(!provider || !model || !OPTS) return;
+  const catalog=OPTS.llm_models||[], providers=[...new Set(catalog.map(item=>item.provider))];
+  const configuredProvider=OPTS.defaults?.llm_provider||'runware';
+  if(!provider.options.length){providers.forEach(name=>{const option=document.createElement('option');option.value=name;option.textContent=name==='runware'?'Runware API (all vendors)':name[0].toUpperCase()+name.slice(1);provider.appendChild(option);});provider.value=providers.includes(configuredProvider)?configuredProvider:providers[0]||'';}
+  const selectedProvider=provider.value, current=model.value||OPTS.defaults?.llm_model||'';
+  model.innerHTML=''; catalog.filter(item=>item.provider===selectedProvider).forEach(item=>{const option=document.createElement('option');option.value=item.model;option.textContent=`${item.vendor||'Runware'} · ${item.label} · ${item.cost}`;model.appendChild(option);});
+  if([...model.options].some(option=>option.value===current)) model.value=current;
+  const chosen=catalog.find(item=>item.provider===selectedProvider&&item.model===model.value);
+  if(status) status.textContent=chosen?`Runs through your Runware API key · ${chosen.description} · ${chosen.cost}`:'Configure the Runware API key before generation.';
+}
 function syncVoiceProviderUI(){
   const provider=document.getElementById('tts_provider').value;
   document.getElementById('edge_voice_group').classList.toggle('hidden',provider!=='edge');
+  document.getElementById('edge_voice_options')?.classList.toggle('hidden',provider!=='edge');
+  document.getElementById('google_voice_group')?.classList.toggle('hidden',provider!=='google');
   document.getElementById('eleven_voice_group').classList.toggle('hidden',provider!=='elevenlabs');
+  if(provider==='edge') loadEdgeVoices();
+  if(provider==='google') loadGoogleVoices();
   if(provider==='elevenlabs') loadElevenLabsVoices();
 }
 function capabilityMarkup(cap){
@@ -130,6 +198,7 @@ async function stopJob(){
 
 async function load(){
   OPTS = await (await fetch('/api/options')).json();
+  ensureProviderControls();
   const sel=document.getElementById('style');
   OPTS.styles.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;
     if(s===OPTS.defaults.style)o.selected=true; sel.appendChild(o);});
@@ -148,6 +217,13 @@ async function load(){
   if(OPTS.defaults && OPTS.defaults.tts_provider) tts.value=OPTS.defaults.tts_provider;
   tts.addEventListener('change',syncVoiceProviderUI);
   document.getElementById('refresh_eleven_voices').addEventListener('click',()=>loadElevenLabsVoices(true));
+  document.getElementById('refresh_edge_voices')?.addEventListener('click',()=>loadEdgeVoices(true));
+  const speed=document.getElementById('voice_speed'), speedOut=document.getElementById('voiceSpeedValue');
+  if(speed){speed.value=OPTS.defaults?.voice_speed||1;const updateSpeed=()=>{if(speedOut)speedOut.textContent=`${Number(speed.value).toFixed(2)}×`;};speed.addEventListener('input',updateSpeed);updateSpeed();}
+  loadGoogleVoices();
+  syncLLMModels();
+  document.getElementById('llm_provider')?.addEventListener('change',syncLLMModels);
+  document.getElementById('llm_model')?.addEventListener('change',syncLLMModels);
   syncVoiceProviderUI();
   if(OPTS.defaults && OPTS.defaults.render_engine){ const re=document.getElementById('render_engine'); if(re) re.value=OPTS.defaults.render_engine; }
   if(OPTS.defaults){
@@ -627,7 +703,8 @@ function updateScriptLanguageIndicator(value=''){
   if(/[\u0600-\u06ff]/.test(value)) out.textContent='Urdu';
   else{
     const selected=document.getElementById('ffLang')?.value||'roman_urdu';
-    out.textContent=selected==='english'?'English':'Roman Urdu';
+    const labels={english:'English',hindi:'Hindi',hinglish:'Hindi + English 85/15',urdu:'Urdu',roman_urdu:'Roman Urdu'};
+    out.textContent=labels[selected]||'Roman Urdu';
   }
 }
 
@@ -641,7 +718,8 @@ function renderWorkflowSummary(){
   const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
   set('summaryStoryMode',storyLabels[story]||story);
   set('summaryFormat',`${aspectLabels[aspect]||aspect} · ${quality}`);
-  set('summaryVoice',tts==='elevenlabs'?'ElevenLabs':'Edge TTS');
+  const voiceLabels={elevenlabs:'ElevenLabs',google:'Google Cloud TTS',edge:'Edge TTS'};
+  set('summaryVoice',voiceLabels[tts]||tts);
   set('summarySubtitles',document.getElementById('cap_enabled')?.checked?'Enabled':'Optional');
   set('renderSceneCount',PLAN?.scenes?.length??PLAN?.parsed?.scenes?.length??'—');
   set('renderCharacterCount',PLAN?.characters?.length??PLAN?.parsed?.characters?.length??'—');
@@ -649,7 +727,7 @@ function renderWorkflowSummary(){
   set('renderEngineSummary',engine==='blender'?'Blender':'Three.js');
   set('renderProjectTitle',STUDIO_UI.projectName||'Untitled video');
   set('renderFormatSummary',`${aspectLabels[aspect]||aspect} · ${quality}`);
-  set('renderVoiceSummary',tts==='elevenlabs'?'ElevenLabs':'Edge TTS');
+  set('renderVoiceSummary',voiceLabels[tts]||tts);
   set('renderCaptionSummary',document.getElementById('cap_enabled')?.checked?'Enabled':'Optional');
   const metrics=getRenderMetrics();
   set('renderSceneCount',metrics.scenes);
@@ -910,7 +988,12 @@ function collectSettings(){
     outro_on: true,
     tts_provider: ttsProvider,
     urdu_accent: ttsProvider==='edge' ? document.getElementById('urdu_accent').value : '',
+    edge_voice: ttsProvider==='edge' ? (document.getElementById('edge_voice')?.value||'') : '',
+    google_tts_voice: ttsProvider==='google' ? (document.getElementById('google_tts_voice')?.value||'') : '',
     elevenlabs_voice_id: ttsProvider==='elevenlabs' ? document.getElementById('elevenlabs_voice_id').value : '',
+    voice_speed: Number(document.getElementById('voice_speed')?.value||1),
+    llm_provider: document.getElementById('llm_provider')?.value||OPTS?.defaults?.llm_provider||'runware',
+    llm_model: document.getElementById('llm_model')?.value||OPTS?.defaults?.llm_model||'',
     voice_volume: document.getElementById('voice_volume').value,
     music_volume: document.getElementById('music_volume').value,
     captions: {
@@ -933,7 +1016,7 @@ async function suggestStyle(){
   if(r.style) document.getElementById('style').value=r.style;
 }
 
-function _scriptLang(){ const t=document.getElementById('tplLang'); return t?t.value:'roman_urdu'; }
+function _scriptLang(){ const t=document.getElementById('ffLang')||document.getElementById('tplLang'); return t?t.value:'roman_urdu'; }
 
 async function analyzeScript(){
   const script=document.getElementById('script').value.trim();
@@ -1552,8 +1635,9 @@ async function testRunware(){
   out.innerHTML='<span style="color:var(--muted)">Runware ko test kiya ja raha hai...</span>';
   try{
     const img=document.getElementById('test_img').checked;
+    const model=document.getElementById('llm_model')?.value||'';
     const j=await (await fetch('/api/test-runware',{method:'POST',
-      headers:{'Content-Type':'application/json'},body:JSON.stringify({image:img})})).json();
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({image:img,model})})).json();
     const t=j.tests||{};
     const dot=ok=>ok?'<span style="color:var(--green)">●</span>':'<span style="color:var(--red)">●</span>';
     let h='';

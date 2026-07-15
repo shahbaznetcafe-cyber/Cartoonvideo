@@ -5,12 +5,15 @@ Same-gender characters ko alag sunane ke liye pitch/rate vary karta hai.
 Har line ki audio + duration ek timeline mein save hoti hai.
 """
 import asyncio
+import hashlib
+import json
 import os
 import subprocess
 
 import edge_tts
 
 import config
+import dialogue_style
 import viseme_timeline
 
 # Same gender ke kai characters ko distinguish karne ke liye variations
@@ -83,6 +86,16 @@ def _duration(path):
         return 2.0
 
 
+def _synthesis_signature(text, voice, rate, pitch):
+    payload = {
+        "text": text, "voice": voice, "rate": rate, "pitch": pitch,
+        "provider": config.TTS_PROVIDER, "speed": round(float(config.VOICE_SPEED), 3),
+        "edge_voice": config.EDGE_VOICE, "google_voice": config.GOOGLE_TTS_VOICE,
+        "eleven_voice": config.ELEVENLABS_VOICE_ID,
+    }
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
 def generate_voices(parsed, proj_dir, on_progress=None):
     """
     Har line ki mp3 banao -> proj_dir/voices/.
@@ -110,7 +123,8 @@ def generate_voices(parsed, proj_dir, on_progress=None):
     for i, (sc, ln) in enumerate(all_lines, start=1):
         spk = ln.get("speaker", "narrator")
         ch = chars.get(spk, {})
-        voice = ch.get("voice", config.VOICE_MAP["narrator"])
+        language_voices = config.voice_map_for_language(parsed.get("language"))
+        voice = ch.get("voice", language_voices["narrator"])
         pitch = ch.get("pitch", "+0Hz")
         rate = ch.get("rate", "+0%")
         # per-character voice override (characters.json "voice" field)
@@ -124,17 +138,27 @@ def generate_voices(parsed, proj_dir, on_progress=None):
 
         fname = f"s{sc['id']}_l{i}.mp3"
         fpath = os.path.join(voices_dir, fname)
+        speak_text = dialogue_style.normalize_spoken_punctuation(
+            tts_texts[i - 1] or ln["text"], parsed.get("language"))
+        signature = _synthesis_signature(speak_text, voice, rate, pitch)
+        signature_path = fpath + ".synthesis.json"
+        cached_signature = ""
+        try:
+            with open(signature_path, encoding="utf-8") as handle:
+                cached_signature = json.load(handle).get("signature", "")
+        except Exception:
+            pass
 
         # RESUME: agar valid mp3 pehle se hai to dobara na banao (crash ke baad tez)
-        if os.path.exists(fpath) and os.path.getsize(fpath) > 500:
+        if (os.path.exists(fpath) and os.path.getsize(fpath) > 500
+                and cached_signature == signature):
             dur = _duration(fpath)
             if on_progress:
                 on_progress(i, total, f"Voice {i}/{total}: [{spk}] (cached)")
         else:
             import providers
-            speak_text = tts_texts[i - 1] or ln["text"]   # Urdu-script (agar transliterate hua)
             providers.tts_synthesize(speak_text, voice, fpath, rate=rate, pitch=pitch,
-                                     volume=config.VOICE_VOLUME)
+                                     volume=config.VOICE_VOLUME, speed=config.VOICE_SPEED)
             # professional cleanup: lead/trail silence trim + loudness-normalize + 48k.
             # words.json (lip-sync spans) ko trim-amount se shift karo taake sync sahi rahe.
             try:
@@ -146,12 +170,17 @@ def generate_voices(parsed, proj_dir, on_progress=None):
                     os.replace(tmpf, fpath)
                     wj = fpath + ".words.json"
                     if lead > 0.001 and os.path.exists(wj):
-                        d = _json.load(open(wj, encoding="utf-8"))
+                        with open(wj, encoding="utf-8") as handle:
+                            d = _json.load(handle)
                         for w in d.get("words", []):
                             w["t"] = round(max(0.0, w["t"] - lead), 4)
-                        _json.dump(d, open(wj, "w", encoding="utf-8"), ensure_ascii=False)
+                        with open(wj, "w", encoding="utf-8") as handle:
+                            _json.dump(d, handle, ensure_ascii=False)
             except Exception as _ex:
                 print(f"  [voice clean skip] {_ex}", flush=True)
+            with open(signature_path, "w", encoding="utf-8") as handle:
+                json.dump({"signature": signature, "provider": config.TTS_PROVIDER,
+                           "speed": config.VOICE_SPEED}, handle, ensure_ascii=False)
             dur = _duration(fpath)
 
         first_in_scene = i == 1 or all_lines[i - 2][0].get("id") != sc.get("id")

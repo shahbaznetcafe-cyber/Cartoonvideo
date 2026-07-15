@@ -10,7 +10,7 @@ load_dotenv()
 RUNWARE_ENDPOINT = "https://api.runware.ai/v1"
 RUNWARE_API_KEY = os.getenv("RUNWARE_API_KEY", "").strip()
 
-TEXT_MODEL = os.getenv("TEXT_MODEL", "openai:gpt@5.4-mini")
+TEXT_MODEL = os.getenv("TEXT_MODEL", "openai-gpt-5-4-mini")
 IMAGE_MODEL = os.getenv("IMAGE_MODEL", "runware:101@1")
 
 # Urdu voice sets (edge-tts, free) — Indian (ur-IN) + Pakistani (ur-PK), per gender
@@ -20,9 +20,18 @@ VOICE_SETS = {
     "indian":    {"male": "ur-IN-SalmanNeural", "female": "ur-IN-GulNeural",
                   "child": "ur-IN-GulNeural", "narrator": "ur-IN-SalmanNeural"},
 }
+HINDI_VOICE_SETS = {
+    "male": "hi-IN-MadhurNeural",
+    "female": "hi-IN-SwaraNeural",
+    "child": "hi-IN-AnanyaNeural",
+    "narrator": "hi-IN-MadhurNeural",
+}
 URDU_ACCENT = os.getenv("URDU_ACCENT", "pakistani")   # indian | pakistani
 # default edge-tts voices (per gender) — accent ke hisab se
 VOICE_MAP = dict(VOICE_SETS.get(URDU_ACCENT, VOICE_SETS["pakistani"]))
+EDGE_VOICE = os.getenv("EDGE_VOICE", "").strip()  # empty = automatic by language/gender
+GOOGLE_TTS_VOICE = os.getenv("GOOGLE_TTS_VOICE", "hi-IN-Standard-B").strip()
+VOICE_SPEED = max(0.7, min(1.2, float(os.getenv("VOICE_SPEED", "1.0"))))
 
 
 def set_urdu_accent(accent):
@@ -31,6 +40,13 @@ def set_urdu_accent(accent):
     URDU_ACCENT = accent if accent in VOICE_SETS else "pakistani"
     VOICE_MAP.clear(); VOICE_MAP.update(VOICE_SETS[URDU_ACCENT])
     return URDU_ACCENT
+
+
+def voice_map_for_language(language=None):
+    """Return language-appropriate automatic voices without mutating old projects."""
+    if str(language or "").lower() in {"hindi", "hinglish"}:
+        return HINDI_VOICE_SETS
+    return VOICE_MAP
 
 # P4 — Style system (163+ styles). Default style; per-scene override bhi ho sakta.
 STYLE = os.getenv("STYLE", "3d cartoon")
@@ -79,9 +95,10 @@ OVERLAY_OPACITY = float(os.getenv("OVERLAY_OPACITY", "0.35"))
 VOICE_VOLUME = os.getenv("VOICE_VOLUME", "+0%")
 
 # P3 — Multi-provider engine
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "runware")     # runware|huggingface|groq|gemini|openai|openrouter|together
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "runware")
+LLM_MODEL = os.getenv("LLM_MODEL", "").strip()
 IMAGE_PROVIDER = os.getenv("IMAGE_PROVIDER", "runware")  # runware|fal|replicate
-TTS_PROVIDER = os.getenv("TTS_PROVIDER", "edge")         # edge|elevenlabs|fish
+TTS_PROVIDER = os.getenv("TTS_PROVIDER", "edge")         # edge|google|elevenlabs
 ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "").strip()
 # Eleven v3 supports Urdu and expressive character/audiobook delivery.  Keep the
 # environment override for accounts that deliberately use another model.
@@ -89,9 +106,9 @@ ELEVENLABS_MODEL = os.getenv("ELEVENLABS_MODEL", "eleven_v3").strip() or "eleven
 # HuggingFace InferenceClient model (HF_TOKEN .env mein daalein)
 HF_MODEL = os.getenv("HF_MODEL", "meta-llama/Meta-Llama-3-8B-Instruct")
 # fallback chains (provider fail/no-key ho to agla)
-LLM_FALLBACK = ["runware", "huggingface", "groq", "gemini", "openai", "openrouter", "together"]
+LLM_FALLBACK = ["runware", "deepseek", "zai", "huggingface", "groq", "gemini", "openai", "openrouter", "together"]
 IMAGE_FALLBACK = ["runware", "fal", "replicate"]
-TTS_FALLBACK = ["edge", "elevenlabs", "fish"]
+TTS_FALLBACK = ["edge", "google", "elevenlabs"]
 
 # Captions (P2) — karaoke
 WHISPER_MODEL = os.getenv("WHISPER_MODEL", "base")

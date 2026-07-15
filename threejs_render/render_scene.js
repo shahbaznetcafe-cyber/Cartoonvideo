@@ -76,6 +76,8 @@ await page.goto(`http://localhost:${PORT}/render_scene.html`, { waitUntil: 'load
 await page.waitForFunction('window.__ready===true || window.__error', { timeout: 60000 });
 const err = await page.evaluate(() => window.__error);
 if (err) { console.log('SCENE_ERROR:', err); await browser.close(); server.close(); process.exit(1); }
+const debug = await page.evaluate(() => window.__debug);
+console.log(`SCENE_DEBUG ${JSON.stringify(debug)}`);
 
 const NF = await page.evaluate(() => window.__nframes);
 const t0 = Date.now();
