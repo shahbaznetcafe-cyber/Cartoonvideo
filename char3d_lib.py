@@ -15,6 +15,69 @@ RIG_DIR = os.path.join(config.BASE_DIR, "blender", "rigged", "blend")
 THREE_CHAR_DIR = os.path.join(config.BASE_DIR, "threejs_render", "assets", "chars")
 _VALIDATION_CACHE = {}
 
+# Story characters aksar Urdu/Hindi script ya roman mein aate hain ("خرگوش",
+# "khargosh"), jabke library keywords angrezi mein hain ("bunny", "rabbit").
+# Yeh map har concept ke Urdu-script + roman forms ko un angrezi keywords se
+# jorta hai jo library characters ke paas pehle se hain — taake sahi character
+# assign ho, na ke round-robin se koi bhi.  Keys lowercase; Urdu bila-case.
+CHARACTER_CONCEPTS = {
+    # animals
+    "rabbit": "rabbit bunny", "bunny": "rabbit bunny", "khargosh": "rabbit bunny",
+    "خرگوش": "rabbit bunny", "خرگوش": "rabbit bunny",
+    "cat": "cat", "billi": "cat", "بلی": "cat", "بلّی": "cat",
+    "dog": "dog", "kutta": "dog", "کتا": "dog", "کتّا": "dog",
+    "puppy": "dog pug", "pug": "dog pug",
+    "monkey": "monkey", "bandar": "monkey", "بندر": "monkey",
+    "cow": "cow", "gaaye": "cow", "gaay": "cow", "گائے": "cow",
+    "chicken": "chicken", "hen": "chicken", "murghi": "chicken", "مرغی": "chicken",
+    "bird": "bird pigeon birb", "pigeon": "pigeon", "kabootar": "pigeon", "کبوتر": "pigeon",
+    "fish": "fish", "machli": "fish", "مچھلی": "fish",
+    "shark": "shark", "sharky": "shark",
+    "frog": "frog", "maindak": "frog", "مینڈک": "frog",
+    "dragon": "dragon", "azhdaha": "dragon", "اژدہا": "dragon", "ڈریگن": "dragon",
+    "dino": "dino dinosaur", "dinosaur": "dino dinosaur", "ڈائنوسار": "dino dinosaur",
+    "yeti": "yeti", "shark2": "shark",
+    # roles / people
+    "captain": "captain pirate", "kaptaan": "captain pirate", "کپتان": "captain pirate",
+    "pirate": "pirate", "qazaq": "pirate", "قزاق": "pirate",
+    "king": "king", "badshah": "king", "بادشاہ": "king",
+    "soldier": "soldier", "sipahi": "soldier", "فوجی": "soldier", "سپاہی": "soldier",
+    "farmer": "farmer", "kisan": "farmer", "کسان": "farmer",
+    "doctor": "doctor", "hakeem": "doctor", "ڈاکٹر": "doctor",
+    "chef": "chef", "cook": "chef", "bawarchi": "chef", "باورچی": "chef",
+    "ninja": "ninja", "نینجا": "ninja",
+    "wizard": "wizard witch", "jadugar": "wizard witch", "جادوگر": "wizard witch",
+    "witch": "witch", "dayan": "witch", "ڈائن": "witch",
+    "viking": "viking", "cowboy": "cowboy",
+    "astronaut": "astronaut spacesuit", "spaceman": "astronaut spacesuit",
+    "khalabaz": "astronaut spacesuit", "خلاباز": "astronaut spacesuit",
+    "robot": "robot bot", "روبوٹ": "robot bot",
+    "ghost": "ghost skeleton", "bhoot": "ghost skeleton", "بھوت": "ghost skeleton",
+    "skeleton": "skeleton", "dhancha": "skeleton", "ڈھانچہ": "skeleton",
+    "zombie": "zombie", "adventurer": "adventurer explorer", "hero": "adventurer explorer",
+    "elf": "elf", "goblin": "goblin", "knight": "knight",
+    # generic humans -> plain casual/adventurer humans (round-robin friendly)
+    "boy": "casual boy", "larka": "casual boy", "لڑکا": "casual boy",
+    "girl": "casual girl", "larki": "casual girl", "لڑکی": "casual girl",
+    "man": "casual man", "aadmi": "casual man", "آدمی": "casual man",
+    "woman": "casual woman", "aurat": "casual woman", "عورت": "casual woman",
+}
+
+
+def concept_keywords(*texts):
+    """Return English keyword tokens implied by any Urdu/roman/English character
+    word found in the given texts (id/name/role).  Longest keys first so
+    multi-word forms win before their substrings."""
+    blob = " ".join(str(t or "") for t in texts)
+    low = blob.lower()
+    tokens = []
+    for key, mapped in CHARACTER_CONCEPTS.items():
+        is_urdu = any(ord(c) > 0x600 for c in key)
+        hit = key in blob if is_urdu else key.lower() in low
+        if hit:
+            tokens.append(mapped)
+    return " ".join(dict.fromkeys(tokens))   # de-dupe, keep order
+
 
 def load():
     if os.path.exists(MANIFEST):
@@ -256,6 +319,10 @@ def assign(parsed_chars, overrides=None, library=None):
         raw = f"{ch.get('id','')} {ch.get('name','')} {ch.get('role','')}".lower()
         # compact (space/underscore hata) taake "onion uncle" -> "onionuncle" match kare
         hay = raw + " " + _re.sub(r"[^a-z0-9]", "", raw)
+        # Urdu/Hindi/roman character words -> angrezi keywords (khargosh -> bunny)
+        concepts = concept_keywords(ch.get("id"), ch.get("name"), ch.get("role"))
+        if concepts:
+            hay += " " + concepts
         best, best_len, best_fit = None, 0, 99
         for e in entries:
             if e["blend"] in used:
