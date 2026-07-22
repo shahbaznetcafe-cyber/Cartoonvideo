@@ -24,13 +24,44 @@ MOOD_MUSIC = {
 
 
 def _find(folder):
-    return (glob.glob(os.path.join(folder, "*.mp3")) +
-            glob.glob(os.path.join(folder, "*.MP3")) +
-            glob.glob(os.path.join(folder, "*.wav")))
+    files = []
+    for extension in ("*.mp3", "*.MP3", "*.wav", "*.WAV", "*.m4a", "*.M4A"):
+        files.extend(glob.glob(os.path.join(folder, extension)))
+    return sorted(set(files))
 
 
-def select_music(scene_moods):
-    """Video ke dominant mood ke hisab se ek music track chuno (ya None)."""
+def music_catalog():
+    """Safe local catalog for the desktop selector; never exposes arbitrary paths."""
+    tracks = []
+    for root, _dirs, _files in os.walk(MUSIC_DIR):
+        for path in _find(root):
+            relative = os.path.relpath(path, MUSIC_DIR).replace("\\", "/")
+            category = os.path.basename(os.path.dirname(relative)) or "library"
+            if "/" not in relative:
+                category = "library"
+            title = os.path.splitext(os.path.basename(relative))[0].replace("_", " ").replace("-", " ").title()
+            tracks.append({"id": relative, "title": title, "category": category, "path": path})
+    return sorted(tracks, key=lambda item: (item["category"], item["title"]))
+
+
+def _manual_track(selection):
+    if not selection or str(selection).strip().lower() in ("auto", "mood", "default"):
+        return None
+    requested = os.path.normpath(str(selection).replace("/", os.sep))
+    if os.path.isabs(requested) or requested.startswith(".."):
+        return None
+    candidate = os.path.abspath(os.path.join(MUSIC_DIR, requested))
+    root = os.path.abspath(MUSIC_DIR) + os.sep
+    if not candidate.startswith(root) or not os.path.isfile(candidate):
+        return None
+    return candidate
+
+
+def select_music(scene_moods, selection=None):
+    """Resolve explicit local choice first; otherwise select a deterministic mood match."""
+    manual = _manual_track(selection if selection is not None else getattr(config, "MUSIC_TRACK", "auto"))
+    if manual:
+        return manual
     if not config.MUSIC_MOOD_AUTO:
         files = _find(MUSIC_DIR)
         return files[0] if files else None
@@ -39,13 +70,13 @@ def select_music(scene_moods):
     if scene_moods:
         dom = Counter([m or "neutral" for m in scene_moods]).most_common(1)[0][0]
         cat = MOOD_MUSIC.get(dom, "calm")
-
-    for d in (os.path.join(MUSIC_DIR, cat), MUSIC_DIR):
-        files = _find(d)
+    for folder in (os.path.join(MUSIC_DIR, cat), MUSIC_DIR):
+        files = _find(folder)
         if files:
             return files[0]
-    return None
-
+    # If there is no exact mood folder, a catalog track is still preferable to silence.
+    catalog = music_catalog()
+    return catalog[0]["path"] if catalog else None
 
 def get_sfx(name):
     """Named SFX (e.g. 'whoosh','transition','footsteps') — file ya None."""

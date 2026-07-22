@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "title": "The Suspicious Box — Directed Production Scene",
+  "characterId": "quaternius_adventurer",
+  "fps": 24,
+  "durationSeconds": 30,
+  "dialogue": false,
+  "environment": {
+    "enabled": true,
+    "seed": 20260715,
+    "windStrength": 0.62,
+    "leaves": 28,
+    "clouds": 2,
+    "ambientActors": 3,
+    "instancedVegetation": true
+  },
+  "props": [
+    {
+      "id": "suspicious_box",
+      "targets": [
+        { "name": "reach_handle", "position": [0.77, 1.1, 0.4], "rotation": [0, 0, 0], "forward": [0, 0, 1], "handPreference": "right" }
+      ]
+    }
+  ],
+  "beats": [
+    { "id": "establish_forest", "start": 0, "end": 2.25, "storyAction": "offscreen_hold", "purpose": "establish", "characterVisibility": "offscreen", "environmentEvents": ["wind", "leaves", "birds"] },
+    { "id": "enter_path", "start": 2.25, "end": 6.75, "storyAction": "walk_path", "purpose": "locomotion", "movement": { "from": [-6.65,0,0.58], "to": [-2.45,0,0.34], "clipCycles": 3 } },
+    { "id": "notice_box", "start": 6.75, "end": 8.75, "storyAction": "notice_prop", "purpose": "prop_reveal", "facingTarget": [1.05,0,0.24], "lookTarget": [0.77,1.1,0.4], "turnFromPrevious": true },
+    { "id": "cautious_approach", "start": 8.75, "end": 12.75, "storyAction": "cautious_approach", "purpose": "relationship", "facingTarget": [1.05,0,0.24], "lookTarget": [0.77,1.1,0.4], "movement": { "from": [-2.45,0,0.34], "to": [0.22,0,0.3], "clipCycles": 2 } },
+    { "id": "reach_and_contact", "start": 12.75, "end": 15.5, "storyAction": "reach_prop", "purpose": "contact", "loop": false, "lookTarget": [0.77,1.1,0.4], "interaction": { "target": "suspicious_box.reach_handle", "capability": "right_hand_reach", "characterPosition": [0.22,0,0.3], "acceptableFacingErrorDegrees": 12, "triggerTime": 13.75, "triggerFrame": 330, "consequenceEvent": "box_lid_pop" }, "environmentEvents": ["box_lid_pop", "box_shake", "particle_burst"] },
+    { "id": "surprised_reaction", "start": 15.5, "end": 17, "storyAction": "surprise_recoil", "purpose": "body_reaction", "loop": false, "interruptible": true, "facingTarget": [1.05,0,0.24] },
+    { "id": "step_backward", "start": 17, "end": 19.75, "storyAction": "retreat_backward", "purpose": "retreat", "facingTarget": [1.05,0,0.24], "movement": { "from": [0.22,0,0.3], "to": [-1.22,0,0.43], "clipCycles": 2 } },
+    { "id": "point_warning", "start": 19.75, "end": 23, "storyAction": "warning_point", "purpose": "warning", "facingTarget": [1.05,0,0.24], "lookTarget": [0.77,1.1,0.4] },
+    { "id": "quick_exit", "start": 23, "end": 27.5, "storyAction": "quick_exit", "purpose": "exit", "turnFromPrevious": true, "movement": { "from": [-1.22,0,0.43], "to": [-9,0,-0.22], "clipCycles": 5 } },
+    { "id": "box_aftermath", "start": 27.5, "end": 30, "storyAction": "aftermath_hold", "purpose": "aftermath", "characterVisibility": "offscreen", "environmentEvents": ["box_lid_twitch", "wind", "leaves"] }
+  ]
+}

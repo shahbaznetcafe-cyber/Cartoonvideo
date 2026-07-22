@@ -31,15 +31,40 @@ const chars = specIn.chars.map(c => {
   }
   return { id: c.id || `slot_${c.slot}`, glb: `./assets/chars/${slug(c.blend)}.glb`,
            slot: c.slot, speaking: !!c.speaking,
+           capabilityId: c.capabilityId || '', animationTier: c.animationTier || 'LEGACY',
+           facialTier: c.facialTier || '', speechMode: c.speechMode || 'body_only',
+           lipSyncMode: c.lipSyncMode || 'none', facialReady: !!c.facialReady,
+           library: c.library || 'sbz',
            openness: op, visemes, emotion: c.emotion || 'neutral',
            costume: c.costume || '', accessory: c.accessory || '', held: c.held || '',
-           action: c.action || 'none', target: (c.target == null ? -1 : c.target),
-           acting: c.acting || {} };
+           action: c.action || 'none', sourceClip: c.sourceClip || '',
+           baseClip: c.baseClip || '', crossfadeSeconds: Number(c.crossfadeSeconds) || .22,
+           blocking: c.blocking || {}, interaction: c.interaction || null,
+           target: (c.target == null ? -1 : c.target),
+           acting: c.acting || {}, traits: c.traits || {} };
 });
 const env = specIn.env ? `./assets/env/${path.basename(specIn.env)}` : '';
+const backgroundSource = specIn.backgroundImage && fs.existsSync(specIn.backgroundImage)
+  ? path.resolve(specIn.backgroundImage) : '';
+// Production scene assets are read only sources selected by scene_assets.py.
+// Give every GLTF a scoped URL so its .bin and texture siblings resolve
+// locally, without exposing arbitrary filesystem paths to the browser.
+const sceneAssetRoots = new Map();
+const props = (Array.isArray(specIn.props) ? specIn.props : []).map((prop, index) => {
+  const asset = prop && prop.asset;
+  if (!asset || !asset.source || !fs.existsSync(asset.source)) return prop;
+  const source = path.resolve(asset.source);
+  const key = `asset_${index}`;
+  sceneAssetRoots.set(key, path.dirname(source));
+  return { ...prop, asset: { ...asset, url: `/scene-assets/${key}/${encodeURIComponent(path.basename(source))}` } };
+});
 const pageSpec = { res: [VW, VH], fps, env, exposure: specIn.exposure || -0.2,
+  frameCount: Math.max(2, Math.ceil((Number(specIn.duration) || 0) * fps)),
   shot: specIn.shot || 'wide', focus: specIn.focus || 0,
   sceneLook: specIn.sceneLook || 'sunny', timeOffset: Number(specIn.timeOffset) || 0,
+  direction: specIn.direction || {}, environmentMotion: specIn.environmentMotion || {},
+  backgroundImage: backgroundSource ? '/background-image.png' : '',
+  props,
   animationStateSchema: Number(specIn.animationStateSchema) || 0,
   features: {
     facialRuntime: specIn.features?.facialRuntime !== false,
@@ -50,10 +75,25 @@ fs.writeFileSync(path.join(HERE, '_spec.json'), JSON.stringify(pageSpec));
 const OUT = specIn.out; fs.mkdirSync(OUT, { recursive: true });
 
 // static server
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.glb': 'model/gltf-binary',
-  '.json': 'application/json', '.wasm': 'application/wasm' };
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.glb': 'model/gltf-binary', '.gltf': 'model/gltf+json', '.bin': 'application/octet-stream',
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.ktx2': 'image/ktx2', '.json': 'application/json', '.wasm': 'application/wasm' };
 const server = http.createServer((req, res) => {
-  let fp = path.join(HERE, decodeURIComponent(req.url.split('?')[0]));
+  const requestPath = decodeURIComponent(req.url.split('?')[0]);
+  let fp;
+  const assetMatch = requestPath.match(/^\/scene-assets\/([^/]+)\/(.+)$/);
+  if (assetMatch && sceneAssetRoots.has(assetMatch[1])) {
+    const root = sceneAssetRoots.get(assetMatch[1]);
+    const relative = assetMatch[2].replace(/\\/g, '/');
+    const candidate = path.resolve(root, relative);
+    // GLTF child resources must remain inside this exact local source folder.
+    if (candidate !== root && !candidate.startsWith(root + path.sep)) {
+      res.writeHead(403); res.end(); return;
+    }
+    fp = candidate;
+  } else {
+    fp = requestPath === '/background-image.png' && backgroundSource
+      ? backgroundSource : path.join(HERE, requestPath);
+  }
   if (req.url === '/') fp = path.join(HERE, 'render_scene.html');
   fs.readFile(fp, (e, d) => {
     if (e) { res.writeHead(404); res.end(); return; }

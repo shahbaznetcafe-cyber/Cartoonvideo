@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-15T20:35:57.185Z",
+  "statement": "These legacy/facial production-path files are byte-identical to their HEAD versions.",
+  "files": [
+    {
+      "file": "blender3d.py",
+      "headBlob": "7eb6d6a6b45beaa081b8a362e72927cd190d0d32",
+      "currentBlob": "34c2c86869939ae95b7204ba2d63e234bd1c1598",
+      "unchanged": false
+    },
+    {
+      "file": "char3d_lib.py",
+      "headBlob": "ffcdbd4f755fda2ccbbfb50e44e88de0f54d60b2",
+      "currentBlob": "d2a3b00aa9d30c54e6a25c3ac3ead6672cfe54df",
+      "unchanged": false
+    },
+    {
+      "file": "threejs_render/render_scene.html",
+      "headBlob": "878c5d0b65274908061220d868e863278c3a9157",
+      "currentBlob": "05f4d4c8e5dba40cb14c6100d2e8a62506f2ed13",
+      "unchanged": false
+    },
+    {
+      "file": "threejs_render/render_scene.js",
+      "headBlob": "bb65cd8a0046f5783963bf816191d616d3fe2005",
+      "currentBlob": "88212220dcbdb9c45b3142dde8a17e98fb248f75",
+      "unchanged": false
+    },
+    {
+      "file": "threejs_render/facial_runtime.js",
+      "headBlob": "a5d04946198b0a75c03a13f081366569a51c7417",
+      "currentBlob": "a5d04946198b0a75c03a13f081366569a51c7417",
+      "unchanged": true
+    },
+    {
+      "file": "threejs_render/acting_state_runtime.js",
+      "headBlob": "c19c5b720f141bf83cdd05cad884c498b8e3e2cb",
+      "currentBlob": "c19c5b720f141bf83cdd05cad884c498b8e3e2cb",
+      "unchanged": true
+    },
+    {
+      "file": "threejs_render/bone_pose_runtime.js",
+      "headBlob": "36e20f0eeed1e04b4b3449e5269a899faa753407",
+      "currentBlob": "36e20f0eeed1e04b4b3449e5269a899faa753407",
+      "unchanged": true
+    },
+    {
+      "file": "threejs_render/humanoid_motion_runtime.js",
+      "headBlob": "a248b3bb84004584379fe7779d129f9f8ee55564",
+      "currentBlob": "76676571a77f7be0325fbabf1444dc94a5d1a071",
+      "unchanged": false
+    }
+  ],
+  "allUnchanged": false
+}

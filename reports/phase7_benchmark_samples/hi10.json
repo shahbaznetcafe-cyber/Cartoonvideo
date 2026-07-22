@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "hindi",
+    "scenes": [
+      {
+        "id": "1",
+        "lines": [
+          {
+            "speaker": "बच्चा",
+            "text": "देखो, मुझे यह किताब अभी चाहिए!",
+            "emotion": "उत्साहित",
+            "action": "हाथ से किताब की ओर इशारा करता है"
+          },
+          {
+            "speaker": "मित्र",
+            "text": "शांत बोलो, यहाँ पुस्तकालय है।",
+            "emotion": "धीमा और समझाने वाला",
+            "action": "आवाज़ धीमी रखते हुए पास आता है"
+          },
+          {
+            "speaker": "बच्चा",
+            "text": "अरे, ठीक है... मैं धीरे बोलूँगा।",
+            "emotion": "संकोची",
+            "action": "आवाज़ कम करता है"
+          },
+          {
+            "speaker": "मित्र",
+            "text": "हाँ, ऐसे ही। सबको पढ़ने दो।",
+            "emotion": "मित्रतापूर्ण",
+            "action": "मुस्कुराता है"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "d7d025ed-8b86-4d75-bf68-e2cc3df860fd",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.openai.gpt.5.4.mini",
+    "modelAir": "openai:gpt@5.4-mini",
+    "modelDisplayName": "GPT-5.4 Mini",
+    "transport": "native",
+    "latencyMs": 4245,
+    "cost": 0.001099,
+    "usage": {
+      "promptTokens": 379,
+      "completionTokens": 181,
+      "totalTokens": 560,
+      "completionTokensDetails": {
+        "reasoningTokens": 0
+      },
+      "promptTokensDetails": {
+        "cachedTokens": 0
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "8e21085db2b59525dc453809ab351d696f0804d0cc6bcc9ff81978d383b181be",
+    "promptVersion": "phase7.1",
+    "contentSha256": "b0efc065d0525419e8ba216bf5d57edf475dd56dcecc85bf5ace84b270efd228",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

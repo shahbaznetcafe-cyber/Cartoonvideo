@@ -6,12 +6,17 @@ Templates = settings presets (templates/ folder).
 import json
 import os
 import shutil
+import threading
 import time
+from datetime import datetime
 
 import config
 
 TEMPLATES_DIR = os.path.join(config.BASE_DIR, "templates_presets")
 os.makedirs(TEMPLATES_DIR, exist_ok=True)
+_JOB_LOCKS = {}
+_JOB_LOCKS_GUARD = threading.Lock()
+STALE_JOB_SECONDS = 90
 
 
 # ---------------- Projects ----------------
@@ -83,30 +88,101 @@ def _job_path(proj_dir):
     return os.path.join(proj_dir, "job.json")
 
 
+def _job_lock(path):
+    with _JOB_LOCKS_GUARD:
+        return _JOB_LOCKS.setdefault(os.path.abspath(path), threading.RLock())
+
+
+def _read_job_path(path):
+    try:
+        with open(path, encoding="utf-8") as handle:
+            data = json.load(handle)
+        return data if isinstance(data, dict) else None
+    except (OSError, ValueError, TypeError, json.JSONDecodeError):
+        return None
+
+
+def job_age_seconds(job, now=None):
+    """Age of the last durable heartbeat/progress update."""
+    if not job:
+        return float("inf")
+    now = time.time() if now is None else float(now)
+    try:
+        return max(0.0, now - float(job.get("updated_at")))
+    except (TypeError, ValueError):
+        pass
+    try:
+        stamp = datetime.strptime(str(job.get("updated") or ""), "%Y-%m-%d %H:%M:%S")
+        return max(0.0, now - stamp.timestamp())
+    except (TypeError, ValueError):
+        return float("inf")
+
+
 def save_job(proj_dir, **fields):
-    """Job state disk par (crash/loadshedding ke baad resume ke liye)."""
+    """Atomically persist job state for concurrent progress/heartbeat writers."""
     os.makedirs(proj_dir, exist_ok=True)
     p = _job_path(proj_dir)
-    data = {}
-    if os.path.exists(p):
+    with _job_lock(p):
+        data = _read_job_path(p) or {}
+        data.update(fields)
+        now = time.time()
+        data["updated"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now))
+        data["updated_at"] = round(now, 3)
+        tmp = f"{p}.{os.getpid()}.{threading.get_ident()}.tmp"
         try:
-            data = json.load(open(p, encoding="utf-8"))
-        except Exception:
-            data = {}
-    data.update(fields)
-    data["updated"] = time.strftime("%Y-%m-%d %H:%M:%S")
-    json.dump(data, open(p, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
-    return data
+            with open(tmp, "w", encoding="utf-8", newline="\n") as handle:
+                json.dump(data, handle, ensure_ascii=False, indent=2)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(tmp, p)
+        finally:
+            try:
+                if os.path.exists(tmp):
+                    os.remove(tmp)
+            except OSError:
+                pass
+        return data
 
 
 def load_job(name):
     p = _job_path(os.path.join(config.PROJECTS_DIR, name))
-    if os.path.exists(p):
-        try:
-            return json.load(open(p, encoding="utf-8"))
-        except Exception:
-            pass
+    with _job_lock(p):
+        return _read_job_path(p)
+
+
+def find_job(job_id):
+    """Find durable job state when a UI request reaches a restarted backend."""
+    if not job_id:
+        return None
+    for name in os.listdir(config.PROJECTS_DIR):
+        pdir = os.path.join(config.PROJECTS_DIR, name)
+        if not os.path.isdir(pdir):
+            continue
+        job = load_job(name)
+        if job and str(job.get("job_id") or "") == str(job_id):
+            job = dict(job)
+            job.setdefault("project", name)
+            return job
     return None
+
+
+def recover_stale_jobs(stale_after=STALE_JOB_SECONDS):
+    """Convert orphaned `running` jobs into honest resumable interruptions."""
+    recovered = []
+    for name in os.listdir(config.PROJECTS_DIR):
+        pdir = os.path.join(config.PROJECTS_DIR, name)
+        if not os.path.isdir(pdir):
+            continue
+        job = load_job(name)
+        if (not job or job.get("state") != "running"
+                or job_age_seconds(job) <= float(stale_after)):
+            continue
+        save_job(pdir, state="interrupted", stage="interrupted",
+                 message="Previous app session ended. Resume to continue cached work.",
+                 error=None, heartbeat_at=None)
+        recovered.append(name)
+    return recovered
 
 
 def resumable_projects():
@@ -118,7 +194,7 @@ def resumable_projects():
             continue
         job = load_job(name)
         has_final = os.path.exists(os.path.join(pdir, "final.mp4"))
-        if job and job.get("state") in ("running", "error") and not has_final:
+        if job and job.get("state") in ("running", "error", "stopped", "interrupted") and not has_final:
             # progress hint: kitni voices/clips ban chuki
             done_clips = 0
             cd = os.path.join(pdir, "clips3d")
@@ -129,6 +205,7 @@ def resumable_projects():
                 "name": name, "title": job.get("title", name),
                 "state": job.get("state"), "stage": job.get("stage"),
                 "message": job.get("message", ""), "updated": job.get("updated"),
+                "stale": job.get("state") == "running" and job_age_seconds(job) > STALE_JOB_SECONDS,
                 "done_clips": done_clips,
             })
     out.sort(key=lambda x: x.get("updated", ""), reverse=True)

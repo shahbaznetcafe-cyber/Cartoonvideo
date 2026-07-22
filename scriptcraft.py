@@ -10,10 +10,16 @@ Returns dict: {script, title, genre, cast, hook, logline, beats, cta, plan}.
 import json
 import re
 
+import actions
 import dialogue_style
+import duration_planner
 
 LANG_NAME = dialogue_style.LANGUAGE_NAMES
-LENGTH_LINES = {"short": 6, "medium": 10, "long": 16}
+LENGTH_LINES = {
+    key: int(value["lines"])
+    for key, value in duration_planner.DURATION_PRESETS.items()
+}
+LENGTH_LINES.update({"short": 6, "medium": 12, "long": 24})
 
 # Few-shot: ye "kaisा GREAT lagta hai" ka floor set karta hai (Roman Urdu exemplar)
 EXEMPLAR = """--- EXAMPLE of a GREAT short script (study the craft: instant hook, distinct
@@ -45,7 +51,8 @@ def _json_obj(raw):
     return json.loads(raw[s:e + 1])
 
 
-def _plan(providers, idea, language, lang_name, n, genre, cast_rule, continuity, structure_hint):
+def _plan(providers, idea, language, lang_name, n, duration_brief, genre, cast_rule, continuity,
+          structure_hint, performance_rule=""):
     genre_rule = ("Auto-detect the single best genre." if genre in ("", "auto")
                   else f"Genre: {genre}.")
     struct = f"\nSTRUCTURE to follow: {structure_hint}" if structure_hint else ""
@@ -53,10 +60,15 @@ def _plan(providers, idea, language, lang_name, n, genre, cast_rule, continuity,
             if continuity else "")
     sysp = (
         "You are a world-class viral short-video story architect. Plan a script BEFORE writing it.\n"
-        f"{genre_rule}\n{cast_rule}{struct}\n"
+        f"{genre_rule}\n{cast_rule}{struct}\n{performance_rule}\n"
         f"{dialogue_style.full_prompt_policy(language)}\n"
+        f"{actions.prompt_policy()}\n"
         "Design a tight arc for a ~{}-line video: strong hook -> escalation -> turn -> "
         "satisfying payoff. The FIRST 2 seconds decide retention.\n".format(n) +
+        "DURATION CONTRACT: Target {} ({}-{} spoken dialogue words; about {} words per line). "
+        "Plan enough meaningful story beats to fill this natural speaking time; do not pad with repetition.\n".format(
+            duration_brief["target_label"], duration_brief["minimum_words"],
+            duration_brief["maximum_words"], duration_brief["average_words_per_line"]) +
         "Write 3 DISTINCT opening hook lines (different angles: shock / question / funny "
         "claim), then pick the single strongest as \"hook\" with a one-word reason.\n"
         "Reply with ONLY JSON (no markdown):\n"
@@ -69,7 +81,7 @@ def _plan(providers, idea, language, lang_name, n, genre, cast_rule, continuity,
     return _json_obj(providers.llm_generate(sysp, user, max_tokens=900, temperature=0.9))
 
 
-def _draft(providers, plan, idea, language, lang_name, n, cast_rule):
+def _draft(providers, plan, idea, language, lang_name, n, duration_brief, cast_rule, performance_rule="", max_tokens=1400):
     beats = " -> ".join(plan.get("beats", []))
     voices = "; ".join(f"{c.get('name')}: {c.get('voice','')}" for c in plan.get("cast", []))
     sysp = (
@@ -77,21 +89,24 @@ def _draft(providers, plan, idea, language, lang_name, n, cast_rule):
         f"{EXEMPLAR}\n"
         f"LANGUAGE: write ALL dialogue in {lang_name}.\n"
         f"{dialogue_style.full_prompt_policy(language)}\n"
+        f"{actions.prompt_policy()}\n"
         f"{cast_rule}\n"
+        f"{performance_rule}\n"
         f"CHARACTER VOICES (keep each DISTINCT): {voices}\n"
         f"ARC (beats): {beats}\n"
         f"OPENING HOOK (use as line 1, punchy): {plan.get('hook','')}\n"
         f"ENDING: land the payoff, then this engagement line: {plan.get('cta','')}\n"
-        f"LENGTH: about {n} dialogue lines. Every line short, punchy, natural to speak aloud.\n"
+        f"LENGTH: about {n} dialogue lines and {duration_brief['minimum_words']}-{duration_brief['maximum_words']} spoken words "
+        f"(target {duration_brief['target_label']}; roughly {duration_brief['average_words_per_line']} words per line). "
+        "Every line must remain natural to speak aloud; add story detail, reactions and scene progress instead of filler.\n"
         "FORMAT (strict):\n- First line: [Scene: <short place>]\n"
-        "- Every other line: 'Name: (emotion) spoken line' (emotion one of "
-        "happy|sad|angry|excited|surprised|neutral, optional).\n"
+        "- Every other line: 'Name: (emotion; action; location) spoken line'.\n"
         "Reply with ONLY the script text.")
     user = f"Idea: {idea}\nTitle: {plan.get('title','')}"
-    return _clean(providers.llm_generate(sysp, user, max_tokens=1400, temperature=0.85))
+    return _clean(providers.llm_generate(sysp, user, max_tokens=max_tokens, temperature=0.85))
 
 
-def _polish(providers, draft, language, lang_name):
+def _polish(providers, draft, language, lang_name, duration_brief, performance_rule="", max_tokens=1400):
     sysp = (
         "You are a ruthless script editor. Improve this cartoon script. Silently CHECK:\n"
         "- Is line 1 an instant, scroll-stopping hook? If weak, make it punchier.\n"
@@ -99,10 +114,14 @@ def _polish(providers, draft, language, lang_name):
         "- Any repeated words/phrases/ideas across lines? Remove repetition.\n"
         "- Is the pacing tight (no filler) and the ending a satisfying payoff?\n"
         "- Does every line sound natural spoken aloud in " + lang_name + "?\n"
+        + "Preserve a total spoken-word range of {}-{} words for the {} target; never shorten it below range just to make it punchy.\n".format(
+            duration_brief["minimum_words"], duration_brief["maximum_words"], duration_brief["target_label"])
         + dialogue_style.full_prompt_policy(language) + "\n"
-        "Keep the SAME characters, language, scene headers, and 'Name: (emotion) line' format.\n"
+        + actions.prompt_policy() + "\n"
+        + performance_rule + "\n"
+        "Keep the SAME characters, language, scene headers, and 'Name: (emotion; action; location) line' format.\n"
         "Output ONLY the final improved script text — no commentary.")
-    return _clean(providers.llm_generate(sysp, f"Script:\n{draft}", max_tokens=1400, temperature=0.7))
+    return _clean(providers.llm_generate(sysp, f"Script:\n{draft}", max_tokens=max_tokens, temperature=0.7))
 
 
 def craft(idea, language="roman_urdu", characters=None, length="medium", lines=None,
@@ -112,8 +131,17 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
     idea = (idea or "").strip()
     if not idea:
         raise ValueError("Idea chahiye")
-    chars = [c for c in (characters or []) if c and c.strip()]
-    n = int(lines) if lines else LENGTH_LINES.get(length, 10)
+    seen_cast, chars = set(), []
+    for value in characters or []:
+        name = str(value or "").strip()
+        if name and name.casefold() not in seen_cast:
+            chars.append(name)
+            seen_cast.add(name.casefold())
+    import character_performance
+    performance_rule = character_performance.script_guidance(chars)
+    length = duration_planner.normalize_duration(length)
+    n = int(lines) if lines else LENGTH_LINES.get(length, 12)
+    duration_brief = duration_planner.writing_brief(length)
     lang_name = LANG_NAME.get(language, "Roman Urdu")
     g = (genre or "auto").lower()
 
@@ -128,9 +156,14 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
         cast_rule = ("CAST: choose 2-3 characters that fit the idea (animals, food, people, "
                      "mascots, objects). Short memorable names. Keep cast small.")
 
-    plan = _plan(providers, idea, language, lang_name, n, g, cast_rule, continuity, structure_hint)
-    draft = _draft(providers, plan, idea, language, lang_name, n, cast_rule)
-    script = _polish(providers, draft, language, lang_name) if polish else draft
+    plan = _plan(providers, idea, language, lang_name, n, duration_brief, g, cast_rule, continuity,
+                 structure_hint, performance_rule)
+    token_budget = min(6000, max(1400, int(duration_brief["maximum_words"] * 2.2)))
+    draft = _draft(providers, plan, idea, language, lang_name, n, duration_brief, cast_rule,
+                   performance_rule, max_tokens=token_budget)
+    script = (_polish(providers, draft, language, lang_name, duration_brief,
+                      performance_rule, max_tokens=token_budget)
+              if polish else draft)
 
     return {
         "script": script,
@@ -142,4 +175,10 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
         "hooks": plan.get("hooks", []),
         "beats": plan.get("beats", []),
         "cta": plan.get("cta", ""),
+        "character_performance": [
+            {key: profile.get(key) for key in (
+                "name", "tier", "speech_mode", "lip_sync", "facial_ready", "camera"
+            )}
+            for profile in character_performance.profiles_for_names(chars)
+        ],
     }

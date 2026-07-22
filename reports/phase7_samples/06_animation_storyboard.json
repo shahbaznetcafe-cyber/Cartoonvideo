@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "stage": "animation_plan",
+  "approved": false,
+  "output": {
+    "schemaVersion": 1,
+    "title": "Hero Offscreen Hold",
+    "fps": 24,
+    "durationSeconds": 2.0,
+    "characters": [
+      {
+        "id": "hero",
+        "capabilityId": "quaternius_adventurer",
+        "capabilityTier": "SKELETAL_INTERACTIVE"
+      }
+    ],
+    "beats": [
+      {
+        "id": "beat_001",
+        "startFrame": 0,
+        "endFrame": 48,
+        "type": "action",
+        "cameraIntent": "medium",
+        "characterId": "hero",
+        "sourceClip": "Idle",
+        "target": null
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "23410353-9c83-420f-aff3-83401d81772d",
+    "taskType": "ANIMATION_PLANNER",
+    "modelInternalId": "runware.google.gemini.3.5.flash",
+    "modelAir": "google:gemini@3.5-flash",
+    "modelDisplayName": "Gemini 3.5 Flash",
+    "transport": "native",
+    "latencyMs": 3873,
+    "cost": 0.004262,
+    "usage": {
+      "promptTokens": 1743,
+      "completionTokens": 183,
+      "totalTokens": 1926,
+      "costBreakdown": {
+        "tokens": {
+          "prompt": {
+            "modalities": [
+              {
+                "modality": "TEXT",
+                "tokens": 1743,
+                "cost": 0.002615,
+                "costDisplay": "0.002615"
+              }
+            ],
+            "billableTokens": 1743,
+            "cost": 0.002615,
+            "costDisplay": "0.002615"
+          },
+          "cache": {
+            "modalities": [],
+            "billableTokens": 0,
+            "cost": 0,
+            "costDisplay": "0.000000"
+          },
+          "completion": {
+            "billableTokens": 183,
+            "textTokens": 183,
+            "reasoningTokens": 0,
+            "cost": 0.001647,
+            "costDisplay": "0.001647"
+          }
+        },
+        "features": {
+          "search": {
+            "count": 0,
+            "cost": 0,
+            "costDisplay": "0.000000"
+          },
+          "maps": {
+            "count": 0,
+            "cost": 0,
+            "costDisplay": "0.000000"
+          }
+        },
+        "total": 0.004262,
+        "totalDisplay": "0.004262"
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "1b6cfaf4ff547de54c0ebc8410ac88b260a73b2a5a42e09f2782ba7876945c80",
+    "promptVersion": "phase7.1",
+    "contentSha256": "a86ced4789574b20d6c3e23c8c7cab93890aad0f04d140ae30e1198922dcf430",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-proof/script_pipeline/08_animation_plan.json"
+}

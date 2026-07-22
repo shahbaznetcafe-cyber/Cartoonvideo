@@ -14,6 +14,10 @@ import requests
 
 import config
 from runware_client import post_tasks, new_uuid
+from script_engine.registry import ModelRegistry
+
+
+_PHASE7_MODEL_REGISTRY = ModelRegistry()
 
 
 def _key(name):
@@ -49,9 +53,11 @@ def _llm_runware_av():
 
 
 def _llm_runware(system, user, max_tokens, temperature):
+    selected = _selected_model("runware", config.TEXT_MODEL)
+    model = _PHASE7_MODEL_REGISTRY.resolve(selected)
     task = {
         "taskType": "textInference", "taskUUID": new_uuid(),
-        "model": _selected_model("runware", config.TEXT_MODEL),
+        "model": model["runwareAir"], "includeCost": True, "includeUsage": True,
         "settings": {"systemPrompt": system, "temperature": temperature,
                      "maxTokens": max_tokens},
         "messages": [{"role": "user", "content": user}],
@@ -70,25 +76,21 @@ _OAI = {
     "gemini":     ("https://generativelanguage.googleapis.com/v1beta/openai", "GOOGLE_API_KEY", "GEMINI_MODEL", "gemini-1.5-flash"),
 }
 
-LLM_MODEL_CATALOG = [
-    # A single Runware key/gateway serves every vendor model below.
-    {"provider": "runware", "vendor": "DeepSeek", "model": "deepseek-v4-flash", "label": "DeepSeek V4 Flash", "cost": "lowest cost", "description": "Fast, economical multilingual script drafting"},
-    {"provider": "runware", "vendor": "DeepSeek", "model": "deepseek-v4-pro", "label": "DeepSeek V4 Pro", "cost": "best value", "description": "Strong long-form reasoning and story structure"},
-    {"provider": "runware", "vendor": "Z.AI", "model": "zai-glm-4-7", "label": "GLM 4.7", "cost": "low cost", "description": "Economical multilingual writing"},
-    {"provider": "runware", "vendor": "Z.AI", "model": "zai-glm-5-1", "label": "GLM 5.1", "cost": "high quality", "description": "Long-form planning and polished scripts"},
-    {"provider": "runware", "vendor": "OpenAI", "model": "openai-gpt-5-4-mini", "label": "GPT-5.4 Mini", "cost": "balanced", "description": "Recommended balance of quality, speed and cost"},
-    {"provider": "runware", "vendor": "OpenAI", "model": "openai-gpt-5-4", "label": "GPT-5.4", "cost": "premium", "description": "Higher-quality story writing and revision"},
-    {"provider": "runware", "vendor": "Google", "model": "google-gemini-3-5-flash", "label": "Gemini 3.5 Flash", "cost": "fast", "description": "Fast multilingual scripts and analysis"},
-    {"provider": "runware", "vendor": "Google", "model": "google-gemini-3-1-pro", "label": "Gemini 3.1 Pro", "cost": "premium", "description": "High-quality long-form multilingual stories"},
-]
-
-_RUNWARE_MODEL_ALIASES = {
-    "openai:gpt@5.4-mini": "openai-gpt-5-4-mini",
-    "deepseek:v4@flash": "deepseek-v4-flash",
-    "deepseek:v4@pro": "deepseek-v4-pro",
-    "zai:glm@4.7": "zai-glm-4-7",
-    "zai:glm@5.1": "zai-glm-5-1",
-}
+LLM_MODEL_CATALOG = []
+_RUNWARE_MODEL_ALIASES = {}
+for _entry in _PHASE7_MODEL_REGISTRY.enabled():
+    _legacy = _entry.get("legacyIds", [_entry["internalId"]])[0]
+    LLM_MODEL_CATALOG.append({
+        "provider": "runware", "vendor": _entry["family"], "model": _legacy,
+        "internal_id": _entry["internalId"], "runware_air": _entry["runwareAir"],
+        "label": _entry["displayName"], "cost": _entry["costPreference"],
+        "description": ", ".join(_entry.get("intendedTasks", [])),
+        "structured_json": _entry["structuredJson"],
+        "streaming": _entry["streaming"], "context_limit": _entry["contextLimit"],
+        "verified": True,
+    })
+    for _alias in [_entry["internalId"], _entry["runwareAir"], *_entry.get("legacyIds", [])]:
+        _RUNWARE_MODEL_ALIASES[_alias] = _legacy
 
 
 def _selected_model(provider, fallback):
@@ -341,7 +343,7 @@ def _tts_edge(text, voice, out_path, rate, pitch, volume, speed=1.0):
             with open(out_path + ".words.json", "w", encoding="utf-8") as handle:
                 _j.dump({"words": spans, "level": ("word" if words else "sentence")},
                         handle, ensure_ascii=False)
-    asyncio.run(run())
+    asyncio.run(asyncio.wait_for(run(), timeout=config.TTS_EDGE_TIMEOUT))
     return out_path
 
 
@@ -450,7 +452,7 @@ def elevenlabs_voice_options(force=False):
 
 
 def _tts_eleven_av():
-    return bool(_eleven_key())
+    return "elevenlabs" not in _TTS_DISABLED and bool(_eleven_key())
 
 
 def _tts_eleven(text, voice, out_path, rate, pitch, volume, speed=1.0):
@@ -464,7 +466,7 @@ def _tts_eleven(text, voice, out_path, rate, pitch, volume, speed=1.0):
         json={"text": text,
               "model_id": getattr(config, "ELEVENLABS_MODEL", "eleven_v3"),
               "voice_settings": {"speed": _speed(speed)}},
-        timeout=120)
+        timeout=config.TTS_ELEVENLABS_TIMEOUT)
     r.raise_for_status()
     with open(out_path, "wb") as f:
         f.write(r.content)
@@ -491,7 +493,7 @@ def _tts_google(text, voice, out_path, rate, pitch, volume, speed=1.0):
             "voice": {"languageCode": "hi-IN", "name": config.GOOGLE_TTS_VOICE},
             "audioConfig": {"audioEncoding": "MP3", "speakingRate": _speed(speed),
                             "pitch": pitch_semitones},
-        }, timeout=120)
+        }, timeout=config.TTS_GOOGLE_TIMEOUT)
     response.raise_for_status()
     audio = response.json().get("audioContent")
     if not audio:
@@ -504,21 +506,78 @@ def _tts_google(text, voice, out_path, rate, pitch, volume, speed=1.0):
 _TTS = {"edge": (_tts_edge_av, _tts_edge),
         "google": (_tts_google_av, _tts_google),
         "elevenlabs": (_tts_eleven_av, _tts_eleven)}
+_TTS_CIRCUIT = {}
+# A rejected cloud credential will not recover by retrying every dialogue line.
+# Keep it disabled only for this server session; correcting the key and restarting
+# immediately makes it available again.
+_TTS_DISABLED = set()
+_TTS_RETRY_ATTEMPTS = {"edge": 3}
+
+
+def _remove_partial_tts_files(out_path):
+    """Never allow a partial audio file to be reused after a failed provider."""
+    for partial in (out_path, out_path + ".words.json"):
+        try:
+            if os.path.exists(partial):
+                os.remove(partial)
+        except OSError:
+            pass
+
+
+def _is_rejected_credential(error):
+    response = getattr(error, "response", None)
+    return getattr(response, "status_code", None) in (401, 403)
 
 
 def tts_synthesize(text, voice, out_path, rate="+0%", pitch="+0Hz", volume="+0%", speed=None):
+    """Synthesize one line with safe retries and provider-level isolation.
+
+    Edge is the default no-key provider and can transiently drop a request during
+    long jobs.  Retrying that *line* before opening its circuit prevents a single
+    blip from stopping a whole project.  Invalid paid-provider credentials are
+    disabled for this session instead of being attempted for every remaining line.
+    """
     order = [config.TTS_PROVIDER] + [p for p in config.TTS_FALLBACK
                                      if p != config.TTS_PROVIDER]
     errs = []
     for name in order:
         pr = _TTS.get(name)
+        if name in _TTS_DISABLED:
+            errs.append(f"{name}: disabled for this session after credentials were rejected")
+            continue
         if not pr or not pr[0]():
             continue
-        try:
-            return pr[1](text, voice, out_path, rate, pitch, volume,
-                         config.VOICE_SPEED if speed is None else speed)
-        except Exception as e:
-            errs.append(f"{name}: {e}")
+        retry_at = float(_TTS_CIRCUIT.get(name, 0) or 0)
+        if retry_at > time.monotonic():
+            errs.append(f"{name}: temporarily skipped after a recent failure")
+            continue
+
+        attempts = _TTS_RETRY_ATTEMPTS.get(name, 1)
+        last_error = None
+        for attempt in range(attempts):
+            try:
+                result = pr[1](text, voice, out_path, rate, pitch, volume,
+                               config.VOICE_SPEED if speed is None else speed)
+                _TTS_CIRCUIT.pop(name, None)
+                return result
+            except Exception as error:
+                last_error = error
+                _remove_partial_tts_files(out_path)
+                if name == "elevenlabs" and _is_rejected_credential(error):
+                    _TTS_DISABLED.add(name)
+                    break
+                if attempt + 1 < attempts:
+                    # Short bounded backoff keeps a render responsive while giving
+                    # a transient Edge network failure a chance to recover.
+                    time.sleep(0.5 * (attempt + 1))
+        if name not in _TTS_DISABLED:
+            _TTS_CIRCUIT[name] = time.monotonic() + config.TTS_CIRCUIT_SECONDS
+        detail = str(last_error or "unknown provider failure")
+        if attempts > 1 and name not in _TTS_DISABLED:
+            detail = f"failed after {attempts} attempts: {detail}"
+        elif name in _TTS_DISABLED:
+            detail = f"credentials rejected; disabled for this session: {detail}"
+        errs.append(f"{name}: {detail}")
     raise RuntimeError("TTS providers fail: " + ("; ".join(errs) or "koi available nahi"))
 
 
@@ -532,13 +591,11 @@ def status():
     }
 
 
-def estimate_cost(scene_count, line_count, char_count, render_mode="draft"):
-    """Mota-mota cost estimate (USD)."""
+def estimate_cost(scene_count, line_count, char_count):
+    """Mota-mota cost estimate (USD) — 3D pipeline (background plates + free TTS)."""
     llm = 0.01
-    bg = scene_count * 0.003          # Runware FLUX image
-    chars = char_count * 0.01         # character images (agar AI banaye)
+    bg = scene_count * 0.003          # Runware FLUX background plate
     voices = 0.0                      # edge-tts free
-    video = line_count * 0.28 if render_mode == "cinematic" else 0.0
-    total = llm + bg + chars + voices + video
-    return {"llm": llm, "backgrounds": round(bg, 3), "characters": round(chars, 3),
-            "voices": voices, "ai_video": round(video, 2), "total": round(total, 2)}
+    total = llm + bg + voices
+    return {"llm": llm, "backgrounds": round(bg, 3),
+            "voices": voices, "total": round(total, 2)}

@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "hindi",
+    "scenes": [
+      {
+        "id": "कक्षा",
+        "lines": [
+          {
+            "speaker": "शिक्षक",
+            "text": "बच्चों, आज हम पानी बचाने की एक छोटी-सी गतिविधि करेंगे।",
+            "emotion": "समझाने वाला",
+            "action": "बोर्ड की ओर इशारा करते हैं"
+          },
+          {
+            "speaker": "शिक्षक",
+            "text": "मैं एक-एक करके कुछ आदतें बताऊँगा, और आप बताइए कि इनमें से कौन-सी सही है।",
+            "emotion": "उत्साहित",
+            "action": "मुस्कुराते हैं"
+          },
+          {
+            "speaker": "रवि",
+            "text": "सर, क्या नल खुला छोड़ना सही है?",
+            "emotion": "जिज्ञासु",
+            "action": "हाथ उठाता है"
+          },
+          {
+            "speaker": "शिक्षक",
+            "text": "नहीं, रवि। नल खुला छोड़ना पानी की बर्बादी है।",
+            "emotion": "सख्त लेकिन प्यारा",
+            "action": "सिर हिलाते हैं"
+          },
+          {
+            "speaker": "मीरा",
+            "text": "तो दाँत साफ करते समय नल बंद रखना चाहिए?",
+            "emotion": "समझने वाली",
+            "action": "आगे झुकती है"
+          },
+          {
+            "speaker": "शिक्षक",
+            "text": "बिल्कुल! यही सही आदत है।",
+            "emotion": "खुश",
+            "action": "अंगूठा दिखाते हैं"
+          },
+          {
+            "speaker": "अमन",
+            "text": "सर, अगर कहीं टंकी से पानी टपक रहा हो, तो क्या करें?",
+            "emotion": "चिंतित",
+            "action": "परेशान होकर पूछता है"
+          },
+          {
+            "speaker": "शिक्षक",
+            "text": "तुरंत बड़े लोगों को बताओ और रिसाव ठीक कराओ। एक-एक बूंद बहुत कीमती होती है।",
+            "emotion": "गंभीर",
+            "action": "समझाते हैं"
+          },
+          {
+            "speaker": "शिक्षक",
+            "text": "अब हमारी छोटी गतिविधि है। मैं कुछ चित्र दिखाऊँगा, और आप बताइए—पानी बच रहा है या नहीं।",
+            "emotion": "उत्साहित",
+            "action": "चित्र कार्ड निकालते हैं"
+          },
+          {
+            "speaker": "बच्चे",
+            "text": "ठीक है, सर!",
+            "emotion": "जोशीले",
+            "action": "सभी एक साथ बोलते हैं"
+          },
+          {
+            "speaker": "शिक्षक",
+            "text": "बहुत बढ़िया। याद रखो, पानी बचाना हमारी जिम्मेदारी है।",
+            "emotion": "प्रेरक",
+            "action": "कक्षा की ओर देखकर कहते हैं"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "40afea28-2077-4a6c-b915-c0218032ff99",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.openai.gpt.5.4.mini",
+    "modelAir": "openai:gpt@5.4-mini",
+    "modelDisplayName": "GPT-5.4 Mini",
+    "transport": "native",
+    "latencyMs": 6180,
+    "cost": 0.00255,
+    "usage": {
+      "promptTokens": 376,
+      "completionTokens": 504,
+      "totalTokens": 880,
+      "completionTokensDetails": {
+        "reasoningTokens": 0
+      },
+      "promptTokensDetails": {
+        "cachedTokens": 0
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "2e9e03c9fa0b76793288e4f63aac7b263786e3172faf96fd919b15cd2dcec7e2",
+    "promptVersion": "phase7.1",
+    "contentSha256": "7ed84b3d1195ddd3c41b61a2140b6f9da27610f0348f16253abb1782f6d65e2c",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "verifiedAt": "2026-07-15T12:25:00+05:00",
+  "method": "Configured Runware account modelSearch plus bounded inference verification",
+  "credentialsIncluded": false,
+  "models": [
+    {"air": "deepseek:v4@flash", "internalId": "runware.deepseek.v4.flash", "enabled": true},
+    {"air": "deepseek:v4@pro", "internalId": "runware.deepseek.v4.pro", "enabled": true},
+    {"air": "zai:glm@4.7", "internalId": "runware.zai.glm.4.7", "enabled": false, "reason": "Discoverable, but native and OpenAI-compatible inference returned invalidModel on 2026-07-15."},
+    {"air": "zai:glm@5.1", "internalId": "runware.zai.glm.5.1", "enabled": true},
+    {"air": "openai:gpt@5.4-mini", "internalId": "runware.openai.gpt.5.4.mini", "enabled": true},
+    {"air": "openai:gpt@5.4", "internalId": "runware.openai.gpt.5.4", "enabled": true},
+    {"air": "google:gemini@3.5-flash", "internalId": "runware.google.gemini.3.5.flash", "enabled": true},
+    {"air": "google:gemini@3.1-pro", "internalId": "runware.google.gemini.3.1.pro", "enabled": true}
+  ],
+  "sources": [
+    "https://runware.ai/docs/platform/model-search",
+    "https://runware.ai/docs/platform/openai",
+    "https://runware.ai/docs/models"
+  ]
+}

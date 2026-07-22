@@ -8,7 +8,7 @@ from unittest import mock
 import viseme_maps
 import viseme_timeline
 import voice_engine
-import character_library
+import providers
 
 
 class VisemeMappingTests(unittest.TestCase):
@@ -157,7 +157,7 @@ class VoiceEngineVisemeIntegrationTests(unittest.TestCase):
             Path(voices, "s1_l1.mp3").write_bytes(b"audio" * 200)
             expected = str(Path(project, "visemes", "hash.visemes.json"))
             with (mock.patch.object(voice_engine, "_duration", return_value=1.25),
-                  mock.patch.object(character_library, "find_for", return_value=None),
+                  mock.patch.object(providers, "tts_synthesize", return_value=None),
                   mock.patch.object(viseme_timeline, "cached_viseme_timeline",
                                     return_value=({}, expected, False))):
                 timeline = voice_engine.generate_voices(self._parsed(), project)
@@ -171,7 +171,7 @@ class VoiceEngineVisemeIntegrationTests(unittest.TestCase):
             voices.mkdir()
             Path(voices, "s1_l1.mp3").write_bytes(b"audio" * 200)
             with (mock.patch.object(voice_engine, "_duration", return_value=1.25),
-                  mock.patch.object(character_library, "find_for", return_value=None),
+                  mock.patch.object(providers, "tts_synthesize", return_value=None),
                   mock.patch.object(viseme_timeline, "cached_viseme_timeline",
                                     side_effect=RuntimeError("test failure"))):
                 timeline = voice_engine.generate_voices(self._parsed(), project)

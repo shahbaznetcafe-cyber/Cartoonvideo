@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "stage": "scene_breakdown",
+  "approved": false,
+  "output": {
+    "schemaVersion": 1,
+    "title": "Forest Path Discovery",
+    "language": "roman_urdu",
+    "characters": [
+      {
+        "id": "ali",
+        "name": "Ali",
+        "role": "Protagonist",
+        "voiceNotes": "Young curious boy"
+      }
+    ],
+    "scenes": [
+      {
+        "id": "scene_1",
+        "location": "Forest path",
+        "timeOfDay": "day",
+        "characters": [
+          "ali"
+        ],
+        "elements": [
+          {
+            "type": "narration",
+            "estimatedDuration": 2.5,
+            "text": "Ali raste par chalta hai. "
+          },
+          {
+            "type": "dialogue",
+            "estimatedDuration": 3.0,
+            "speaker": "ali",
+            "text": "Yeh box yahan kaise aaya? "
+          }
+        ],
+        "estimatedDuration": 5.5
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "3a3ef977-2358-49da-950d-b7f98a415607",
+    "taskType": "FAST_PARSER",
+    "modelInternalId": "runware.google.gemini.3.5.flash",
+    "modelAir": "google:gemini@3.5-flash",
+    "modelDisplayName": "Gemini 3.5 Flash",
+    "transport": "native",
+    "latencyMs": 4268,
+    "cost": 0.00339,
+    "usage": {
+      "promptTokens": 1516,
+      "completionTokens": 124,
+      "totalTokens": 1640,
+      "costBreakdown": {
+        "tokens": {
+          "prompt": {
+            "modalities": [
+              {
+                "modality": "TEXT",
+                "tokens": 1516,
+                "cost": 0.002274,
+                "costDisplay": "0.002274"
+              }
+            ],
+            "billableTokens": 1516,
+            "cost": 0.002274,
+            "costDisplay": "0.002274"
+          },
+          "cache": {
+            "modalities": [],
+            "billableTokens": 0,
+            "cost": 0,
+            "costDisplay": "0.000000"
+          },
+          "completion": {
+            "billableTokens": 124,
+            "textTokens": 124,
+            "reasoningTokens": 0,
+            "cost": 0.001116,
+            "costDisplay": "0.001116"
+          }
+        },
+        "features": {
+          "search": {
+            "count": 0,
+            "cost": 0,
+            "costDisplay": "0.000000"
+          },
+          "maps": {
+            "count": 0,
+            "cost": 0,
+            "costDisplay": "0.000000"
+          }
+        },
+        "total": 0.00339,
+        "totalDisplay": "0.003390"
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "cd0430b8acd36a123d6d456296ab4b0b9f31fde6fc2e6b49c3487b147ef58d09",
+    "promptVersion": "phase7.1",
+    "contentSha256": "281c45712ac883fffd46d6090a624b3feb8a6a4cc3295e677849b670e7daa65a",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/04_scene_breakdown.json"
+}

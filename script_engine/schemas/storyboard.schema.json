@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sbz://schemas/storyboard-v1",
+  "title": "SBZ Capability-Aware Storyboard",
+  "type": "object",
+  "required": ["schemaVersion", "title", "fps", "durationSeconds", "characters", "beats"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "title": {"type": "string", "minLength": 1},
+    "fps": {"type": "integer", "minimum": 1, "maximum": 120},
+    "durationSeconds": {"type": "number", "minimum": 0.1},
+    "characters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "capabilityId", "capabilityTier"],
+        "properties": {
+          "id": {"type": "string"},
+          "capabilityId": {"type": "string"},
+          "capabilityTier": {"enum": ["STATIC", "SKELETAL_BASIC", "SKELETAL_INTERACTIVE", "FACIAL_READY"]}
+        }
+      }
+    },
+    "beats": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "startFrame", "endFrame", "type", "cameraIntent"],
+        "properties": {
+          "id": {"type": "string"},
+          "startFrame": {"type": "integer", "minimum": 0},
+          "endFrame": {"type": "integer", "minimum": 1},
+          "type": {"enum": ["dialogue", "narration", "action", "camera", "sound", "environment"]},
+          "characterId": {"type": ["string", "null"]},
+          "animationAction": {"type": ["string", "null"]},
+          "sourceClip": {"type": ["string", "null"]},
+          "fallbackAction": {"type": ["string", "null"]},
+          "target": {"type": ["string", "null"]},
+          "cameraIntent": {"type": "string", "minLength": 1},
+          "dialogueText": {"type": ["string", "null"]},
+          "soundCue": {"type": ["string", "null"]},
+          "environmentalEvent": {"type": ["string", "null"]}
+        }
+      }
+    }
+  }
+}

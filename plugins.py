@@ -38,22 +38,9 @@ def install_plugin(plugin_folder):
     typ = m.get("type")
 
     if typ == "characters":
-        # PNGs -> characters/, entries -> characters.json
-        import character_library as cl
-        os.makedirs(cl.LIB_DIR, exist_ok=True)
-        manifest = cl._load_manifest()
-        existing = {e.get("file") for e in manifest}
-        added = 0
-        for ch in m.get("characters", []):
-            src = os.path.join(pdir, ch["file"])
-            if os.path.exists(src):
-                shutil.copy(src, os.path.join(cl.LIB_DIR, os.path.basename(ch["file"])))
-                ch["file"] = os.path.basename(ch["file"])
-                if ch["file"] not in existing:
-                    manifest.append(ch); added += 1
-        json.dump(manifest, open(cl.MANIFEST, "w", encoding="utf-8"),
-                  ensure_ascii=False, indent=2)
-        return {"type": typ, "added": added}
+        # 2D PNG character plugins retire ho gaye — pipeline ab 3D-only hai
+        # (SBZ Originals + Quaternius). 3D characters characters3d.json se aate hain.
+        return {"type": typ, "error": "2D character plugins ab supported nahi (3D-only pipeline)"}
 
     if typ == "music":
         mood = m.get("mood", "calm")

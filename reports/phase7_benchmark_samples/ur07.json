@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "urdu",
+    "scenes": [
+      {
+        "id": "kitchen_scene",
+        "lines": [
+          {
+            "speaker": "دادی",
+            "text": "حسن بیٹا، یہ چائے تو ذرا پھیکی لگ رہی ہے۔ چٹکی بھر نمک اور ڈال دو۔",
+            "emotion": "طنزیہ",
+            "action": "چائے کا کپ منہ کے قریب لے جاتی ہیں"
+          },
+          {
+            "speaker": "حسن",
+            "text": "دادی اماں، چائے میں نمک؟ یہ کوئی نیا نسخہ ہے کیا؟",
+            "emotion": "حیرت",
+            "action": "دیگچی میں چمچ ہلاتے ہوئے"
+          },
+          {
+            "speaker": "دادی",
+            "text": "ارے بے وقوف، چینی ختم ہو گئی ہے اور نمک تو ہے نا! میٹھے کی جگہ نمکین چائے پینے میں کیا حرج ہے؟",
+            "emotion": "مذاق",
+            "action": "ہلکا سا قہقہہ لگاتی ہیں"
+          },
+          {
+            "speaker": "حسن",
+            "text": "دادی! آپ کا مذاق بھی کمال ہے۔ ذرا میں چینی لا رہا ہوں دکان سے۔",
+            "emotion": "شرمندگی",
+            "action": "کپڑے کی تھیلی اٹھاتے ہوئے"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "949172db-2cbe-4b5d-bfff-ceb1aea34352",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.deepseek.v4.pro",
+    "modelAir": "deepseek:v4@pro",
+    "modelDisplayName": "DeepSeek V4 Pro",
+    "transport": "openai_compatible",
+    "latencyMs": 45700,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 294,
+      "completion_tokens": 389,
+      "total_tokens": 683
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": true,
+    "fallbackReason": "OutputValidationError",
+    "cache": "hit",
+    "cacheKey": "6535006de269cc2a578db3b34f1f4c3c47e31bfcebfa45515c56ea8601ca6a89",
+    "promptVersion": "phase7.1",
+    "contentSha256": "c04d259f1d76dc05ee737ce6086e37da4a3d704ff9a1891ec55a72256f9e8d81",
+    "finishReason": "stop"
+  },
+  "diagnostics": [
+    {
+      "model": "runware.zai.glm.5.1",
+      "reason": "OutputValidationError",
+      "message": "Structured output failed schema validation",
+      "validation": [
+        "$.scenes[0].lines[2].action: expected string",
+        "$.scenes[0].lines[4].action: expected string"
+      ]
+    }
+  ],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

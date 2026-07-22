@@ -140,7 +140,7 @@ if ENV_GLB and os.path.exists(ENV_GLB):
     rig.scale=(cs,cs,cs); bpy.context.view_layer.update()
     cvv=[char.matrix_world @ mathutils.Vector(c) for c in char.bound_box]
     cbot=min(v.z for v in cvv)
-    rig.location=(env_cx, env_cy+0.6, rig.location.z + (floor-cbot) + 0.02)
+    rig.location=(env_cx, env_cy+0.6, rig.location.z + (floor-cbot) + 0.045)
     # character ko camera (+Y) ki taraf mooh karo (Sketchfab/Rodin front -Y hota hai)
     rig.rotation_euler = (rig.rotation_euler.x, rig.rotation_euler.y,
                           rig.rotation_euler.z + math.radians(180))

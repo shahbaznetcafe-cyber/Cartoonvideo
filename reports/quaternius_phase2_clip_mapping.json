@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "character": "Quaternius Adventurer",
+  "sourceGlb": "D:\\flayer\\sbz-studio\\assets\\characters\\quaternius_master\\master_character.glb",
+  "policy": "Every story action names the real embedded source clip. No semantic aliases are used.",
+  "mapping": [
+    {
+      "storyAction": "Offscreen establishment / aftermath hold",
+      "sourceClip": "Idle",
+      "authoredClip": true,
+      "runtimeTreatment": "Looped while character is outside the camera composition."
+    },
+    {
+      "storyAction": "Enter and walk the path",
+      "sourceClip": "Walk",
+      "authoredClip": true,
+      "runtimeTreatment": "Three complete authored cycles with matched holder displacement."
+    },
+    {
+      "storyAction": "Notice and assess the box",
+      "sourceClip": "Idle_Neutral",
+      "authoredClip": true,
+      "runtimeTreatment": "Looped subtle body hold with a small additive Head look toward the box."
+    },
+    {
+      "storyAction": "Cautious approach",
+      "sourceClip": "Walk",
+      "authoredClip": true,
+      "runtimeTreatment": "Two complete authored cycles at reduced speed with proportionally reduced displacement."
+    },
+    {
+      "storyAction": "Reach toward the box",
+      "sourceClip": "Interact",
+      "authoredClip": true,
+      "runtimeTreatment": "LoopOnce, slowed slightly and clamped; box consequence is timed to the reach."
+    },
+    {
+      "storyAction": "Body recoil",
+      "sourceClip": "HitRecieve_2",
+      "authoredClip": true,
+      "runtimeTreatment": "LoopOnce and clamped for a readable reaction close-up."
+    },
+    {
+      "storyAction": "Backward retreat",
+      "sourceClip": "Run_Back",
+      "authoredClip": true,
+      "runtimeTreatment": "Two complete authored cycles with backward holder displacement while facing the box."
+    },
+    {
+      "storyAction": "Point toward the box",
+      "sourceClip": "Idle_Gun_Pointing",
+      "authoredClip": true,
+      "runtimeTreatment": "The original clip name is retained and its forward arm direction is blocked toward the prop."
+    },
+    {
+      "storyAction": "Quick exit",
+      "sourceClip": "Run",
+      "authoredClip": true,
+      "runtimeTreatment": "Five complete authored cycles with matched travel and an offscreen exit."
+    }
+  ],
+  "notUsedAsSemanticClips": {
+    "Point": "This Phase 1 alias is not used or described as an authored Point clip.",
+    "Celebrate": "This Phase 1 alias is not used in the Phase 2 story."
+  },
+  "facialClaim": "None. The GLB has no jaw, eye controls, facial morph targets or lip-sync capability."
+}

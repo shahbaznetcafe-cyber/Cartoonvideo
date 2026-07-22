@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "editable": true,
+  "maxProviderFallbacks": 1,
+  "maxTransportRetries": 1,
+  "requestTimeoutSeconds": 90,
+  "tasks": {
+    "FAST_PARSER": {
+      "primary": "runware.google.gemini.3.5.flash",
+      "fallbacks": ["runware.deepseek.v4.flash"],
+      "maxOutputTokens": 2400,
+      "temperature": 0.2
+    },
+    "STORY_ARCHITECT": {
+      "primary": "runware.deepseek.v4.pro",
+      "fallbacks": ["runware.openai.gpt.5.4.mini"],
+      "maxOutputTokens": 2600,
+      "temperature": 0.65
+    },
+    "DIALOGUE_WRITER": {
+      "primary": "runware.zai.glm.5.1",
+      "fallbacks": ["runware.deepseek.v4.pro"],
+      "maxOutputTokens": 3000,
+      "temperature": 0.72
+    },
+    "SCRIPT_DOCTOR": {
+      "primary": "runware.openai.gpt.5.4.mini",
+      "fallbacks": ["runware.deepseek.v4.flash"],
+      "maxOutputTokens": 2600,
+      "temperature": 0.45
+    },
+    "ANIMATION_PLANNER": {
+      "primary": "runware.google.gemini.3.5.flash",
+      "fallbacks": ["runware.openai.gpt.5.4.mini"],
+      "maxOutputTokens": 4000,
+      "temperature": 0.15
+    },
+    "QUALITY_REVIEWER": {
+      "primary": "runware.openai.gpt.5.4",
+      "fallbacks": ["runware.deepseek.v4.pro"],
+      "maxOutputTokens": 1400,
+      "temperature": 0.1
+    },
+    "TRANSLATION": {
+      "primary": "runware.zai.glm.5.1",
+      "fallbacks": ["runware.openai.gpt.5.4.mini"],
+      "maxOutputTokens": 2600,
+      "temperature": 0.2
+    }
+  }
+}

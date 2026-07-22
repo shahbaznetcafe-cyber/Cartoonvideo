@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "title": "Phase 7 Runware Live Proof",
+  "credentialsIncluded": false,
+  "comparisonMode": false,
+  "boundedFallbacks": 1,
+  "passed": 6,
+  "failed": 0,
+  "results": [
+    {
+      "name": "01_urdu_story",
+      "stage": "story_outline",
+      "language": "urdu",
+      "status": "PASS",
+      "model": "runware.deepseek.v4.pro",
+      "air": "deepseek:v4@pro",
+      "latencyMs": 10903,
+      "cost": null,
+      "cache": "hit",
+      "fallbackUsed": false
+    },
+    {
+      "name": "02_roman_urdu_dialogue",
+      "stage": "character_dialogue",
+      "language": "roman_urdu",
+      "status": "PASS",
+      "model": "runware.zai.glm.5.1",
+      "air": "zai:glm@5.1",
+      "latencyMs": 24243,
+      "cost": null,
+      "cache": "hit",
+      "fallbackUsed": false
+    },
+    {
+      "name": "03_hindi_dialogue",
+      "stage": "character_dialogue",
+      "language": "hindi",
+      "status": "PASS",
+      "model": "runware.zai.glm.5.1",
+      "air": "zai:glm@5.1",
+      "latencyMs": 43380,
+      "cost": null,
+      "cache": "hit",
+      "fallbackUsed": false
+    },
+    {
+      "name": "04_script_doctor",
+      "stage": "script_doctor",
+      "language": "roman_urdu",
+      "status": "PASS",
+      "model": "runware.openai.gpt.5.4.mini",
+      "air": "openai:gpt@5.4-mini",
+      "latencyMs": 4404,
+      "cost": 0.00108,
+      "cache": "miss",
+      "fallbackUsed": false
+    },
+    {
+      "name": "05_parser_for_animation",
+      "stage": "scene_breakdown",
+      "language": "roman_urdu",
+      "status": "PASS",
+      "model": "runware.google.gemini.3.5.flash",
+      "air": "google:gemini@3.5-flash",
+      "latencyMs": 4586,
+      "cost": 0.003678,
+      "cache": "hit",
+      "fallbackUsed": false
+    },
+    {
+      "name": "06_animation_storyboard",
+      "stage": "animation_plan",
+      "language": "roman_urdu",
+      "status": "PASS",
+      "model": "runware.google.gemini.3.5.flash",
+      "air": "google:gemini@3.5-flash",
+      "latencyMs": 3873,
+      "cost": 0.004262,
+      "cache": "hit",
+      "fallbackUsed": false
+    }
+  ]
+}

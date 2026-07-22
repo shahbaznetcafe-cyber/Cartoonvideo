@@ -1,22 +1,17 @@
 """
-M3 (asset part) — Scene backgrounds + character avatars (Runware image gen).
-Backgrounds: landscape scene (no people). Characters: portrait -> circle avatar.
-Sab proj/assets/ mein cache hote hain (dobara generate nahi).
+M3 (asset part) — Reusable AI scene background plates (Runware image gen) for the
+3D Three.js pipeline. Landscape scene, no people. Cache mein save (dobara generate nahi).
 """
 import json
 import os
 import time
-
-import requests
-from PIL import Image, ImageDraw
+import hashlib
+from pathlib import Path
 
 import config
-import character_library
-from runware_client import post_tasks, new_uuid
 
-# har character ko ek ring color
-_RING_COLORS = [(34, 197, 94), (59, 130, 246), (244, 114, 182),
-                (251, 191, 36), (167, 139, 250), (248, 113, 113)]
+BACKGROUND_LIBRARY = Path(config.BASE_DIR) / "assets" / "generated_backgrounds"
+BACKGROUND_MANIFEST = BACKGROUND_LIBRARY / "manifest.json"
 
 
 def _runware_image(prompt, width, height, out_path, negative=""):
@@ -37,149 +32,61 @@ def generate_background(prompt, out_path, style=None):
         w, h, shot = 1024, 1024, "square"
     else:
         w, h, shot = 1344, 768, "wide"
-    base = f"{prompt}, {shot} establishing shot, no people, no characters"
+    base = (
+        f"{prompt}, low-poly 3D game environment compatible with Quaternius cartoon characters, "
+        f"clean stylized geometry, cohesive material palette, {shot} establishing shot, "
+        "clear foreground and midground depth, no depth-of-field blur, no people, no characters"
+    )
     full = styles.apply_style(base, style or config.STYLE)
     return _runware_image(full, w, h, out_path,
-                          negative="people, person, characters, text, watermark")
+                          negative="people, person, characters, text, watermark, photorealism, bokeh, blurry background")
 
 
-def _circle_avatar(portrait_path, out_path, ring_color, size=512):
-    img = Image.open(portrait_path).convert("RGBA")
-    # square center-crop
-    w, h = img.size
-    s = min(w, h)
-    img = img.crop(((w - s) // 2, (h - s) // 2, (w - s) // 2 + s, (h - s) // 2 + s))
-    img = img.resize((size, size), Image.LANCZOS)
+def reusable_background(prompt, style=None):
+    """Generate a scene plate once, then reuse it across future projects.
 
-    # circular mask
-    mask = Image.new("L", (size, size), 0)
-    ImageDraw.Draw(mask).ellipse([0, 0, size, size], fill=255)
-
-    out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    out.paste(img, (0, 0), mask)
-
-    # ring
-    ring = max(8, size // 28)
-    ImageDraw.Draw(out).ellipse(
-        [ring // 2, ring // 2, size - ring // 2, size - ring // 2],
-        outline=ring_color + (255,), width=ring,
-    )
-    out.save(out_path)
-    return out_path
-
-
-def _write_meta(out_path, mouth, circle, draw_mouth):
-    meta = {"mouth": mouth, "circle": circle, "draw_mouth": draw_mouth}
-    json.dump(meta, open(out_path.replace(".png", ".json"), "w", encoding="utf-8"))
-
-
-def generate_character_avatar(character, idx, out_path, lib_override=None):
-    meta_path = out_path.replace(".png", ".json")
-    if os.path.exists(out_path) and os.path.exists(meta_path):
-        return out_path
-
-    color = _RING_COLORS[idx % len(_RING_COLORS)]
-
-    # 1) Library character (auto-assigned ya keyword-match)
-    lib = lib_override or character_library.find_for(character)
-    if lib:
-        print(f"      (user image: {os.path.basename(lib['image'])})")
-        if lib.get("circle", True):
-            _circle_avatar(lib["image"], out_path, color)
-            mouth = lib.get("mouth") or [0.5, 0.62]
-        else:
-            # as-is: transparent character jaisa hai waisa rakho
-            Image.open(lib["image"]).convert("RGBA").save(out_path)
-            mouth = lib.get("mouth") or [0.5, 0.66]
-        _write_meta(out_path, mouth, lib.get("circle", True),
-                    draw_mouth=lib.get("mouth") is not None)
-        return out_path
-
-    # LIBRARY_ONLY: AI se naye character mat banao
-    if config.LIBRARY_ONLY:
-        raise RuntimeError(
-            f"LIBRARY_ONLY on hai aur '{character.get('name')}' ke liye koi "
-            f"library character nahi mila. characters/ mein character add karein.")
-
-    # 2) Warna AI se flat cartoon generate karo
-    role = character.get("role", "")
-    gender = character.get("gender", "person")
-    prompt = (f"flat 2D cartoon character, simple vector illustration, bold clean outlines, "
-              f"flat solid colors, minimal shading, big friendly round head, front-facing, "
-              f"looking straight at camera, neutral closed mouth, calm expression, "
-              f"{gender}, {role}, centered face, head and shoulders, solid pastel background")
-    portrait = out_path.replace(".png", "_portrait.png")
-    _runware_image(prompt, 768, 768, portrait,
-                   negative=("3D, realistic, photorealistic, detailed shading, gradient, "
-                             "open mouth, teeth, smiling wide, full body, multiple people, "
-                             "side profile, text, watermark, blurry"))
-    _circle_avatar(portrait, out_path, color)
-    _write_meta(out_path, [0.5, 0.575], circle=True, draw_mouth=True)
-    return out_path
+    The cache key includes the final style/aspect/prompt so images are never
+    reused for a materially different scene.  The manifest makes the saved
+    library understandable without putting provider credentials in it.
+    """
+    import styles
+    raw_prompt = str(prompt or "stylized story environment").strip()
+    style_name = style or config.STYLE
+    key_source = json.dumps({"prompt": raw_prompt, "style": style_name,
+                             "aspect": config.ASPECT}, sort_keys=True)
+    key = hashlib.sha256(key_source.encode("utf-8")).hexdigest()[:20]
+    BACKGROUND_LIBRARY.mkdir(parents=True, exist_ok=True)
+    path = BACKGROUND_LIBRARY / f"{key}.png"
+    if not path.exists():
+        generate_background(raw_prompt, str(path), style=style_name)
+    manifest = {}
+    try:
+        manifest = json.loads(BACKGROUND_MANIFEST.read_text(encoding="utf-8"))
+    except (OSError, ValueError, TypeError):
+        pass
+    manifest[key] = {"file": path.name, "prompt": raw_prompt, "style": style_name,
+                     "aspect": config.ASPECT, "updated_at": int(time.time())}
+    temp = BACKGROUND_MANIFEST.with_suffix(".tmp")
+    temp.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+                    encoding="utf-8")
+    os.replace(temp, BACKGROUND_MANIFEST)
+    return str(path)
 
 
-def build_assets(parsed, proj_dir, on_progress=None):
-    assets_dir = os.path.join(proj_dir, "assets")
-    os.makedirs(assets_dir, exist_ok=True)
-
-    # backgrounds (per scene)
-    scene_bg = {}
-    scenes = parsed.get("scenes", [])
-    chars = parsed.get("characters", [])
-    total = len(scenes) + len(chars)
-    step = 0
-
-    for sc in scenes:
-        step += 1
-        path = os.path.join(assets_dir, f"bg_scene{sc['id']}.png")
+def build_scene_backgrounds(parsed, proj_dir=None, on_progress=None):
+    """Return reusable AI scene plates for the Three.js pipeline only."""
+    del proj_dir
+    result = {}
+    scenes = list(parsed.get("scenes") or [])
+    total = max(1, len(scenes))
+    for index, scene in enumerate(scenes, 1):
+        prompt = scene.get("background_prompt") or scene.get("location") or "stylized story environment"
         if on_progress:
-            on_progress(step, total, f"Background: scene {sc['id']} ({sc.get('location')})")
-        generate_background(sc.get("background_prompt", sc.get("location", "room")),
-                            path, style=sc.get("style"))
-        scene_bg[sc["id"]] = path
-
-    # avatars — library characters auto-assign (scene/script ke hisab se)
-    assignment = character_library.assign(chars)
-    # preview se user ka veggie override (char_id -> veggie naam/package)
-    overrides = parsed.get("char_overrides") or {}
-    for cid, veg in overrides.items():
-        if not veg:
-            continue
-        e = character_library.find_for({"name": str(veg)})
-        if e:
-            assignment[cid] = e
-    char_avatar = {}
-    char_rigs = {}
-    for idx, ch in enumerate(chars):
-        step += 1
-        path = os.path.join(assets_dir, f"char_{ch['id']}.png")
-        lib = assignment.get(ch["id"])
-        if on_progress:
-            chosen = "AI"
-            if lib:
-                chosen = lib.get("package") or os.path.splitext(os.path.basename(lib["image"]))[0]
-            on_progress(step, total, f"Character: {ch.get('name')} -> {chosen}")
-        generate_character_avatar(ch, idx, path, lib_override=lib)
-        char_avatar[ch["id"]] = path
-
-        # PUPPET: rig se real animation
-        if config.PUPPET_ANIMATION and lib:
-            try:
-                pkg = lib.get("package")
-                if pkg:
-                    # pre-built folder-package (rigged layers + animations.json)
-                    rig_path = os.path.join(config.BASE_DIR, "characters", pkg)
-                    if os.path.exists(os.path.join(rig_path, "rig.json")):
-                        char_rigs[ch["id"]] = rig_path
-                    else:
-                        print(f"  [rig skip {ch.get('name')}] package missing: {pkg}")
-                else:
-                    import autorig
-                    slug = os.path.splitext(os.path.basename(lib["image"]))[0]
-                    rig = autorig.auto_rig(lib["image"], autorig.rig_dir_for(slug),
-                                           mouth_xy=tuple(lib.get("mouth") or (0.5, 0.66)))
-                    char_rigs[ch["id"]] = rig
-            except Exception as e:
-                print(f"  [rig skip {ch.get('name')}] {e}")
-
-    return scene_bg, char_avatar, char_rigs
+            on_progress(index, total, f"Reusable AI background: scene {scene.get('id')}")
+        try:
+            result[scene.get("id")] = reusable_background(prompt, style=scene.get("style"))
+        except Exception as exc:
+            # A local Three.js environment is still a valid no-network fallback.
+            # Do not fail a video just because a provider is temporarily unavailable.
+            print(f"  [AI background fallback] scene {scene.get('id')}: {exc}")
+    return result

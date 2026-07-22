@@ -15,30 +15,31 @@ import edge_tts
 import config
 import dialogue_style
 import viseme_timeline
+import voice_profiles
 
-# Same gender ke kai characters ko distinguish karne ke liye variations
-_PITCH_RATE_VARIANTS = [
-    ("+0Hz", "+0%"),
-    ("-30Hz", "-4%"),
-    ("+25Hz", "+6%"),
-    ("-15Hz", "+3%"),
-    ("+40Hz", "-3%"),
-    ("-45Hz", "+8%"),
-]
+
+class Cancelled(Exception):
+    """Raised between bounded voice operations when the user requests stop."""
+
+# Kept as a fallback for unknown characters. Rich profiles live in voice_profiles.py.
+_PITCH_RATE_VARIANTS = [("+0Hz", "+0%"), ("-18Hz", "-3%"), ("+18Hz", "+4%"), ("-8Hz", "+2%")]
 
 
 def assign_voice_params(parsed):
-    """Har character ko (voice, pitch, rate) do — gender same ho to bhi alag."""
+    """Give every character a deterministic, inspectable voice direction."""
     seen = {}
     for ch in parsed.get("characters", []):
-        g = (ch.get("gender") or "male").lower()
-        idx = seen.get(g, 0)
-        seen[g] = idx + 1
-        pitch, rate = _PITCH_RATE_VARIANTS[idx % len(_PITCH_RATE_VARIANTS)]
-        ch["pitch"] = pitch
-        ch["rate"] = rate
+        gender = (ch.get("gender") or "male").lower()
+        ordinal = seen.get(gender, 0)
+        seen[gender] = ordinal + 1
+        profile = voice_profiles.profile_for_character(ch, ordinal)
+        # Explicit saved values remain authoritative for existing projects.
+        ch.setdefault("pitch", profile["pitch"])
+        ch.setdefault("rate", profile["rate"])
+        ch["voice_tone"] = profile["id"]
+        ch["voice_direction"] = profile["description"]
+        ch["pause_style"] = profile["pause_style"]
     return parsed
-
 
 def _char_lookup(parsed):
     return {c["id"]: c for c in parsed.get("characters", [])}
@@ -86,17 +87,18 @@ def _duration(path):
         return 2.0
 
 
-def _synthesis_signature(text, voice, rate, pitch):
+def _synthesis_signature(text, voice, rate, pitch, tail_pause=0.0):
     payload = {
         "text": text, "voice": voice, "rate": rate, "pitch": pitch,
         "provider": config.TTS_PROVIDER, "speed": round(float(config.VOICE_SPEED), 3),
         "edge_voice": config.EDGE_VOICE, "google_voice": config.GOOGLE_TTS_VOICE,
         "eleven_voice": config.ELEVENLABS_VOICE_ID,
+        "tail_pause": round(float(tail_pause or 0.0), 3),
     }
     return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
 
 
-def generate_voices(parsed, proj_dir, on_progress=None):
+def generate_voices(parsed, proj_dir, on_progress=None, should_cancel=None):
     """
     Har line ki mp3 banao -> proj_dir/voices/.
     return: timeline = list of dicts (scene, speaker, text, emotion, audio, duration).
@@ -112,6 +114,8 @@ def generate_voices(parsed, proj_dir, on_progress=None):
     # total lines (progress ke liye)
     all_lines = [(sc, ln) for sc in parsed["scenes"] for ln in sc.get("lines", [])]
     total = len(all_lines)
+    if on_progress:
+        on_progress(0, total, f"Voice queue ready: {total} line(s)")
 
     # Roman Urdu -> Urdu script (TTS ke liye) — ek batch call. Captions Roman rahenge.
     tts_texts = [ln.get("text", "") for _, ln in all_lines]
@@ -121,26 +125,25 @@ def generate_voices(parsed, proj_dir, on_progress=None):
         tts_texts = transliterate_roman_to_urdu(tts_texts)
 
     for i, (sc, ln) in enumerate(all_lines, start=1):
+        if should_cancel and should_cancel():
+            raise Cancelled()
         spk = ln.get("speaker", "narrator")
         ch = chars.get(spk, {})
         language_voices = config.voice_map_for_language(parsed.get("language"))
         voice = ch.get("voice", language_voices["narrator"])
         pitch = ch.get("pitch", "+0Hz")
         rate = ch.get("rate", "+0%")
-        # per-character voice override (characters.json "voice" field)
-        try:
-            import character_library
-            lib = character_library.find_for(ch) if ch else None
-            if lib and lib.get("voice"):
-                voice = lib["voice"]
-        except Exception:
-            pass
 
         fname = f"s{sc['id']}_l{i}.mp3"
         fpath = os.path.join(voices_dir, fname)
-        speak_text = dialogue_style.normalize_spoken_punctuation(
-            tts_texts[i - 1] or ln["text"], parsed.get("language"))
-        signature = _synthesis_signature(speak_text, voice, rate, pitch)
+        speak_text = voice_profiles.add_natural_pauses(
+            dialogue_style.normalize_spoken_punctuation(
+                tts_texts[i - 1] or ln["text"], parsed.get("language")),
+            parsed.get("language"))
+        # Kids pacing: line ke baad breather; scene ki aakhri line par lamba pause.
+        last_in_scene = (i == total) or all_lines[i][0].get("id") != sc.get("id")
+        tail_pause = config.SCENE_PAUSE if last_in_scene else config.LINE_PAUSE
+        signature = _synthesis_signature(speak_text, voice, rate, pitch, tail_pause)
         signature_path = fpath + ".synthesis.json"
         cached_signature = ""
         try:
@@ -157,8 +160,13 @@ def generate_voices(parsed, proj_dir, on_progress=None):
                 on_progress(i, total, f"Voice {i}/{total}: [{spk}] (cached)")
         else:
             import providers
+            if on_progress:
+                on_progress(i - 1, total,
+                            f"Voice {i}/{total}: [{spk}] via {config.TTS_PROVIDER}...")
             providers.tts_synthesize(speak_text, voice, fpath, rate=rate, pitch=pitch,
                                      volume=config.VOICE_VOLUME, speed=config.VOICE_SPEED)
+            if should_cancel and should_cancel():
+                raise Cancelled()
             # professional cleanup: lead/trail silence trim + loudness-normalize + 48k.
             # words.json (lip-sync spans) ko trim-amount se shift karo taake sync sahi rahe.
             try:
@@ -178,6 +186,11 @@ def generate_voices(parsed, proj_dir, on_progress=None):
                             _json.dump(d, handle, ensure_ascii=False)
             except Exception as _ex:
                 print(f"  [voice clean skip] {_ex}", flush=True)
+            try:
+                import audiopost
+                audiopost.pad_tail(fpath, tail_pause)
+            except Exception as _ex:
+                print(f"  [voice pad skip] {_ex}", flush=True)
             with open(signature_path, "w", encoding="utf-8") as handle:
                 json.dump({"signature": signature, "provider": config.TTS_PROVIDER,
                            "speed": config.VOICE_SPEED}, handle, ensure_ascii=False)
@@ -202,6 +215,8 @@ def generate_voices(parsed, proj_dir, on_progress=None):
                                      if first_in_scene else None)),
             "audio": os.path.join("voices", fname),
             "duration": round(dur, 2),
+            "voice_tone": ch.get("voice_tone", "neutral"),
+            "voice_direction": ch.get("voice_direction", "natural narration"),
         }
 
         # Provider-neutral facial timeline. Failure is advisory so the existing

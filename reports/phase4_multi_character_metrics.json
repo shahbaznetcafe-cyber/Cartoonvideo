@@ -1,0 +1,343 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "capture": true,
+  "output": "D:\\flayer\\sbz-studio\\outputs\\phase4_multi_character_proof.mp4",
+  "durationSeconds": 6,
+  "fps": 24,
+  "totalFrames": 144,
+  "renderSeconds": 37.654,
+  "meta": {
+    "phase": 4,
+    "fps": 24,
+    "totalFrames": 144,
+    "characterCount": 3,
+    "mixerCount": 3,
+    "uniqueRootCount": 3,
+    "uniqueSkeletonCount": 3,
+    "sharedSkeletonCorruption": false,
+    "sharedBonePairs": [],
+    "combinedBounds": {
+      "min": [
+        -1.757846843697627,
+        0,
+        -0.3763704292797884
+      ],
+      "max": [
+        1.7202601635290786,
+        0.5090839461673894,
+        0.1849712414642749
+      ],
+      "size": [
+        3.4781070072267055,
+        0.5090839461673894,
+        0.5613416707440633
+      ]
+    },
+    "cameraFit": {
+      "position": [
+        0.13120665991572586,
+        0.48181295962554205,
+        5.178567138111128
+      ],
+      "target": [
+        -0.018793340084274135,
+        0.38181295962554207,
+        -0.09569959390775676
+      ],
+      "performanceHeight": 1.4763434438854293,
+      "proportionAware": true
+    },
+    "characters": [
+      {
+        "id": "quaternius_casual_2",
+        "tier": "SKELETAL_BASIC",
+        "clip": "Walk",
+        "mixerRootUuid": "fa790d5b-6960-4ae5-90de-ae89ba81c4dc",
+        "rootUuid": "fa790d5b-6960-4ae5-90de-ae89ba81c4dc",
+        "skeletonUuids": [
+          "26f94890-5f69-4be8-9873-30c7519ab02d"
+        ],
+        "materials": [
+          "Eye:31251c",
+          "Eyebrows:3e3429",
+          "Hair:492e18",
+          "LightBlue:333f47",
+          "LightBrown:969083",
+          "Red_Dark:7d2734",
+          "Skin:cead86",
+          "Skin_Darker:b99c79",
+          "White:b4b4b4"
+        ],
+        "normalizationScale": 1,
+        "position": [
+          -1.58,
+          0,
+          0.18
+        ]
+      },
+      {
+        "id": "quaternius_farmer",
+        "tier": "SKELETAL_BASIC",
+        "clip": "Wave",
+        "mixerRootUuid": "79235be5-bf62-4793-840c-40d9ee1c7ca5",
+        "rootUuid": "79235be5-bf62-4793-840c-40d9ee1c7ca5",
+        "skeletonUuids": [
+          "1977dbbf-3ee1-4c78-9f80-b63d44b03225"
+        ],
+        "materials": [
+          "Beige:9c977c",
+          "Brown2:5c4e32",
+          "Brown:756440",
+          "Eye:31251c",
+          "Eyebrows:3e3429",
+          "LightBlue:333f47",
+          "Red:7c0f1f",
+          "Skin:cead86"
+        ],
+        "normalizationScale": 1,
+        "position": [
+          0,
+          0,
+          -0.08
+        ]
+      },
+      {
+        "id": "quaternius_king",
+        "tier": "SKELETAL_BASIC",
+        "clip": "Listen",
+        "mixerRootUuid": "d2012dfa-a0bf-48d0-af6b-b0c73a2fd626",
+        "rootUuid": "d2012dfa-a0bf-48d0-af6b-b0c73a2fd626",
+        "skeletonUuids": [
+          "90e07a93-6fd3-48f6-9d85-c3fbcc883f3d"
+        ],
+        "materials": [
+          "Beige:9c977c",
+          "Blue:3f4758",
+          "DarkBrown:4b3e36",
+          "Eye:31251c",
+          "Gold:907438",
+          "Hair_White:c2c2c2",
+          "Metal:636463",
+          "Metal_Dark:4f504f",
+          "Skin:cead86"
+        ],
+        "normalizationScale": 1,
+        "position": [
+          1.58,
+          0,
+          0.12
+        ]
+      }
+    ],
+    "blenderUsedAtRuntime": false,
+    "facialAnimationClaimed": false
+  },
+  "samples": [
+    {
+      "frame": 0,
+      "characters": [
+        {
+          "id": "quaternius_casual_2",
+          "clip": "Walk",
+          "rootUuid": "fa790d5b-6960-4ae5-90de-ae89ba81c4dc",
+          "groundY": 0,
+          "height": 0.4569919333060494,
+          "boneChecksum": 551.2549241825927
+        },
+        {
+          "id": "quaternius_farmer",
+          "clip": "Wave",
+          "rootUuid": "79235be5-bf62-4793-840c-40d9ee1c7ca5",
+          "groundY": 0,
+          "height": 0.45165034399491827,
+          "boneChecksum": 413.72149634042796
+        },
+        {
+          "id": "quaternius_king",
+          "clip": "Listen",
+          "rootUuid": "d2012dfa-a0bf-48d0-af6b-b0c73a2fd626",
+          "groundY": 0,
+          "height": 0.5090839461673894,
+          "boneChecksum": 454.71107103009797
+        }
+      ]
+    },
+    {
+      "frame": 24,
+      "characters": [
+        {
+          "id": "quaternius_casual_2",
+          "clip": "Walk",
+          "rootUuid": "fa790d5b-6960-4ae5-90de-ae89ba81c4dc",
+          "groundY": 0,
+          "height": 0.4569919333060494,
+          "boneChecksum": 510.3074025941014
+        },
+        {
+          "id": "quaternius_farmer",
+          "clip": "Wave",
+          "rootUuid": "79235be5-bf62-4793-840c-40d9ee1c7ca5",
+          "groundY": 0,
+          "height": 0.45165034399491827,
+          "boneChecksum": 417.79162736774487
+        },
+        {
+          "id": "quaternius_king",
+          "clip": "Listen",
+          "rootUuid": "d2012dfa-a0bf-48d0-af6b-b0c73a2fd626",
+          "groundY": 0,
+          "height": 0.5090839461673894,
+          "boneChecksum": 455.5731718957169
+        }
+      ]
+    },
+    {
+      "frame": 48,
+      "characters": [
+        {
+          "id": "quaternius_casual_2",
+          "clip": "Walk",
+          "rootUuid": "fa790d5b-6960-4ae5-90de-ae89ba81c4dc",
+          "groundY": 0,
+          "height": 0.4569919333060494,
+          "boneChecksum": 521.5313902829452
+        },
+        {
+          "id": "quaternius_farmer",
+          "clip": "Wave",
+          "rootUuid": "79235be5-bf62-4793-840c-40d9ee1c7ca5",
+          "groundY": 0,
+          "height": 0.45165034399491827,
+          "boneChecksum": 409.3211441380429
+        },
+        {
+          "id": "quaternius_king",
+          "clip": "Listen",
+          "rootUuid": "d2012dfa-a0bf-48d0-af6b-b0c73a2fd626",
+          "groundY": 0,
+          "height": 0.5090839461673894,
+          "boneChecksum": 454.7718713767603
+        }
+      ]
+    },
+    {
+      "frame": 72,
+      "characters": [
+        {
+          "id": "quaternius_casual_2",
+          "clip": "Walk",
+          "rootUuid": "fa790d5b-6960-4ae5-90de-ae89ba81c4dc",
+          "groundY": 0,
+          "height": 0.4569919333060494,
+          "boneChecksum": 481.09223913571077
+        },
+        {
+          "id": "quaternius_farmer",
+          "clip": "Wave",
+          "rootUuid": "79235be5-bf62-4793-840c-40d9ee1c7ca5",
+          "groundY": 0,
+          "height": 0.45165034399491827,
+          "boneChecksum": 383.7020617882498
+        },
+        {
+          "id": "quaternius_king",
+          "clip": "Listen",
+          "rootUuid": "d2012dfa-a0bf-48d0-af6b-b0c73a2fd626",
+          "groundY": 0,
+          "height": 0.5090839461673894,
+          "boneChecksum": 455.137663297366
+        }
+      ]
+    },
+    {
+      "frame": 96,
+      "characters": [
+        {
+          "id": "quaternius_casual_2",
+          "clip": "Walk",
+          "rootUuid": "fa790d5b-6960-4ae5-90de-ae89ba81c4dc",
+          "groundY": 0,
+          "height": 0.4569919333060494,
+          "boneChecksum": 509.343268802555
+        },
+        {
+          "id": "quaternius_farmer",
+          "clip": "Wave",
+          "rootUuid": "79235be5-bf62-4793-840c-40d9ee1c7ca5",
+          "groundY": 0,
+          "height": 0.45165034399491827,
+          "boneChecksum": 408.15267524348417
+        },
+        {
+          "id": "quaternius_king",
+          "clip": "Listen",
+          "rootUuid": "d2012dfa-a0bf-48d0-af6b-b0c73a2fd626",
+          "groundY": 0,
+          "height": 0.5090839461673894,
+          "boneChecksum": 455.26822785093384
+        }
+      ]
+    },
+    {
+      "frame": 120,
+      "characters": [
+        {
+          "id": "quaternius_casual_2",
+          "clip": "Walk",
+          "rootUuid": "fa790d5b-6960-4ae5-90de-ae89ba81c4dc",
+          "groundY": 0,
+          "height": 0.4569919333060494,
+          "boneChecksum": 472.3844849461186
+        },
+        {
+          "id": "quaternius_farmer",
+          "clip": "Wave",
+          "rootUuid": "79235be5-bf62-4793-840c-40d9ee1c7ca5",
+          "groundY": 0,
+          "height": 0.45165034399491827,
+          "boneChecksum": 413.72147180433467
+        },
+        {
+          "id": "quaternius_king",
+          "clip": "Listen",
+          "rootUuid": "d2012dfa-a0bf-48d0-af6b-b0c73a2fd626",
+          "groundY": 0,
+          "height": 0.5090839461673894,
+          "boneChecksum": 454.71107097998345
+        }
+      ]
+    },
+    {
+      "frame": 143,
+      "characters": [
+        {
+          "id": "quaternius_casual_2",
+          "clip": "Walk",
+          "rootUuid": "fa790d5b-6960-4ae5-90de-ae89ba81c4dc",
+          "groundY": 0,
+          "height": 0.4569919333060494,
+          "boneChecksum": 496.00389147903627
+        },
+        {
+          "id": "quaternius_farmer",
+          "clip": "Wave",
+          "rootUuid": "79235be5-bf62-4793-840c-40d9ee1c7ca5",
+          "groundY": 0,
+          "height": 0.45165034399491827,
+          "boneChecksum": 415.9558438405314
+        },
+        {
+          "id": "quaternius_king",
+          "clip": "Listen",
+          "rootUuid": "d2012dfa-a0bf-48d0-af6b-b0c73a2fd626",
+          "groundY": 0,
+          "height": 0.5090839461673894,
+          "boneChecksum": 455.58088104237686
+        }
+      ]
+    }
+  ],
+  "pageErrors": [],
+  "requestErrors": []
+}

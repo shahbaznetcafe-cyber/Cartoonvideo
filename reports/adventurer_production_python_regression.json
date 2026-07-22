@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "command": "Blender Python 3.13 + project site-packages: -m unittest discover -s tests -v",
+  "runner": "Python unittest discovery",
+  "executedAt": "2026-07-16T00:55:00+05:00",
+  "passed": 96,
+  "failed": 0,
+  "errors": 0,
+  "skipped": 0,
+  "durationSeconds": 1.831,
+  "exitCode": 0,
+  "result": "PASS",
+  "note": "The project venv launcher points to an unavailable system interpreter. The same project site-packages were loaded into Blender Python 3.13 and the complete unittest suite passed without network access."
+}

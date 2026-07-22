@@ -1,11 +1,18 @@
-let polling=null, OPTS=null, CUR_JOB=null, CHAR_CAPS={};
+let polling=null, OPTS=null, CUR_JOB=null, CHAR_CAPS={}, POLL_FAILURES=0, POLL_IN_FLIGHT=false, POLL_RETRY_TIMER=null, LAST_JOB_STATUS=null;
+let CHARACTER_CATALOG=null, CHARACTER_LIBRARY='sbz', CHARACTER_CATEGORY='all';
+let CAST_CHARACTER_LIBRARY='sbz';
+let TEMPLATE_CHARACTER_LIBRARY='sbz';
+let ASSET_CATALOG=null, ASSET_CATEGORY='backgrounds';
 let ELEVEN_VOICES_LOADED=false, EDGE_VOICES_LOADED=false;
+let SCRIPT_ENGINE_OPTIONS=null, SCRIPT_ENGINE_JOB=null, SCRIPT_ENGINE_RESULT=null;
+let SCRIPT_ENGINE_PROJECT='', SCRIPT_ENGINE_APPROVED=false, SCRIPT_ENGINE_POLL=null;
+let MANUAL_SCENE_TIMER=null, MANUAL_SCENE_TOKEN=0, PLAN_SOURCE_SCRIPT='';
 const ORDER=['story','voice','asset','render'];
 function escHtml(value){
   return String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 function uiIcon(name){
-  return `<svg class="icon" aria-hidden="true"><use href="/static/icons/icons.svg?v=20260714-phase10#icon-${name}"></use></svg>`;
+  return `<svg class="icon" aria-hidden="true"><use href="/static/icons/icons.svg?v=20260715-character-catalog#icon-${name}"></use></svg>`;
 }
 function feedbackMarkup(type,message,icon){
   const iconName=icon||(type==='success'?'check':type==='warning'?'warning':type==='loading'?'render':'info');
@@ -180,10 +187,26 @@ function capabilityMarkup(cap){
     +(warns?`<br><span style="color:#fbbf24"><b>Warning:</b> ${warns}</span>`:'')
     +(errs?`<br><span style="color:#fca5a5"><b>Error:</b> ${errs}</span>`:'')+`</div></details>`;
 }
-async function load3dValidation(){
+function performanceMarkup(performance){
+  if(!performance)return '';
+  const mode=performance.speech_mode||'body_only';
+  const labels={viseme_facial:'Full facial + viseme sync',viseme:'Viseme lip-sync',jaw_openness:'Jaw lip-sync',body_only:'Body acting only',static:'Static visual role'};
+  const cls=mode==='viseme_facial'?'full':mode==='viseme'?'viseme':mode==='jaw_openness'?'legacy':'body';
+  const warning=performance.warning||performance.performance_warning||'';
+  return `<span class="performanceBadge ${cls}" title="${escHtml(warning)}">${escHtml(labels[mode]||performance.label||mode)}</span>`;
+}
+function castingDecisionMarkup(decision){
+  if(!decision)return '';
+  const labels={skeletal_action:'Action-led',dialogue:'Dialogue-led',hybrid:'Action + dialogue',balanced:'Balanced'};
+  const title=decision.message||'';
+  return `<span class="performanceBadge body" title="${escHtml(title)}">${escHtml(labels[decision.need]||decision.route||'Casting plan')}</span>`;
+}
+async function load3dValidation(packages=[]){
   try{
-    const payload=await (await fetch('/api/characters3d/validation')).json();
-    CHAR_CAPS={};
+    const requested=[...new Set((packages||[]).filter(Boolean).map(value=>String(value).toLowerCase()))];
+    const query=requested.length?`?packages=${encodeURIComponent(requested.join(','))}`:'';
+    const payload=await (await fetch('/api/characters3d/validation'+query)).json();
+    if(!requested.length) CHAR_CAPS={};
     (payload.characters||[]).forEach(cap=>{
       const blend=((cap.character&&cap.character.blend)||'').replace(/\\/g,'/').split('/').pop().replace(/\.(blend|glb)$/i,'').toLowerCase();
       if(blend) CHAR_CAPS[blend]=cap;
@@ -196,6 +219,77 @@ async function stopJob(){
   try{ await fetch('/api/stop/'+CUR_JOB,{method:'POST'}); }catch(e){}
 }
 
+const SCRIPT_STAGE_TASK={story_idea:'STORY_ARCHITECT',story_outline:'STORY_ARCHITECT',character_profiles:'STORY_ARCHITECT',scene_breakdown:'FAST_PARSER',character_dialogue:'DIALOGUE_WRITER',script_doctor:'SCRIPT_DOCTOR',visual_story_beats:'FAST_PARSER',animation_plan:'ANIMATION_PLANNER',storyboard:'ANIMATION_PLANNER'};
+const SCRIPT_STAGE_LABEL={story_idea:'Story Idea',story_outline:'Story Outline',character_profiles:'Character Profiles',scene_breakdown:'Scene Breakdown / Parser',character_dialogue:'Character Dialogue',script_doctor:'Script Doctor',visual_story_beats:'Visual Story Beats',animation_plan:'Capability-Aware Animation Plan',storyboard:'Validated Storyboard JSON'};
+function titleFromId(value){return String(value||'').split('_').map(word=>word?word[0].toUpperCase()+word.slice(1):'').join(' ');}
+function populateScriptEngineModels(select,selected){
+  if(!select||!SCRIPT_ENGINE_OPTIONS)return;
+  const models=SCRIPT_ENGINE_OPTIONS.models?.models||[];select.innerHTML='';
+  models.forEach(model=>{const option=document.createElement('option');option.value=model.internalId;option.textContent=`${model.family} · ${model.displayName} · ${model.costPreference}`;option.title=`AIR: ${model.runwareAir} · ${model.intendedTasks.join(', ')}`;select.appendChild(option);});
+  if(selected&&[...select.options].some(option=>option.value===selected))select.value=selected;
+}
+function syncScriptEngineControls(resetModel=true){
+  if(!SCRIPT_ENGINE_OPTIONS)return;
+  const stage=document.getElementById('scriptEngineStage')?.value||'scene_breakdown';
+  const doctor=stage==='script_doctor';document.getElementById('scriptDoctorModeGroup')?.classList.toggle('hidden',!doctor);
+  const compare=document.getElementById('scriptEngineCompare')?.checked===true;document.getElementById('scriptEngineComparisonGroup')?.classList.toggle('hidden',!compare);
+  if(resetModel){const task=SCRIPT_STAGE_TASK[stage],primary=SCRIPT_ENGINE_OPTIONS.routing?.tasks?.[task]?.primary;populateScriptEngineModels(document.getElementById('scriptEngineModel'),primary);populateScriptEngineModels(document.getElementById('scriptEngineComparisonModel'));const comparison=document.getElementById('scriptEngineComparisonModel');if(comparison&&comparison.options.length>1)comparison.selectedIndex=1;}
+}
+async function loadScriptEngineOptions(){
+  try{
+    const response=await fetch('/api/script-engine/options');const data=await response.json();if(!response.ok)throw new Error(data.error||'Script engine options unavailable');SCRIPT_ENGINE_OPTIONS=data;
+    const stage=document.getElementById('scriptEngineStage'),language=document.getElementById('scriptEngineLanguage'),mode=document.getElementById('scriptDoctorMode');
+    if(!stage||!language||!mode)return;
+    stage.innerHTML=data.stages.map(value=>`<option value="${escHtml(value)}">${escHtml(SCRIPT_STAGE_LABEL[value]||titleFromId(value))}</option>`).join('');stage.value='scene_breakdown';
+    language.innerHTML=data.languages.map(value=>`<option value="${escHtml(value)}">${escHtml(titleFromId(value))}</option>`).join('');language.value=document.getElementById('ffLang')?.value||'roman_urdu';
+    mode.innerHTML=data.scriptDoctorModes.map(value=>`<option value="${escHtml(value)}">${escHtml(titleFromId(value))}</option>`).join('');mode.value='robotic_naturalizer';
+    syncScriptEngineControls(true);stage.addEventListener('change',()=>syncScriptEngineControls(true));document.getElementById('scriptEngineCompare')?.addEventListener('change',()=>syncScriptEngineControls(false));
+  }catch(error){const status=document.getElementById('scriptEngineStatus');if(status)status.innerHTML=feedbackMarkup('danger',error.message);}
+}
+function scriptEngineContent(stage){
+  const script=document.getElementById('script')?.value.trim()||'';if(stage==='story_idea')return document.getElementById('ffIdea')?.value.trim()||script;return script;
+}
+function scriptEngineMetadataMarkup(metadata){
+  if(!metadata)return'';const cost=metadata.cost==null?'Cost unavailable':`$${Number(metadata.cost).toFixed(6)}`;return [`Model: ${metadata.modelDisplayName}`,`AIR: ${metadata.modelAir}`,`${metadata.latencyMs} ms`,cost,`Cache: ${metadata.cache}`,`Retries: ${metadata.retryCount}`,metadata.fallbackUsed?`Fallback: ${metadata.fallbackReason}`:'No fallback'].map(value=>`<span>${escHtml(value)}</span>`).join('');
+}
+async function pollScriptEngineJob(){
+  if(!SCRIPT_ENGINE_JOB)return;const response=await fetch('/api/script-engine/status/'+encodeURIComponent(SCRIPT_ENGINE_JOB));const job=await response.json();if(!response.ok){throw new Error(job.error||'Script job unavailable');}
+  const status=document.getElementById('scriptEngineStatus');if(job.state==='queued'||job.state==='running'){status.innerHTML=feedbackMarkup('loading',job.state==='queued'?'Request queued.':'Runware stage generate ho raha hai.');return;}
+  clearInterval(SCRIPT_ENGINE_POLL);SCRIPT_ENGINE_POLL=null;document.getElementById('scriptEngineCancelBtn')?.classList.add('hidden');setButtonLoading(document.getElementById('scriptEngineRunBtn'),false);
+  if(job.state==='done'){
+    SCRIPT_ENGINE_RESULT=job.result;const primary=job.result.primary;document.getElementById('scriptEngineOutput').value=JSON.stringify(primary.output,null,2);document.getElementById('scriptEngineMetadata').innerHTML=scriptEngineMetadataMarkup(primary.metadata);document.getElementById('scriptEngineApproveBtn').disabled=false;
+    const comparison=job.result.comparison;status.innerHTML=feedbackMarkup('success',comparison?'Both validated outputs are ready. Primary output is editable below.':'Validated structured output is ready.');if(comparison)status.innerHTML+=`<div class="feedback-detail">Comparison: ${escHtml(comparison.metadata.modelDisplayName)} · ${comparison.metadata.latencyMs} ms${comparison.metadata.cost==null?'':` · $${Number(comparison.metadata.cost).toFixed(6)}`}</div>`;
+  }else if(job.state==='cancelled'){status.innerHTML=feedbackMarkup('warning','Generation cancelled.');}else{status.innerHTML=feedbackMarkup('danger',job.error||'Generation failed.');if(job.diagnostics?.length)status.innerHTML+=`<div class="feedback-detail">${escHtml(job.diagnostics.map(item=>item.message||item).join(' · '))}</div>`;}
+  SCRIPT_ENGINE_JOB=null;
+}
+async function runScriptEngineStage(){
+  if(!SCRIPT_ENGINE_OPTIONS){await loadScriptEngineOptions();if(!SCRIPT_ENGINE_OPTIONS)return;}
+  const stage=document.getElementById('scriptEngineStage').value,content=scriptEngineContent(stage),status=document.getElementById('scriptEngineStatus');
+  if(!content){notifyValidation('Is stage ke liye pehle idea ya script likhein.','script','scriptEngineStatus');return;}
+  if((stage==='animation_plan'||stage==='storyboard')&&!SCRIPT_ENGINE_APPROVED){status.innerHTML=feedbackMarkup('warning','Animation planning se pehle current structured output approve karein.');return;}
+  if(!SCRIPT_ENGINE_PROJECT)SCRIPT_ENGINE_PROJECT=STUDIO_UI.projectName.startsWith('project-')?STUDIO_UI.projectName:`script-draft-${Date.now()}`;
+  const compare=document.getElementById('scriptEngineCompare').checked;const payload={stage,content,language:document.getElementById('scriptEngineLanguage').value,mode:stage==='script_doctor'?document.getElementById('scriptDoctorMode').value:null,model:document.getElementById('scriptEngineModel').value,compare,comparison_model:compare?document.getElementById('scriptEngineComparisonModel').value:null,allow_fallback:true,use_cache:true,project:SCRIPT_ENGINE_PROJECT,approved_input:SCRIPT_ENGINE_APPROVED};
+  setButtonLoading(document.getElementById('scriptEngineRunBtn'),true,'Generating…');document.getElementById('scriptEngineCancelBtn').classList.remove('hidden');document.getElementById('scriptEngineApproveBtn').disabled=true;status.innerHTML=feedbackMarkup('loading','Secure backend request start ho rahi hai.');
+  try{const response=await fetch('/api/script-engine/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const data=await response.json();if(!response.ok)throw new Error(data.error||'Stage start nahi hua');SCRIPT_ENGINE_JOB=data.job_id;clearInterval(SCRIPT_ENGINE_POLL);SCRIPT_ENGINE_POLL=setInterval(()=>pollScriptEngineJob().catch(error=>{clearInterval(SCRIPT_ENGINE_POLL);SCRIPT_ENGINE_POLL=null;status.innerHTML=feedbackMarkup('danger',error.message);setButtonLoading(document.getElementById('scriptEngineRunBtn'),false);}),700);await pollScriptEngineJob();}catch(error){status.innerHTML=feedbackMarkup('danger',error.message);setButtonLoading(document.getElementById('scriptEngineRunBtn'),false);document.getElementById('scriptEngineCancelBtn').classList.add('hidden');}
+}
+async function cancelScriptEngineStage(){if(!SCRIPT_ENGINE_JOB)return;await fetch('/api/script-engine/cancel/'+encodeURIComponent(SCRIPT_ENGINE_JOB),{method:'POST'});}
+async function approveScriptEngineStage(){
+  if(!SCRIPT_ENGINE_RESULT)return;const stage=document.getElementById('scriptEngineStage').value,status=document.getElementById('scriptEngineStatus');let output;try{output=JSON.parse(document.getElementById('scriptEngineOutput').value);}catch(error){status.innerHTML=feedbackMarkup('danger','Edited output valid JSON nahi hai.');return;}
+  try{const response=await fetch('/api/script-engine/approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project:SCRIPT_ENGINE_PROJECT,stage,output})});const data=await response.json();if(!response.ok)throw new Error((data.diagnostics||[]).join(' · ')||data.error||'Approval failed');SCRIPT_ENGINE_APPROVED=true;status.innerHTML=feedbackMarkup('success','Stage approved and saved. Ab next stage generate ho sakta hai.');if(stage==='script_doctor'&&output.script)replaceScriptWithGenerated(output.script,STUDIO_UI.projectName,'Script Doctor');document.getElementById('scriptEngineApproveBtn').disabled=true;}catch(error){status.innerHTML=feedbackMarkup('danger',error.message);}
+}
+
+async function loadMusicOptions(){
+  const select=document.getElementById('music_track'), status=document.getElementById('music_track_status');
+  if(!select)return;
+  try{
+    const response=await fetch('/api/music'); const data=await response.json();
+    [...select.querySelectorAll('option:not([value="auto"])')].forEach(option=>option.remove());
+    (data.tracks||[]).forEach(track=>{const option=document.createElement('option');option.value=track.id;option.textContent=`${track.title} — ${track.category}`;select.appendChild(option);});
+    const selected=OPTS?.defaults?.music_track||data.selected||'auto';
+    select.value=[...select.options].some(option=>option.value===selected)?selected:'auto';
+    if(status)status.textContent=(data.tracks||[]).length?`${data.tracks.length} local track(s). Auto script ke mood se choose karega.`:'No local music track found in assets/music.';
+  }catch(error){if(status)status.textContent='Music library unavailable; Auto mode will be used.';}
+}
 async function load(){
   OPTS = await (await fetch('/api/options')).json();
   ensureProviderControls();
@@ -221,6 +315,7 @@ async function load(){
   const speed=document.getElementById('voice_speed'), speedOut=document.getElementById('voiceSpeedValue');
   if(speed){speed.value=OPTS.defaults?.voice_speed||1;const updateSpeed=()=>{if(speedOut)speedOut.textContent=`${Number(speed.value).toFixed(2)}×`;};speed.addEventListener('input',updateSpeed);updateSpeed();}
   loadGoogleVoices();
+  loadMusicOptions();
   syncLLMModels();
   document.getElementById('llm_provider')?.addEventListener('change',syncLLMModels);
   document.getElementById('llm_model')?.addEventListener('change',syncLLMModels);
@@ -230,10 +325,13 @@ async function load(){
     document.getElementById('cap_enabled').checked=!!OPTS.defaults.subtitles_on;
     document.getElementById('intro_on').checked=!!OPTS.defaults.intro_on;
   }
+  loadCharacterCatalog();
+  loadAssetCatalog();
   loadTemplates();
   checkResumable();       // crash/close ke baad adhoore projects dikhao
   loadProjectsList();     // purane projects ka count + list
   initScriptTabs();
+  loadScriptEngineOptions();
   initStudioWorkspace();
 }
 
@@ -288,6 +386,122 @@ function openAIGenerator(tab='quick'){
   scheduleWorkspaceAutosave();
 }
 
+function catalogStatusClass(item){
+  if(item.status==='ready') return 'ready';
+  if(item.status==='blocked_license') return 'license-review';
+  if(item.status==='needs_rig_adapter') return 'needs-rig-adapter';
+  return '';
+}
+function catalogInitials(name){
+  return String(name||'?').trim().split(/\s+/).slice(0,2).map(word=>word[0]||'').join('').toUpperCase()||'?';
+}
+async function loadCharacterCatalog(){
+  const grid=document.getElementById('characterCatalogGrid');
+  try{
+    const response=await fetch('/api/character-catalog');
+    const data=await response.json();
+    if(!response.ok) throw new Error(data.error||'Character catalog unavailable');
+    CHARACTER_CATALOG=data;
+    const summary=data.summary||{};
+    const sbzCount=document.getElementById('sbzCatalogCount'), qCount=document.getElementById('quaterniusCatalogCount');
+    if(sbzCount) sbzCount.textContent=summary.sbz||0;
+    if(qCount) qCount.textContent=summary.quaternius||0;
+    document.querySelectorAll('#characterCatalogTabs [data-character-library]').forEach(button=>{
+      button.onclick=()=>setCharacterLibrary(button.dataset.characterLibrary);
+    });
+    const search=document.getElementById('characterCatalogSearch');
+    const category=document.getElementById('characterCatalogCategory');
+    const ready=document.getElementById('characterCatalogReadyOnly');
+    if(search) search.oninput=renderCharacterCatalog;
+    if(category) category.onchange=()=>{CHARACTER_CATEGORY=category.value;renderCharacterCatalog();};
+    if(ready) ready.onchange=renderCharacterCatalog;
+    setCharacterLibrary(CHARACTER_LIBRARY,false);
+  }catch(error){
+    if(grid) grid.innerHTML=`<div class="empty-state compact catalog-empty"><span>${uiIcon('warning')}</span><div><strong>Character catalog unavailable</strong><p>${escHtml(error.message)}</p></div></div>`;
+  }
+}
+function setCharacterLibrary(library,focus=true){
+  CHARACTER_LIBRARY=library==='quaternius'?'quaternius':'sbz';
+  CAST_CHARACTER_LIBRARY=CHARACTER_LIBRARY;
+  CHARACTER_CATEGORY='all';
+  document.querySelectorAll('#characterCatalogTabs [data-character-library]').forEach(button=>{
+    const active=button.dataset.characterLibrary===CHARACTER_LIBRARY;
+    button.classList.toggle('active',active); button.setAttribute('aria-selected',String(active));
+  });
+  const category=document.getElementById('characterCatalogCategory');
+  if(category&&CHARACTER_CATALOG){
+    const choices=CHARACTER_CATALOG.categories?.[CHARACTER_LIBRARY]||[];
+    category.innerHTML='<option value="all">All categories</option>'+choices.map(item=>`<option value="${escHtml(item.id)}">${escHtml(item.label)}</option>`).join('');
+    category.value='all';
+  }
+  renderCharacterCatalog();
+  if(focus) document.querySelector(`#characterCatalogTabs [data-character-library="${CHARACTER_LIBRARY}"]`)?.focus();
+}
+function renderCharacterCatalog(){
+  if(!CHARACTER_CATALOG) return;
+  const grid=document.getElementById('characterCatalogGrid'); if(!grid) return;
+  const query=(document.getElementById('characterCatalogSearch')?.value||'').trim().toLowerCase();
+  const readyOnly=document.getElementById('characterCatalogReadyOnly')?.checked===true;
+  const libraryItems=(CHARACTER_CATALOG.characters||[]).filter(item=>item.library===CHARACTER_LIBRARY);
+  const items=libraryItems.filter(item=>(CHARACTER_CATEGORY==='all'||item.category===CHARACTER_CATEGORY)
+    &&(!readyOnly||item.selectable)
+    &&(!query||`${item.name} ${item.pack} ${item.category} ${item.status_label}`.toLowerCase().includes(query)));
+  const summary=document.getElementById('characterCatalogSummary');
+  if(summary) summary.innerHTML=`<strong>${items.length}</strong><span>of ${libraryItems.length} characters</span>`;
+  const notice=document.getElementById('characterCatalogNotice');
+  if(notice){
+    const s=CHARACTER_CATALOG.summary||{};
+    notice.classList.toggle('hidden',CHARACTER_LIBRARY!=='quaternius');
+    if(CHARACTER_LIBRARY==='quaternius') notice.textContent=`${s.quaternius_ready||0} production ready · ${s.quaternius_pending||0} awaiting standardization or rig mapping · ${s.license_blocked||0} held for license review.`;
+  }
+  if(!items.length){
+    grid.innerHTML=`<div class="empty-state compact catalog-empty"><span>${uiIcon('search')}</span><div><strong>No matching characters</strong><p>Search, category ya ready-only filter change karein.</p></div></div>`; return;
+  }
+  grid.innerHTML=items.map(item=>{
+    const pending=!item.selectable, blocked=item.status==='blocked_license';
+    const thumb=item.thumbnail?`<img src="${escHtml(item.thumbnail)}" alt="" loading="lazy">`:'';
+    const action=pending?`<button type="button" class="library-character-action" disabled>${escHtml(item.status_label)}</button>`
+      :`<button type="button" class="library-character-action" data-character-package="${escHtml(item.package)}" onclick="useCatalogCharacter(this.dataset.characterPackage)">Use in story</button>`;
+    return `<article class="library-character-card ${pending?'pending':''} ${blocked?'license-blocked':''}"><div class="library-character-head"><div class="library-character-avatar"><span>${escHtml(catalogInitials(item.name))}</span>${thumb}</div><div class="library-character-title"><h3 title="${escHtml(item.name)}">${escHtml(item.name)}</h3><span title="${escHtml(item.pack)}">${escHtml(item.pack)}</span></div></div><span class="catalog-status ${catalogStatusClass(item)}">${escHtml(item.status_label)}</span><div class="library-character-meta"><span>${escHtml(item.category)}</span><span>${escHtml(item.tier)}</span><span>${Number(item.clip_count||0)} clips</span></div><p class="library-character-reason" title="${escHtml(item.reason)}">${escHtml(item.reason)}</p>${action}</article>`;
+  }).join('');
+  grid.querySelectorAll('.library-character-avatar img').forEach(image=>image.addEventListener('error',()=>image.closest('.library-character-card')?.classList.add('avatar-missing')));
+}
+function useCatalogCharacter(packageName){
+  const character=CHARS.find(item=>item.package===packageName);
+  if(!character){showStudioToast('Character abhi template selection ke liye ready nahi.','warning','Character unavailable');return;}
+  CHAR_SEL.add(character.id); TEMPLATE_CHARACTER_LIBRARY=character.library||'sbz';
+  openAIGenerator('templates'); setTemplateCharacterLibrary(TEMPLATE_CHARACTER_LIBRARY,false); renderTemplateCharacters();
+  showStudioToast(`${character.name} story cast mein select ho gaya.`,'success','Character selected');
+}
+async function loadAssetCatalog(){
+  const grid=document.getElementById('assetCatalogGrid'); if(!grid) return;
+  try{
+    const response=await fetch('/api/asset-catalog');const data=await response.json();
+    if(!response.ok)throw new Error(data.error||'Asset catalog unavailable');ASSET_CATALOG=data;
+    const counts=data.summary||{};
+    const ids={backgrounds:'assetBackgroundCount',props:'assetPropCount',vehicles:'assetVehicleCount',weapons:'assetWeaponCount'};
+    Object.entries(ids).forEach(([category,id])=>{const el=document.getElementById(id);if(el)el.textContent=counts[category]||0;});
+    document.querySelectorAll('#assetCatalogTabs [data-asset-category]').forEach(button=>button.onclick=()=>setAssetCategory(button.dataset.assetCategory));
+    const search=document.getElementById('assetCatalogSearch');if(search)search.oninput=renderAssetCatalog;
+    setAssetCategory(ASSET_CATEGORY,false);
+  }catch(error){grid.innerHTML=`<div class="empty-state compact catalog-empty"><span>${uiIcon('warning')}</span><div><strong>Asset catalog unavailable</strong><p>${escHtml(error.message)}</p></div></div>`;}
+}
+function setAssetCategory(category,focus=true){
+  ASSET_CATEGORY=['backgrounds','props','vehicles','weapons'].includes(category)?category:'backgrounds';
+  document.querySelectorAll('#assetCatalogTabs [data-asset-category]').forEach(button=>{const active=button.dataset.assetCategory===ASSET_CATEGORY;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active));});
+  renderAssetCatalog();if(focus)document.querySelector(`#assetCatalogTabs [data-asset-category="${ASSET_CATEGORY}"]`)?.focus();
+}
+function renderAssetCatalog(){
+  if(!ASSET_CATALOG)return;const grid=document.getElementById('assetCatalogGrid');if(!grid)return;
+  const query=(document.getElementById('assetCatalogSearch')?.value||'').trim().toLowerCase();
+  const items=(ASSET_CATALOG.assets||[]).filter(item=>item.category===ASSET_CATEGORY&&(!query||`${item.name} ${item.pack}`.toLowerCase().includes(query)));
+  const summary=document.getElementById('assetCatalogSummary');if(summary)summary.innerHTML=`<strong>${items.length}</strong><span>${escHtml(ASSET_CATEGORY)}</span>`;
+  const blocked=items.filter(item=>item.license_status==='blocked').length,notice=document.getElementById('assetCatalogNotice');
+  if(notice){notice.classList.toggle('hidden',!blocked);if(blocked)notice.textContent=`${blocked} Pirate Kit assets license verification tak production selection se blocked hain.`;}
+  if(!items.length){grid.innerHTML=`<div class="empty-state compact catalog-empty"><span>${uiIcon('search')}</span><div><strong>No matching assets</strong><p>Search text ya category change karein.</p></div></div>`;return;}
+  grid.innerHTML=items.map(item=>{const integrated=item.production_selectable,blockedAsset=item.license_status==='blocked';const label=integrated?'Production ready':blockedAsset?'License review':'Scene composition pending';return `<article class="library-character-card ${integrated?'':'pending'} ${blockedAsset?'license-blocked':''}"><div class="library-character-head"><div class="library-character-avatar"><span>${uiIcon(item.category==='vehicles'?'render':'assets')}</span></div><div class="library-character-title"><h3 title="${escHtml(item.name)}">${escHtml(item.name)}</h3><span title="${escHtml(item.pack)}">${escHtml(item.pack)}</span></div></div><span class="catalog-status ${integrated?'ready':blockedAsset?'license-review':''}">${escHtml(item.status_label)}</span><div class="library-character-meta"><span>${escHtml(item.category)}</span><span>${escHtml(item.path.split('.').pop().toUpperCase())}</span></div><p class="library-character-reason">${integrated?'Available in the current background renderer.':blockedAsset?'Not enabled until the pack license is verified.':'Local source is cataloged; a composed scene preset is still required.'}</p><button type="button" class="library-character-action" disabled>${label}</button></article>`;}).join('');
+}
+
 let TPL_SEL=null, TPLS=[], CHARS=[], CHAR_SEL=new Set();
 async function loadTemplates(){
   TPLS = await (await fetch('/api/story-templates')).json();
@@ -301,18 +515,58 @@ async function loadTemplates(){
     b.onclick=()=>selectTemplate(t.id);
     g.appendChild(b);
   });
-  const cg=document.getElementById('tplChars'); cg.innerHTML='';
-  CHARS.forEach(c=>{
+  document.querySelectorAll('#tplCharacterTabs [data-template-character-library]').forEach(button=>{
+    button.onclick=()=>setTemplateCharacterLibrary(button.dataset.templateCharacterLibrary);
+  });
+  renderTemplateCharacters();
+}
+function recommendedTemplateCast(library,allowed){
+  const names=TPL_SEL?.cast_recommendations?.[library]||TPL_SEL?.chars||[];
+  const ids=names.filter(name=>allowed.some(character=>character.id===name));
+  return ids.length>=2?ids:allowed.slice(0,Math.min(3,allowed.length)).map(character=>character.id);
+}
+function setTemplateCharacterLibrary(library,focus=true){
+  TEMPLATE_CHARACTER_LIBRARY=library==='quaternius'?'quaternius':'sbz';
+  CAST_CHARACTER_LIBRARY=TEMPLATE_CHARACTER_LIBRARY;
+  const allowed=CHARS.filter(character=>(character.library||'sbz')===TEMPLATE_CHARACTER_LIBRARY);
+  const existing=[...CHAR_SEL].filter(id=>allowed.some(character=>character.id===id));
+  CHAR_SEL=new Set(existing.length>=2?existing:(TPL_SEL?recommendedTemplateCast(TEMPLATE_CHARACTER_LIBRARY,allowed):existing));
+  document.querySelectorAll('#tplCharacterTabs [data-template-character-library]').forEach(button=>{
+    const active=button.dataset.templateCharacterLibrary===TEMPLATE_CHARACTER_LIBRARY;
+    button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active));
+  });
+  renderTemplateCharacters();
+  if(focus) document.querySelector(`#tplCharacterTabs [data-template-character-library="${TEMPLATE_CHARACTER_LIBRARY}"]`)?.focus();
+}
+function renderTemplateCharacters(){
+  const cg=document.getElementById('tplChars'); if(!cg) return; cg.innerHTML='';
+  const visible=CHARS.filter(c=>(c.library||'sbz')===TEMPLATE_CHARACTER_LIBRARY);
+  visible.forEach(c=>{
     const b=document.createElement('button');
     b.className='tplChip'; b.dataset.cid=c.id; b.style.padding='6px 2px';
+    b.classList.toggle('on',CHAR_SEL.has(c.id));
     b.innerHTML=`<span class="template-chip-icon">${uiIcon('characters')}</span><span>${escHtml(c.name)}</span>`;
+    b.title=`${c.performance_label||c.tier||'Character'}${c.performance_warning?` — ${c.performance_warning}`:''}`;
     b.onclick=()=>toggleChar(c.id);
     cg.appendChild(b);
   });
+  if(!visible.length) cg.innerHTML=`<div class="empty-state compact catalog-empty"><span>${uiIcon('warning')}</span><div><strong>No ready characters</strong><p>Library catalog mein standardization status dekhein.</p></div></div>`;
+  const label=TEMPLATE_CHARACTER_LIBRARY==='quaternius'?'Quaternius ready characters':'SBZ Originals';
+  const summary=document.getElementById('tplCharacterSummary');if(summary)summary.textContent=`${label} · ${visible.length}`;
+}
+function activeLibraryStoryCast(){
+  const library=CAST_CHARACTER_LIBRARY==='quaternius'?'quaternius':'sbz';
+  const allowed=CHARS.filter(character=>(character.library||'sbz')===library);
+  const selected=[...CHAR_SEL].map(id=>CHARS.find(character=>character.id===id))
+    .filter(character=>character&&(character.library||'sbz')===library)
+    .map(character=>character.name);
+  // Selected cards always win. When nothing is explicitly selected, provide a
+  // small default cast from the active library only.
+  return selected.length?selected:allowed.slice(0,3).map(character=>character.name);
 }
 function toggleChar(cid){
   if(CHAR_SEL.has(cid)) CHAR_SEL.delete(cid); else CHAR_SEL.add(cid);
-  document.querySelectorAll('#tplChars .tplChip').forEach(c=>c.classList.toggle('on',CHAR_SEL.has(c.dataset.cid)));
+  renderTemplateCharacters();
 }
 function selectTemplate(id){
   TPL_SEL=TPLS.find(t=>t.id===id);
@@ -320,9 +574,13 @@ function selectTemplate(id){
   document.getElementById('tplPanel').classList.remove('hidden');
   document.getElementById('tplName').textContent=TPL_SEL.name_en;
   document.getElementById('tplTopic').placeholder='e.g. '+TPL_SEL.sample_topic;
-  // template ke default characters pre-select karo
-  CHAR_SEL=new Set(TPL_SEL.chars);
-  document.querySelectorAll('#tplChars .tplChip').forEach(c=>c.classList.toggle('on',CHAR_SEL.has(c.dataset.cid)));
+  // Active library ka cast hi use ho.  Agar template defaults is library
+  // mein nahin hain (for example Quaternius), first two ready characters
+  // select ho jate hain instead of leaving the template unusable.
+  const activeLibrary=TEMPLATE_CHARACTER_LIBRARY==='quaternius'?'quaternius':'sbz';
+  const allowed=CHARS.filter(character=>(character.library||'sbz')===activeLibrary);
+  CHAR_SEL=new Set(recommendedTemplateCast(activeLibrary,allowed));
+  renderTemplateCharacters();
   document.getElementById('tplMsg').textContent=TPL_SEL.desc;
 }
 async function genFromTemplate(){
@@ -333,8 +591,10 @@ async function genFromTemplate(){
   msg.innerHTML=feedbackMarkup('loading','AI script likh raha hai…');
   try{
     const body={template_id:TPL_SEL.id, topic:document.getElementById('tplTopic').value,
-      language:document.getElementById('tplLang').value,
-      length:segVal('tplLenSeg')||'medium', characters:[...CHAR_SEL]};
+      // Templates share the right-side Story basics; no duplicated controls.
+      language:document.getElementById('ffLang').value,
+      length:selectedVideoDuration(), characters:activeLibraryStoryCast(),
+      character_library:TEMPLATE_CHARACTER_LIBRARY};
     const j=await (await fetch('/api/story-templates/generate',{method:'POST',
       headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
     if(j.error){ msg.innerHTML='<span class="err">'+j.error+'</span>'; }
@@ -357,7 +617,8 @@ async function genFreeform(){
   try{
     const body={idea, genre:document.getElementById('ffGenre').value,
       language:document.getElementById('ffLang').value,
-      length:segVal('ffLenSeg')||'medium', quality:pro?'pro':'fast'};
+      length:segVal('ffLenSeg')||'1min', quality:pro?'pro':'fast',
+      characters:activeLibraryStoryCast(), character_library:CAST_CHARACTER_LIBRARY};
     const j=await (await fetch('/api/freeform',{method:'POST',
       headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
     if(j.error){ msg.innerHTML='<span class="err">'+j.error+'</span>'; }
@@ -382,7 +643,8 @@ async function genLongform(){
   try{
     const body={idea, genre:document.getElementById('lfGenre').value,
       language:document.getElementById('lfLang').value,
-      minutes:segVal('lfMinSeg')||'5min'};
+      minutes:segVal('lfMinSeg')||'5min',
+      characters:activeLibraryStoryCast(), character_library:CAST_CHARACTER_LIBRARY};
     const j=await (await fetch('/api/longform',{method:'POST',
       headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
     if(j.error){ msg.innerHTML='<span class="err">'+j.error+'</span>'; }
@@ -413,13 +675,16 @@ function renderCharList(){
   LIB_CHARS.forEach(c=>{
     const chip=document.createElement('div');
     chip.style.cssText='background:rgba(255,255,255,.06);border-radius:14px;padding:3px 8px;font-size:12px;display:flex;align-items:center;gap:6px';
-    const safeName=escHtml(c.name), safeTrait=c.trait?('· '+escHtml(c.trait.slice(0,24))):'';
-    chip.innerHTML='<b>'+safeName+'</b><span style="color:var(--muted)">'+safeTrait+'</span><button type="button" class="icon-button chip-delete" aria-label="Delete '+safeName+'" data-character-id="'+escHtml(c.id)+'" data-character-name="'+safeName+'">'+uiIcon('trash')+'</button>';
-    chip.querySelector('.chip-delete').addEventListener('click',event=>delChar(event.currentTarget.dataset.characterId,event.currentTarget.dataset.characterName));
-    chip.title=(c.trait||'')+(c.catchphrase?(' — "'+c.catchphrase+'"'):'');
+    const safeName=escHtml(c.name), safeTrait=c.trait?('- '+escHtml(c.trait.slice(0,24))):'';
+    const catalogBadge=c.source==='3d_library'?'<span class="performanceBadge body">3D catalog</span>':'';
+    const deleteButton=c.source==='3d_library'?'':'<button type="button" class="icon-button chip-delete" aria-label="Delete '+safeName+'" data-character-id="'+escHtml(c.id)+'" data-character-name="'+safeName+'">'+uiIcon('trash')+'</button>';
+    chip.innerHTML='<b>'+safeName+'</b><span style="color:var(--muted)">'+safeTrait+'</span>'+catalogBadge+deleteButton;
+    chip.querySelector('.chip-delete')?.addEventListener('click',event=>delChar(event.currentTarget.dataset.characterId,event.currentTarget.dataset.characterName));
+    chip.title=(c.trait||'')+(c.catchphrase?(' - "'+c.catchphrase+'"'):'');
     el.appendChild(chip);
   });
 }
+
 async function addChar(){
   const name=document.getElementById('chName').value.trim();
   if(!name){ notifyValidation('Character ka naam likhein.','chName'); return; }
@@ -433,11 +698,67 @@ async function delChar(cid,name='character'){
   requestCharacterDelete(cid,name);
 }
 function renderSeriesSel(){
-  const sel=document.getElementById('serSel'); const cur=sel.value;
-  sel.innerHTML='<option value="">— Select series —</option>';
+  const sel=document.getElementById('serSel'), menu=document.getElementById('serOptions'); if(!sel||!menu)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">Select series</option>';
   SERIES.forEach(s=>{const o=document.createElement('option');o.value=s.id;
     o.textContent=s.name+' ('+s.episodes+' ep)';sel.appendChild(o);});
-  sel.value=cur;
+  sel.value=SERIES.some(series=>String(series.id)===String(cur))?cur:'';
+  menu.innerHTML='';
+  if(!SERIES.length){
+    const empty=document.createElement('div');empty.className='series-dropdown-empty';
+    empty.innerHTML='<strong>No saved series yet</strong><span>Create a new series to start episode continuity.</span>';
+    menu.appendChild(empty);
+  }else{
+    SERIES.forEach(series=>{
+      const episodes=Number(series.episodes||0), option=document.createElement('button');
+      option.type='button';option.className='series-dropdown-option';option.dataset.seriesId=series.id;
+      option.setAttribute('role','option');option.setAttribute('aria-selected',String(String(series.id)===String(sel.value)));
+      const copy=document.createElement('span'), name=document.createElement('strong'), meta=document.createElement('small'), count=document.createElement('span');
+      copy.className='series-option-copy';name.textContent=series.name;meta.textContent=episodes?`Continue with episode ${episodes+1}`:'Start the first episode';
+      count.className='series-option-count';count.textContent=`${episodes} ${episodes===1?'episode':'episodes'}`;
+      copy.append(name,meta);option.append(copy,count);
+      option.onclick=()=>chooseSeries(series.id);option.onkeydown=handleSeriesOptionKeydown;
+      menu.appendChild(option);
+    });
+  }
+  syncSeriesDropdownDisplay();
+}
+function syncSeriesDropdownDisplay(){
+  const sel=document.getElementById('serSel'), label=document.getElementById('serDropdownLabel'), meta=document.getElementById('serDropdownMeta');
+  if(!sel||!label||!meta)return;
+  const series=SERIES.find(item=>String(item.id)===String(sel.value));
+  label.textContent=series?.name||'Select a series';
+  if(series){const episodes=Number(series.episodes||0);meta.textContent=episodes?`${episodes} ${episodes===1?'episode':'episodes'} saved \u00b7 Episode ${episodes+1} is next`:'Ready for episode 1';}
+  else meta.textContent=SERIES.length?'Choose a saved story to continue':'No saved series \u00b7 create your first one';
+  document.querySelectorAll('#serOptions [role="option"]').forEach(option=>option.setAttribute('aria-selected',String(String(option.dataset.seriesId)===String(sel.value))));
+}
+function setSeriesDropdownOpen(open,focusOption=false){
+  const dropdown=document.getElementById('seriesDropdown'), button=document.getElementById('serDropdownButton'), menu=document.getElementById('serOptions');
+  if(!dropdown||!button||!menu)return;
+  const shouldOpen=!!open;dropdown.classList.toggle('open',shouldOpen);menu.classList.toggle('hidden',!shouldOpen);button.setAttribute('aria-expanded',String(shouldOpen));
+  if(shouldOpen&&focusOption){
+    const selected=menu.querySelector('[role="option"][aria-selected="true"]'), first=menu.querySelector('[role="option"]');
+    (selected||first)?.focus();
+  }
+}
+function toggleSeriesDropdown(event){event?.stopPropagation();const button=document.getElementById('serDropdownButton');setSeriesDropdownOpen(button?.getAttribute('aria-expanded')!=='true');}
+function handleSeriesDropdownKeydown(event){
+  if(['ArrowDown','ArrowUp','Enter',' '].includes(event.key)){event.preventDefault();setSeriesDropdownOpen(true,true);}
+  else if(event.key==='Escape')setSeriesDropdownOpen(false);
+}
+function handleSeriesOptionKeydown(event){
+  const options=[...document.querySelectorAll('#serOptions [role="option"]')], index=options.indexOf(event.currentTarget);
+  if(event.key==='ArrowDown'){event.preventDefault();options[(index+1)%options.length]?.focus();}
+  else if(event.key==='ArrowUp'){event.preventDefault();options[(index-1+options.length)%options.length]?.focus();}
+  else if(event.key==='Home'){event.preventDefault();options[0]?.focus();}
+  else if(event.key==='End'){event.preventDefault();options.at(-1)?.focus();}
+  else if(event.key==='Escape'){event.preventDefault();setSeriesDropdownOpen(false);document.getElementById('serDropdownButton')?.focus();}
+  else if(event.key==='Tab')setSeriesDropdownOpen(false);
+}
+function chooseSeries(sid){
+  const sel=document.getElementById('serSel');if(!sel)return;
+  sel.value=String(sid);syncSeriesDropdownDisplay();setSeriesDropdownOpen(false);document.getElementById('serDropdownButton')?.focus();selectSeries(sid);
 }
 function renderCastPicker(){
   const el=document.getElementById('serCast'); el.innerHTML='';
@@ -450,7 +771,12 @@ function renderCastPicker(){
     el.appendChild(b);
   });
 }
-function toggleNewSeries(){ document.getElementById('newSeriesBox').classList.toggle('hidden'); NEW_CAST=new Set(); renderCastPicker(); }
+function toggleNewSeries(){
+  setSeriesDropdownOpen(false);
+  const box=document.getElementById('newSeriesBox'), button=document.getElementById('newSeriesButton');box.classList.toggle('hidden');
+  button?.setAttribute('aria-expanded',String(!box.classList.contains('hidden')));NEW_CAST=new Set();renderCastPicker();
+  if(!box.classList.contains('hidden'))document.getElementById('serName')?.focus();
+}
 async function createSeries(){
   const name=document.getElementById('serName').value.trim();
   if(!name){ notifyValidation('Series naam likhein.','serName'); return; }
@@ -461,9 +787,10 @@ async function createSeries(){
       cast:[...NEW_CAST]})})).json();
   if(r.error){ showStudioToast(r.error,'danger','Series could not be created'); return; }
   document.getElementById('newSeriesBox').classList.add('hidden');
+  document.getElementById('newSeriesButton')?.setAttribute('aria-expanded','false');
   document.getElementById('serName').value='';document.getElementById('serPremise').value='';
   await loadLib();
-  document.getElementById('serSel').value=r.id; selectSeries(r.id);
+  chooseSeries(r.id);
 }
 async function selectSeries(sid){
   if(!sid){ document.getElementById('epBox').classList.add('hidden'); CUR_SERIES=null; return; }
@@ -486,7 +813,7 @@ async function genEpisode(){
   try{
     const j=await (await fetch('/api/series/'+CUR_SERIES.id+'/episode',{method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({idea:document.getElementById('epIdea').value, length:segVal('epLenSeg')||'medium'})})).json();
+      body:JSON.stringify({idea:document.getElementById('epIdea').value, length:segVal('epLenSeg')||'1min'})})).json();
     if(j.error){ msg.innerHTML='<span class="err">'+j.error+'</span>'; }
     else{
       replaceScriptWithGenerated(j.script||'',j.title||CUR_SERIES.name,'Series episode');
@@ -498,6 +825,15 @@ async function genEpisode(){
   }catch(e){ msg.innerHTML='<span class="err">Fail: '+e+'</span>'; }
   btn.disabled=false;
 }
+// Keep every script generator on the same duration vocabulary. Template markup
+// remains backward-compatible, then is upgraded here before event binding.
+const VIDEO_DURATION_OPTIONS=[['30sec','30 sec'],['1min','1 min'],['2min','2 min'],['3min','3 min'],['5min','5 min'],['8min','8 min'],['10min','10 min'],['15min','15 min']];
+function hydrateDurationSegment(id,defaultValue='1min'){
+  const seg=document.getElementById(id); if(!seg) return;
+  seg.classList.add('duration-grid','duration-grid-wide');
+  seg.innerHTML=VIDEO_DURATION_OPTIONS.map(([value,label])=>`<button type="button" data-v="${value}" class="${value===defaultValue?'on':''}">${label}</button>`).join('');
+}
+
 // segmented buttons
 document.querySelectorAll('.seg').forEach(seg=>{
   seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{
@@ -508,6 +844,27 @@ document.querySelectorAll('.seg').forEach(seg=>{
   });
 });
 function segVal(id){const e=document.querySelector('#'+id+' button.on');return e?e.dataset.v:null;}
+function setSegVal(id,value){
+  const seg=document.getElementById(id); if(!seg) return false;
+  let matched=false;
+  seg.querySelectorAll('button').forEach(button=>{
+    const active=button.dataset.v===value; button.classList.toggle('on',active); matched=matched||active;
+  });
+  return matched;
+}
+function selectedVideoDuration(){ return segVal('ffLenSeg')||'1min'; }
+
+function schedulePastedScriptPlan(){
+  clearTimeout(MANUAL_SCENE_TIMER);
+  const token=++MANUAL_SCENE_TOKEN;
+  MANUAL_SCENE_TIMER=setTimeout(async()=>{
+    const editor=document.getElementById('script'), script=editor?.value.trim()||'';
+    if(token!==MANUAL_SCENE_TOKEN||script.length<10) return;
+    const feedback=document.getElementById('scriptFeedback');
+    if(feedback) feedback.innerHTML=feedbackMarkup('loading','Pasted script detected. Cast aur scenes automatically ban rahe hain.');
+    await preview({automatic:true,sourceScript:script});
+  },700);
+}
 
 // Phase 2 desktop workspace shell. This stays provider/backend neutral and only
 // coordinates existing DOM controls, views, and workflow state.
@@ -709,14 +1066,13 @@ function updateScriptLanguageIndicator(value=''){
 }
 
 function renderWorkflowSummary(){
-  const storyLabels={blender3d:'3D Characters',puppet:'Puppet 2D',cinematic:'Cinematic'};
   const aspectLabels={landscape:'Landscape',portrait:'Portrait',square:'Square'};
   const engine=document.getElementById('render_engine')?.value||'threejs';
   const quality=document.getElementById('quality')?.value||'1080p';
   const tts=document.getElementById('tts_provider')?.value||'edge';
-  const story=segVal('storySeg')||'blender3d', aspect=segVal('aspectSeg')||'landscape';
+  const aspect=segVal('aspectSeg')||'landscape';
   const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
-  set('summaryStoryMode',storyLabels[story]||story);
+  set('summaryStoryMode','3D Characters');
   set('summaryFormat',`${aspectLabels[aspect]||aspect} · ${quality}`);
   const voiceLabels={elevenlabs:'ElevenLabs',google:'Google Cloud TTS',edge:'Edge TTS'};
   set('summaryVoice',voiceLabels[tts]||tts);
@@ -775,7 +1131,7 @@ async function updateRenderEstimate(metrics=getRenderMetrics()){
   const out=document.getElementById('renderEstimatedCost'), detail=document.getElementById('costEst');
   if(out) out.textContent='Calculating…';
   try{
-    const response=await fetch('/api/cost',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scenes:metrics.scenes,lines:metrics.lines,chars:metrics.characters,render_mode:segVal('modeSeg')||'draft'})});
+    const response=await fetch('/api/cost',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scenes:metrics.scenes,lines:metrics.lines,chars:metrics.characters})});
     const cost=await response.json(); if(token!==RENDER_ESTIMATE_TOKEN) return;
     if(out) out.textContent=`$${Number(cost.total||0).toFixed(2)}`;
     if(detail) detail.textContent=`Estimate includes story, ${metrics.scenes} backgrounds, ${metrics.characters} characters${Number(cost.ai_video||0)>0?' and AI video clips':''}.`;
@@ -950,11 +1306,21 @@ function initStudioWorkspace(){
   if(WORKSPACE_INITIALIZED) return;
   document.querySelectorAll('.nav-item[data-view]').forEach(item=>item.addEventListener('click',()=>showStudioView(item.dataset.view)));
   document.querySelectorAll('.workflow-step[data-step]').forEach(item=>item.addEventListener('click',()=>setCreateStep(item.dataset.step)));
-  document.getElementById('script')?.addEventListener('input',updateScriptCount);
+  const scriptEditor=document.getElementById('script');
+  scriptEditor?.addEventListener('input',()=>{
+    updateScriptCount();
+    SCRIPT_ENGINE_APPROVED=false;
+    if(PLAN&&scriptEditor.value.trim()!==PLAN_SOURCE_SCRIPT){
+      PLAN=null; PLAN_SOURCE_SCRIPT='';
+      document.getElementById('previewCard')?.classList.add('hidden');
+      document.getElementById('castEmptyState')?.classList.remove('hidden');
+    }
+  });
+  scriptEditor?.addEventListener('paste',()=>setTimeout(schedulePastedScriptPlan,0));
   document.addEventListener('input',event=>{if(event.target.hasAttribute('aria-invalid'))event.target.removeAttribute('aria-invalid');if(event.target.closest('#studioShell,#advancedSettingsDrawer')){syncAdvancedSettingsUI();scheduleWorkspaceAutosave();}},true);
   document.addEventListener('change',event=>{if(event.target.closest('#studioShell,#advancedSettingsDrawer')){renderWorkflowSummary();scheduleWorkspaceAutosave();}},true);
-  document.addEventListener('click',event=>{if(!event.target.closest('.popover-wrap'))closeTopPopovers();if(!event.target.closest('.project-overflow'))closeProjectMenus();});
-  document.addEventListener('keydown',event=>{trapModalFocus(event);if(event.key==='Escape'){closeTopPopovers();closeProjectMenus();closeDeleteProjectDialog();toggleInspector(false);toggleAdvancedSettings(false);}});
+  document.addEventListener('click',event=>{if(!event.target.closest('.popover-wrap'))closeTopPopovers();if(!event.target.closest('.project-overflow'))closeProjectMenus();if(!event.target.closest('#seriesDropdown'))setSeriesDropdownOpen(false);});
+  document.addEventListener('keydown',event=>{trapModalFocus(event);if(event.key==='Escape'){closeTopPopovers();closeProjectMenus();setSeriesDropdownOpen(false);closeDeleteProjectDialog();toggleInspector(false);toggleAdvancedSettings(false);}});
   window.addEventListener('resize',()=>{if(window.innerWidth>=1280)document.body.classList.remove('inspector-open');});
   bindCastInspector();
   restoreWorkspaceDraft();
@@ -976,9 +1342,6 @@ function collectSettings(){
     quality: document.getElementById('quality').value,
     fps: document.getElementById('fps').value,
     fast_preview: document.getElementById('fast_preview').checked,
-    motion_preset: segVal('motionSeg'),
-    render_mode: segVal('modeSeg'),
-    story_mode: segVal('storySeg'),
     multi_char: document.getElementById('multiChar').checked,
     render_engine: document.getElementById('render_engine').value,
     gpu: document.getElementById('gpu_encode').checked ? 'auto' : 'off',
@@ -992,10 +1355,12 @@ function collectSettings(){
     google_tts_voice: ttsProvider==='google' ? (document.getElementById('google_tts_voice')?.value||'') : '',
     elevenlabs_voice_id: ttsProvider==='elevenlabs' ? document.getElementById('elevenlabs_voice_id').value : '',
     voice_speed: Number(document.getElementById('voice_speed')?.value||1),
+    target_duration: selectedVideoDuration(),
     llm_provider: document.getElementById('llm_provider')?.value||OPTS?.defaults?.llm_provider||'runware',
     llm_model: document.getElementById('llm_model')?.value||OPTS?.defaults?.llm_model||'',
     voice_volume: document.getElementById('voice_volume').value,
     music_volume: document.getElementById('music_volume').value,
+    music_track: document.getElementById('music_track')?.value||'auto',
     captions: {
       enabled: document.getElementById('cap_enabled').checked,
       words_per_group: document.getElementById('cap_words').value,
@@ -1016,7 +1381,7 @@ async function suggestStyle(){
   if(r.style) document.getElementById('style').value=r.style;
 }
 
-function _scriptLang(){ const t=document.getElementById('ffLang')||document.getElementById('tplLang'); return t?t.value:'roman_urdu'; }
+function _scriptLang(){ const t=document.getElementById('ffLang'); return t?t.value:'roman_urdu'; }
 
 async function analyzeScript(){
   const script=document.getElementById('script').value.trim();
@@ -1125,10 +1490,12 @@ const EMOTIONS=['neutral','happy','sad','angry','excited','scared','confused','t
 let PLAN=null;
 
 let COSTUMES=[], ACCESSORIES=[], HELD=[];
-async function preview(){
+async function preview(options={}){
+  const automatic=options.automatic===true;
   const script=document.getElementById('script').value.trim();
   if(script.length<10){notifyValidation('Script likhein.','script','scriptFeedback');return;}
-  showStudioView('create',false); setCreateStep(2,false);
+  if(options.sourceScript&&options.sourceScript!==script) return;
+  showStudioView('create',false); if(!automatic)setCreateStep(2,false);
   const btn=document.getElementById('previewBtn');
   setButtonLoading(btn,true,'Building plan…');
   document.getElementById('errMsg').classList.add('hidden');
@@ -1137,12 +1504,55 @@ async function preview(){
     if(!COSTUMES.length){ try{ COSTUMES=await (await fetch('/api/costumes')).json(); }catch(e){} }
     if(!ACCESSORIES.length){ try{ ACCESSORIES=await (await fetch('/api/accessories')).json(); }catch(e){} }
     if(!HELD.length){ try{ HELD=await (await fetch('/api/held')).json(); }catch(e){} }
-    if(!Object.keys(CHAR_CAPS).length){ await load3dValidation(); }
     const j=await (await fetch('/api/preview',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({script})})).json();
-    if(j.error){ showPreviewError(j.error); }
-    else { PLAN=j; renderPreview(j); }
-  }catch(e){ showPreviewError('Preview fail: '+e); }
+      body:JSON.stringify({script,target_duration:selectedVideoDuration(),character_library:CAST_CHARACTER_LIBRARY})})).json();
+    if(j.error){
+      showPreviewError(j.error);
+      if(automatic){
+        const feedback=document.getElementById('scriptFeedback');
+        if(feedback) feedback.innerHTML=feedbackMarkup('danger',`Automatic scene plan nahi bana: ${j.error}`);
+      }
+    }
+    else {
+      (j.characters||[]).forEach(character=>{if(character.package&&character.capability)CHAR_CAPS[String(character.package).toLowerCase()]=character.capability;});
+      PLAN=j; PLAN_SOURCE_SCRIPT=script; renderPreview(j);
+      const duration=j.duration_analysis||{};
+      const hint=document.getElementById('scriptDurationHint');
+      if(hint&&duration.estimated_seconds){
+        hint.textContent=`Target: ${duration.selected_label||selectedVideoDuration()} ? current script: ${formatRenderDuration(duration.estimated_seconds)} / ${duration.word_count||0} words ? recommended: ${duration.minimum_words||'?'}?${duration.maximum_words||'?'} words. Final duration actual voice audio se frame-accurate hogi.`;
+      }
+      if(automatic){
+        setCreateStep(2,false);
+        const sceneCount=(j.scenes||[]).length;
+        showStudioToast(`${sceneCount} scene${sceneCount===1?'':'s'} automatically ready · target ${duration.selected_label||selectedVideoDuration()}.`,'success','Storyboard ready');
+        if(duration.estimated_seconds&&!duration.within_target_tolerance){
+          showStudioToast(`Current script ${formatRenderDuration(duration.estimated_seconds)} ka hai; ${duration.selected_label} target ke liye ${duration.minimum_words}?${duration.maximum_words} spoken words recommend hain. AI generation ab isi budget ko follow karegi.`,'warning','Duration needs content');
+        }
+      } else if(duration.estimated_seconds&&!duration.within_target_tolerance){
+        showStudioToast(`Current script ${formatRenderDuration(duration.estimated_seconds)} ka hai. ${duration.selected_label} target ke liye recommended script budget ${duration.minimum_words}?${duration.maximum_words} words hai; final video hamesha actual voice audio duration par banti hai.`,'warning','Duration needs content');
+      }      if((j.performance_warnings||[]).length){
+        const alternatives=(j.dialogue_cast_recommendations||[]).map(item=>item.name).filter(Boolean).slice(0,3);
+        const suggestion=alternatives.length?` Jaw lip-sync alternatives: ${alternatives.join(', ')}.`:'';
+        showStudioToast(`${j.performance_warnings.length} dialogue line(s) body-only cast ke liye medium/action staging par route hongi.${suggestion}`,'warning','Character performance adjusted');
+      }
+      if(j.motion_preflight&&!j.motion_preflight.ready){
+        const fallbackCount=Number(j.motion_preflight.counts?.safe_fallback||0)+Number(j.motion_preflight.counts?.unsafe_fallback||0);
+        showStudioToast(`${fallbackCount} action(s) ke liye character ka safe authored substitute automatically select ho gaya hai. Cast & Scenes mein aap chahein to review kar sakte hain.`,'info','Motion safely staged');
+      }else if(Number(j.motion_preflight?.counts?.semantic_substitute||0)>0){
+        const substituteCount=Number(j.motion_preflight.counts.semantic_substitute);
+        showStudioToast(`${substituteCount} story action(s) nearest real authored clip se stage hongi; source clip plan mein record hai.`,'info','Motion staging mapped');
+      }
+      if(Number(j.auto_direction_summary?.automatic_actions||0)>0){
+        showStudioToast(`${j.auto_direction_summary.automatic_actions} line action(s) script se automatically direct ho gayi hain.`,'success','Story direction ready');
+      }
+    }
+  }catch(e){
+    showPreviewError('Preview fail: '+e);
+    if(automatic){
+      const feedback=document.getElementById('scriptFeedback');
+      if(feedback) feedback.innerHTML=feedbackMarkup('danger','Automatic scene plan temporarily fail hua. Build Cast & Scene Plan dobara press karein.');
+    }
+  }
   setButtonLoading(btn,false);
 }
 
@@ -1174,12 +1584,15 @@ function renderPreview(p){
   };
   const costOpts=grpOpts(COSTUMES), accOpts=grpOpts(ACCESSORIES), heldOpts=grpOpts(HELD);
   characters.forEach(character=>{
-    const options=veggies.map(item=>`<option value="${escHtml(item.name)}" ${item.package===character.package?'selected':''}>${escHtml(`${item.emoji||''} ${item.name}`.trim())}</option>`).join('');
+    const libraryLabels={sbz:'SBZ Originals',quaternius:'Quaternius Library'};
+    const activeLibrary=(p.parsed?.character_library||CAST_CHARACTER_LIBRARY||'sbz')==='quaternius'?'quaternius':'sbz';
+    const choices=veggies.filter(item=>(item.library||'sbz')===activeLibrary);
+    const options=`<optgroup label="${libraryLabels[activeLibrary]}">${choices.map(item=>`<option value="${escHtml(item.name)}" ${item.package===character.package?'selected':''}>${escHtml(item.name)}${item.tier?` Â· ${escHtml(item.tier)}`:''}</option>`).join('')}</optgroup>`;
     const card=document.createElement('article'); card.className='pvRow character-card'; card.dataset.cid=character.id;
     const capability=CHAR_CAPS[String(character.package||'').toLowerCase()]||character.capability;
     const initials=String(character.name||'?').trim().slice(0,2).toUpperCase();
     card.innerHTML=`<div class="character-card-head"><div class="character-avatar"><span>${escHtml(initials)}</span><img src="${escHtml(character.avatar||'')}" class="pvAv" alt="${escHtml(character.name||'Character')} thumbnail"></div>`
-      +`<div class="character-identity"><h4>${escHtml(character.name||'Character')}</h4><span class="voice-pill">${escHtml(character.voice||'Automatic voice')}</span><div class="capSlot">${capabilityMarkup(capability)}</div></div></div>`
+      +`<div class="character-identity"><h4>${escHtml(character.name||'Character')}</h4><span class="voice-pill">${escHtml(character.voice||'Automatic voice')}</span><div class="performanceSlot">${performanceMarkup(character.performance)} ${castingDecisionMarkup(character.casting_decision)}</div><div class="capSlot">${capabilityMarkup(capability)}</div></div></div>`
       +`<div class="character-controls"><label><span>3D character</span><select class="pvVeg">${options}</select></label>`
       +`<label><span>Costume</span><select class="pvCostume">${costOpts}</select></label>`
       +`<label><span>Accessory</span><select class="pvAcc">${accOpts}</select></label>`
@@ -1187,10 +1600,16 @@ function renderPreview(p){
     cc.appendChild(card);
     const image=card.querySelector('.pvAv');
     image?.addEventListener('error',()=>card.classList.add('avatar-missing'));
-    card.querySelector('.pvVeg')?.addEventListener('change',event=>{
+    card.querySelector('.pvVeg')?.addEventListener('change',async event=>{
       const selected=veggies.find(item=>item.name===event.target.value);
-      const next=selected&&CHAR_CAPS[String(selected.package||'').toLowerCase()];
+      const packageName=String(selected?.package||'').toLowerCase();
+      let next=selected&&CHAR_CAPS[packageName];
+      if(selected&&!next){card.querySelector('.capSlot').innerHTML='<span class="capBadge">Loading capability…</span>';await load3dValidation([packageName]);next=CHAR_CAPS[packageName];}
       card.querySelector('.capSlot').innerHTML=capabilityMarkup(next);
+      card.querySelector('.performanceSlot').innerHTML=performanceMarkup(selected?{
+        speech_mode:selected.speech_mode,lip_sync:selected.lip_sync,facial_ready:selected.facial_ready,
+        label:selected.performance_label,warning:selected.performance_warning
+      }:null);
     });
   });
   if(!characters.length) cc.innerHTML='<div class="empty-state compact"><span>'+uiIcon('characters')+'</span><div><strong>No characters found</strong><p>Script mein speaker names add karke plan dobara build karein.</p></div></div>';
@@ -1484,7 +1903,7 @@ async function resumeProject(name){
   const r=await (await fetch('/api/resume/'+name,{method:'POST'})).json();
   if(r.error){ showErr(r.error); return; }
   CUR_JOB=r.job_id; _resetStop();
-  polling=setInterval(()=>poll(r.job_id),1500);
+  beginJobPolling(r.job_id);
 }
 async function dropProject(name,elBtn){
   requestProjectDelete(name,elBtn?.dataset.projectTitle||name);
@@ -1551,20 +1970,71 @@ async function startJob(parsed){
   if(r.error){showErr(r.error);return;}
   setCurrentProject(r.project||STUDIO_UI.projectName);
   CUR_JOB=r.job_id; _resetStop();
-  polling=setInterval(()=>poll(r.job_id),1500);
+  beginJobPolling(r.job_id);
 }
 function _resetStop(){ const b=document.getElementById('stopBtn'); if(b){b.disabled=false;b.textContent='Stop Generation';} }
 
-async function poll(id){
-  const j=await (await fetch('/api/status/'+id)).json();
-  if(j.state==='running') setStages(j.stage,j.i,j.total,j.message);
-  else if(j.state==='done'){clearInterval(polling);stopGenerationClock();setStages('render',1,1,'',true);showResult(j.result);checkResumable();loadProjectsList();}
-  else if(j.state==='stopped'){clearInterval(polling);stopGenerationClock();reset();setGenerationExperience('ready');
-    const fb=document.getElementById('scriptFeedback'); if(fb)fb.innerHTML=feedbackMarkup('warning','Generation ruk gayi. Completed work safe hai aur Projects se resume ho sakta hai.');
-    checkResumable();loadProjectsList();}
-  else if(j.state==='error'){clearInterval(polling);showErr(j.error||'error');checkResumable();}
+function beginJobPolling(id){
+  clearInterval(polling); clearTimeout(POLL_RETRY_TIMER);
+  POLL_FAILURES=0; POLL_IN_FLIGHT=false; LAST_JOB_STATUS=null;
+  polling=setInterval(()=>poll(id),1500);
+  poll(id);
 }
-
+function stopJobPolling(){
+  clearInterval(polling); polling=null;
+  clearTimeout(POLL_RETRY_TIMER); POLL_RETRY_TIMER=null;
+}
+function schedulePollRetry(id){
+  clearTimeout(POLL_RETRY_TIMER);
+  const delay=Math.min(10000,1500*Math.max(1,POLL_FAILURES));
+  POLL_RETRY_TIMER=setTimeout(()=>poll(id),delay);
+}
+async function poll(id){
+  // Do not overlap status requests. Slow local rendering can otherwise create a
+  // queue of old polls and make a healthy job look disconnected in the UI.
+  if(POLL_IN_FLIGHT) return;
+  POLL_IN_FLIGHT=true;
+  try{
+    const response=await fetch('/api/status/'+id,{cache:'no-store'});
+    const j=await response.json();
+    // A failed job legitimately contains an error message. Handle that state
+    // below instead of treating it like a lost network connection forever.
+    if(!response.ok||(!j.state&&j.error)) throw new Error(j.error||`Status request failed (${response.status})`);
+    POLL_FAILURES=0;
+    LAST_JOB_STATUS=j;
+    if(j.state==='running'){
+      let message=j.message||'Working safely in the background.';
+      const heartbeat=Number(j.heartbeat_at||j.updated_at||0);
+      const progressAt=Number(j.progress_updated_at||j.updated_at||0);
+      if(heartbeat&&Date.now()/1000-heartbeat>20) message='Backend heartbeat slow hai; reconnecting without losing cached work...';
+      else if(progressAt&&Date.now()/1000-progressAt>50){
+        message=j.stage==='render'
+          ? `${message} Current 3D clip local frames render kar raha hai; completed clips cached hain.`
+          : `${message} Provider response ka wait ho raha hai; timeout/fallback automatic hai.`;
+      }
+      setStages(j.stage,j.i,j.total,message);
+    }
+    else if(j.state==='done'){stopJobPolling();stopGenerationClock();setStages('render',1,1,'',true);showResult(j.result);checkResumable();loadProjectsList();}
+    else if(j.state==='stopped'||j.state==='interrupted'){
+      stopJobPolling();stopGenerationClock();reset();setGenerationExperience('ready');
+      const fb=document.getElementById('scriptFeedback'); if(fb)fb.innerHTML=feedbackMarkup('warning',j.message||'Generation interrupted. Completed work safe hai aur Projects se resume ho sakta hai.');
+      checkResumable();loadProjectsList();
+    }
+    else if(j.state==='error'){stopJobPolling();showErr(j.error||j.message||'Generation failed');checkResumable();}
+  }catch(error){
+    POLL_FAILURES+=1;
+    // A poll failure is not proof that the render worker stopped. Keep polling
+    // and preserve the progress screen; the backend owns the real job state.
+    const notice=POLL_FAILURES>=6
+      ? 'Status check delayed hai; automatic reconnect chal raha hai. Completed work safe/cached hai.'
+      : `Status reconnect ho raha hai (${POLL_FAILURES})...`;
+    const last=LAST_JOB_STATUS||{};
+    setStages(last.stage||'story',last.i||0,last.total||1,notice);
+    schedulePollRetry(id);
+  }finally{
+    POLL_IN_FLIGHT=false;
+  }
+}
 function showResult(res){
   showStudioView('create',false); setCreateStep(4,false);
   setGenerationExperience('result');
@@ -1575,7 +2045,7 @@ function showResult(res){
   document.getElementById('rDownload').href='/projects/'+res.video_rel;
   reset();
 }
-function showErr(m){stopGenerationClock();const e=document.getElementById('errMsg');e.textContent=m;e.classList.remove('hidden');reset();}
+function showErr(m){stopJobPolling();stopGenerationClock();const e=document.getElementById('errMsg');e.textContent=m;e.classList.remove('hidden');reset();}
 function reset(){
   const b=document.getElementById('genBtn');setButtonLoading(b,false);b.textContent='Generate directly from script';
   const pb=document.getElementById('previewBtn');setButtonLoading(pb,false);pb.textContent='Build Cast & Scene Plan';

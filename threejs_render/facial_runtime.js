@@ -298,3 +298,78 @@ export class FacialRuntime {
     return targets;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Procedural eye blink for morph-less rigs (all current Quaternius humans).
+// Eyes are skinned primitives, so geometry cannot close; instead the eye
+// materials blend toward the character's skin colour for a few frames, which
+// reads as a cartoon blink at production framerates. Deterministic via seed.
+
+const SQUINT_EMOTIONS = { angry: 0.34, sad: 0.28, tired: 0.42, sleepy: 0.5, suspicious: 0.3 };
+const EYE_MATERIAL = /^(eye|eyes|face)$/i;
+const SKIN_MATERIAL = /^(skin|body)$/i;
+
+export function eyeBlinkBlend(time, seed = 0, emotion = 'neutral') {
+  const squint = SQUINT_EMOTIONS[String(emotion || 'neutral').toLowerCase()] || 0;
+  return Math.max(computeBlinkWeight(time, seed), squint);
+}
+
+export function collectEyeMaterials(root) {
+  const eyes = [];
+  let skin = null;
+  if (!root || typeof root.traverse !== 'function') return { eyes, skin };
+  root.traverse(node => {
+    if (!(node.isMesh || node.isSkinnedMesh) || !node.material) return;
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    for (const material of materials) {
+      if (!material || !material.color) continue;
+      if (EYE_MATERIAL.test(material.name || '')) eyes.push(material);
+      else if (!skin && SKIN_MATERIAL.test(material.name || '')) skin = material;
+    }
+  });
+  return { eyes, skin };
+}
+
+export class ProceduralEyeBlink {
+  constructor({ root = null, materials = null, seed = 0, emotion = 'neutral' } = {}) {
+    const found = materials ? { eyes: materials.eyes || [], skin: materials.skin || null }
+      : collectEyeMaterials(root);
+    this.seed = Number(seed) || 0;
+    this.emotion = emotion;
+    const skin = found.skin && found.skin.color
+      ? { r: found.skin.color.r, g: found.skin.color.g, b: found.skin.color.b }
+      : { r: 0.62, g: 0.42, b: 0.24 };   // canonical Quaternius skin tone
+    // Clone so blinking one character never tints another sharing the material.
+    this.entries = found.eyes.map(material => {
+      const cloned = typeof material.clone === 'function' ? material.clone() : material;
+      return { material: cloned, source: material,
+               base: { r: cloned.color.r, g: cloned.color.g, b: cloned.color.b }, skin };
+    });
+    this.enabled = this.entries.length > 0;
+  }
+
+  /** Reassign cloned materials onto the meshes that used the originals. */
+  attach(root) {
+    if (!root || typeof root.traverse !== 'function') return;
+    const bySource = new Map(this.entries.map(e => [e.source, e.material]));
+    root.traverse(node => {
+      if (!(node.isMesh || node.isSkinnedMesh) || !node.material) return;
+      if (Array.isArray(node.material)) {
+        node.material = node.material.map(m => bySource.get(m) || m);
+      } else if (bySource.has(node.material)) {
+        node.material = bySource.get(node.material);
+      }
+    });
+  }
+
+  update(time) {
+    if (!this.enabled) return 0;
+    const w = eyeBlinkBlend(time, this.seed, this.emotion);
+    for (const { material, base, skin } of this.entries) {
+      material.color.r = base.r + (skin.r - base.r) * w;
+      material.color.g = base.g + (skin.g - base.g) * w;
+      material.color.b = base.b + (skin.b - base.b) * w;
+    }
+    return w;
+  }
+}

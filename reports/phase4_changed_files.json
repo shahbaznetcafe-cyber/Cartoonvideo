@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "modified": [
+    "blender/standardize_quaternius_master.py",
+    "assets/characters/capability_registry.json"
+  ],
+  "created": [
+    "assets/characters/quaternius_representative/phase4_manifest.json",
+    "assets/characters/quaternius_representative/casual_2/casual_2.glb",
+    "assets/characters/quaternius_representative/casual_2/conversion.json",
+    "assets/characters/quaternius_representative/casual_2/validation.json",
+    "assets/characters/quaternius_representative/farmer/farmer.glb",
+    "assets/characters/quaternius_representative/farmer/conversion.json",
+    "assets/characters/quaternius_representative/farmer/validation.json",
+    "assets/characters/quaternius_representative/king/king.glb",
+    "assets/characters/quaternius_representative/king/conversion.json",
+    "assets/characters/quaternius_representative/king/validation.json",
+    "tools/standardize_phase4_characters.py",
+    "tools/enrich_phase4_validation.py",
+    "tools/register_phase4_characters.py",
+    "threejs_render/phase4_multi_character/index.html",
+    "threejs_render/phase4_multi_character/scene.js",
+    "threejs_render/phase4_multi_character/capture.mjs",
+    "reports/phase4_source_audit.json",
+    "reports/phase4_multi_character_scene.json",
+    "reports/phase4_implementation_status.md"
+  ],
+  "generatedWorkingCopies": [
+    "work/character_phase4/standardized/casual_2.blend",
+    "work/character_phase4/standardized/farmer.blend",
+    "work/character_phase4/standardized/king.blend"
+  ],
+  "testsRun": false,
+  "runtimeProofStatus": "pending_deferred_by_user"
+}

@@ -16,6 +16,7 @@ BLENDER = r"C:\Program Files\Blender Foundation\Blender 5.1\blender.exe"
 BL_DIR = os.path.join(config.BASE_DIR, "blender")
 RIG_DIR = os.path.join(BL_DIR, "rigged", "blend")
 VENV_PY = r"D:\flayer\veggie-tool\.venv\Scripts\python.exe"
+THREEJS_RENDER_REVISION = "character-traits-clip-safety-v10"
 
 # ---- GPU video encoding (NVENC) — ffmpeg ko CPU (libx264) ki jagah GPU par ----
 _NVENC_OK = None
@@ -63,6 +64,19 @@ def _vcodec(height=None, fps=30):
         base = ["-c:v", "h264_nvenc", "-preset", "p5", "-rc", "vbr", "-cq", "19"]
     else:
         base = ["-c:v", "libx264", "-preset", "medium", "-crf", "18"]
+    return base + _delivery_video_args(height, fps)
+
+
+def _vcodec_fast(height=None, fps=30):
+    """Tez intermediate encoder — line clips ke liye (final assembly se pehle).
+    Quality thodi kam chalti hai (intermediate), speed maqsad hai:
+    - GPU: NVENC p4 (faster than p5, still good quality)
+    - CPU: libx264 ultrafast + -threads 0 (sabse fast, ~5x faster than medium)"""
+    mode = getattr(config, "GPU_ENCODE", "auto")
+    if mode != "off" and _has_nvenc():
+        base = ["-c:v", "h264_nvenc", "-preset", "p4", "-rc", "vbr", "-cq", "22"]
+    else:
+        base = ["-c:v", "libx264", "-preset", "ultrafast", "-crf", "23", "-threads", "0"]
     return base + _delivery_video_args(height, fps)
 
 # keyword -> rigged .blend basename (english + roman urdu)
@@ -150,27 +164,36 @@ ENV_DIR = os.path.join(BL_DIR, "assets", "env")
 _ENV_KW = {
     "market.glb": {"market", "shop", "bazaar", "stall", "store"},
     "garden.glb": {"garden", "farm", "field", "outdoor", "outside", "park",
-                   "village", "playground", "courtyard", "pathway", "yard", "mud"},
-    "kitchen.glb": {"kitchen", "home", "house", "room", "indoor"},
+                   "village", "playground", "courtyard", "pathway", "path", "road",
+                   "forest", "jungle", "yard", "mud", "desert", "snow"},
+    "kitchen.glb": {"kitchen", "home", "house", "room", "indoor", "school",
+                    "classroom", "office"},
 }
 
 
-def _env_for(scene):
-    """Select an environment with token matching (``washroom`` is not ``room``)."""
+def _env_for(scene, preset=None):
+    """Select an environment with token matching (``washroom`` is not ``room``).
+
+    Baked env sets sirf tab load hote hain jab scene sach mein indoor/market ho.
+    Baqi presets (forest/pirate/space/sunny/...) composed dressings + AI plate
+    use karte hain — warna har video mein wahi garden village set aata tha.
+    """
     loc = (str(scene.get("location", "")) + " " + str(scene.get("background_prompt", ""))).lower()
     tokens = set(re.findall(r"[a-z]+", loc))
     explicit = str(scene.get("environment") or "").lower().strip()
+    preset = str(preset or "").lower()
+    baked = {"kitchen.glb": "indoor", "market.glb": "market"}
     for f, words in _ENV_KW.items():
         p = os.path.join(ENV_DIR, f)
-        if os.path.exists(p) and (explicit in (f, os.path.splitext(f)[0]) or tokens & words):
+        if not os.path.exists(p):
+            continue
+        if explicit in (f, os.path.splitext(f)[0]):
             return p
-    # Outdoor is the safest neutral fallback; it cannot enclose the camera.
-    garden = os.path.join(ENV_DIR, "garden.glb")
-    if os.path.exists(garden):
-        return garden
-    import glob as _g
-    envs = sorted(_g.glob(os.path.join(ENV_DIR, "*.glb")))
-    return envs[0] if envs else None
+        if f in baked and (preset == baked[f] or (not preset and tokens & words)):
+            return p
+    # Outdoor/composed presets: koi baked set nahi — procedural ground +
+    # scene_assets dressings + AI background plate hi variety dete hain.
+    return None
 
 
 def _scene_look(scene):
@@ -301,9 +324,11 @@ def _line_action(e, cast, spk, parsed):
         return "none", -1
     text = e.get("text", "") or ""
     stage_action = e.get("action", "") or ""
-    action = actions.detect(f"{stage_action} {text}", e.get("emotion", "neutral"))
+    normalized_action = re.sub(r"[^a-z_]+", "_", str(stage_action).lower()).strip("_")
+    action = (normalized_action if normalized_action in getattr(actions, "SUPPORTED_ACTIONS", ())
+              else actions.detect(f"{stage_action} {text}", e.get("emotion", "neutral")))
     others = [i for i, cid in enumerate(cast) if cid != spk]
-    if not others:
+    if not others or not actions.needs_target(action):
         return action, -1
     tgt = others[0]
     if actions.needs_target(action):
@@ -316,6 +341,36 @@ def _line_action(e, cast, spk, parsed):
                 break
     return action, tgt
 
+
+def _apply_character_action_safety(timeline, assignment, proj_dir):
+    """Normalize only impossible Quaternius actions before frame rendering."""
+    report = []
+    try:
+        import character_traits
+        for entry in timeline:
+            speaker = entry.get("speaker")
+            blend = assignment.get(speaker)
+            if not blend or _character_runtime_metadata(blend).get("library") != "quaternius":
+                continue
+            requested = str(entry.get("action") or "idle")
+            directive = character_traits.render_directive(blend, requested)
+            entry["character_traits"] = directive.get("traits", {})
+            entry["source_clip"] = directive.get("sourceClip", "")
+            if not directive.get("actionSupported"):
+                entry["action"] = directive.get("action", "idle")
+                entry["action_safety_note"] = (
+                    f"Requested '{requested}' is not a real clip on this character; "
+                    f"using '{entry['action']}' with {directive.get('traits', {}).get('form', 'safe')} staging.")
+            report.append({"speaker": speaker, "requested_action": requested,
+                           "render_action": entry.get("action"),
+                           "source_clip": directive.get("sourceClip", ""),
+                           "supported": bool(directive.get("actionSupported")),
+                           "traits": directive.get("traits", {})})
+        with open(os.path.join(proj_dir, "character_action_safety.json"), "w", encoding="utf-8") as handle:
+            json.dump({"schema_version": 1, "lines": report}, handle, ensure_ascii=False, indent=2)
+    except Exception as exc:
+        print(f"  [character action safety] unavailable: {exc}", flush=True)
+    return timeline
 
 def _prepare_acting_lines(timeline, casts, parsed, multi=True, engine="threejs"):
     """Resolve cast/action once so rendering and saved acting state share one contract."""
@@ -396,13 +451,60 @@ def _resolve_viseme_path(proj_dir, reference):
     return path if os.path.exists(path) else ""
 
 
-def _lip_sync_inputs(character_id, speaker, openness_path, viseme_path):
-    """Only the current speaker receives mouth animation inputs."""
+def _lip_sync_inputs(character_id, speaker, openness_path, viseme_path, performance=None):
+    """Only the current speaker receives inputs supported by the real face rig."""
     speaking = character_id == speaker
+    if performance is None:
+        return {
+            "openness": openness_path if speaking else "",
+            "visemes": viseme_path if speaking else "",
+        }
+    mode = str(performance.get("lipSyncMode") or "none")
+    if not speaking or mode == "none":
+        return {"openness": "", "visemes": ""}
+    if mode == "jaw_openness":
+        return {"openness": openness_path, "visemes": ""}
+    return {"openness": openness_path, "visemes": viseme_path}
+
+
+def _character_runtime_metadata(blend):
+    """Attach explicit body-animation capability without changing legacy rigs."""
+    try:
+        import char3d_lib
+        return char3d_lib.runtime_metadata(blend)
+    except Exception:
+        return {"capabilityId": "", "animationTier": "LEGACY", "facialTier": "SKELETAL_BASIC",
+                "speechMode": "body_only", "lipSyncMode": "none",
+                "facialReady": False, "library": "sbz"}
+
+
+def _character_sync_metadata(character_id, speaker, openness_path, viseme_path, blend):
+    metadata = _character_runtime_metadata(blend)
     return {
-        "openness": openness_path if speaking else "",
-        "visemes": viseme_path if speaking else "",
+        **metadata,
+        **_lip_sync_inputs(character_id, speaker, openness_path, viseme_path, metadata),
     }
+
+
+def _character_render_directive(character_id, blend, requested_action, requested_clip=""):
+    """Use only real clip-backed actions for Quaternius; preserve SBZ legacy behavior."""
+    metadata = _character_runtime_metadata(blend)
+    if metadata.get("library") != "quaternius":
+        return {"action": requested_action or "none", "sourceClip": requested_clip or "", "traits": {}}
+    try:
+        import character_traits
+        return character_traits.render_directive(blend, requested_action, requested_clip)
+    except Exception as exc:
+        print(f"  [character traits] {character_id}: {exc}", flush=True)
+        return {"action": "idle", "sourceClip": "", "traits": {"poseMode": "clip_only"}}
+
+def _capability_safe_shot(shot, blend):
+    """Only validated full-facial rigs may receive a facial/dialogue close-up."""
+    metadata = _character_runtime_metadata(blend)
+    if (not metadata.get("facialReady")
+            and shot in {"closeup", "dialogue_close_up", "facial_close_up"}):
+        return "medium"
+    return shot
 
 
 def _clip_probe(path):
@@ -428,9 +530,33 @@ def _clip_is_valid(video_path, audio_path, fps, ratio=0.90, expected_size=None):
     if expected_size and (width, height) != tuple(expected_size):
         return False
     audio_dur = _probe_duration(audio_path)
-    minimum_duration = max(0.50, audio_dur * ratio)
+    # A real short spoken line can be below half a second. Validate against
+    # its audio duration plus two video frames, rather than rejecting it solely
+    # because of a fixed 0.50s floor. This still rejects one-frame/truncated clips.
+    minimum_duration = max(2.0 / max(1, int(fps or 24)), audio_dur * ratio)
     minimum_frames = max(2, int(minimum_duration * fps * 0.70))
     return video_dur >= minimum_duration and frames >= minimum_frames
+
+
+def _render_revision_matches(video_path, revision=THREEJS_RENDER_REVISION):
+    """Only reuse clips produced by the current visual-direction runtime."""
+    try:
+        if not os.path.exists(video_path + ".revision") and os.path.exists(video_path) and os.path.getsize(video_path) > 10000:
+            _write_render_revision(video_path, revision)
+            return True
+        with open(video_path + ".revision", encoding="utf-8") as handle:
+            return handle.read().strip() == revision
+    except OSError:
+        return False
+
+
+def _write_render_revision(video_path, revision=THREEJS_RENDER_REVISION):
+    path = video_path + ".revision"
+    temp = path + ".tmp"
+    with open(temp, "w", encoding="utf-8", newline="\n") as handle:
+        handle.write(revision + "\n")
+    os.replace(temp, path)
+    return path
 
 
 def _duration_matches(actual, expected, fps, tolerance_seconds=0.12):
@@ -450,6 +576,29 @@ def _stream_duration(path, selector):
     except Exception:
         return 0.0
 
+
+def _enforce_target_duration(video_path, target_seconds, fps):
+    """Meet the selected duration without silently removing spoken dialogue."""
+    target = float(target_seconds or 0)
+    if target <= 0:
+        return video_path, 1.0, None
+    actual = _probe_duration(video_path)
+    tolerance = max(2.0 / max(1, int(fps or 24)), 0.04)
+    if abs(actual - target) <= tolerance:
+        return video_path, 1.0, "already exact"
+    output = video_path + ".target.mp4"
+    if actual < target:
+        padding = target - actual
+        graph = (f"[0:v]tpad=stop_mode=clone:stop_duration={padding:.6f}[v];" f"[0:a]apad=pad_dur={padding:.6f}[a]")
+        action, scale = f"held ending +{padding:.2f}s", 1.0
+    else:
+        # Preset guidance hai, compressor nahi: overrun par speech ki raftaar
+        # tez NAHI karte (kids pacing) — natural duration rakho.
+        return video_path, 1.0, (f"kept natural {actual:.1f}s "
+                                 f"(preset {target:.1f}s; speech retime skipped)")
+    subprocess.run(["ffmpeg", "-y", "-i", video_path, "-filter_complex", graph, "-map", "[v]", "-map", "[a]", "-t", f"{target:.6f}", *_vcodec(None, fps), "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", getattr(config, "AUDIO_BITRATE", "384k"), "-movflags", "+faststart", output, "-loglevel", "error"], check=True)
+    os.replace(output, video_path)
+    return video_path, scale, action
 
 def _validate_final_duration(video_path, expected_duration, fps):
     """Reject timeline drift or an independently truncated A/V stream."""
@@ -472,17 +621,19 @@ def _validate_final_duration(video_path, expected_duration, fps):
 
 
 def _encode_line_frames(frames_dir, audio_path, grade, line_mp4, height, fps):
+    """PNG frames + audio -> line mp4. Tez ultrafast/p4 preset (intermediate clip)."""
     subprocess.run([
-        "ffmpeg", "-y", "-framerate", str(fps),
+        "ffmpeg", "-y", "-threads", "0",
+        "-framerate", str(fps),
         "-i", os.path.join(frames_dir, "frame_%04d.png"), "-i", audio_path,
-        "-vf", grade, *_vcodec(height, fps), "-pix_fmt", "yuv420p",
+        "-vf", grade, *_vcodec_fast(height, fps), "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", getattr(config, "AUDIO_BITRATE", "384k"),
         "-shortest", line_mp4, "-loglevel", "error",
     ], check=True)
 
 
 def render_3d_video(parsed, timeline, scene_bg, proj_dir, out_path, on_progress=None,
-                    should_cancel=None):
+                    should_cancel=None, target_duration=None):
     """timeline ki har line ka 3D clip render + assemble -> final video."""
     import char3d_lib
     VW, VH = config.get_dimensions()
@@ -491,8 +642,15 @@ def render_3d_video(parsed, timeline, scene_bg, proj_dir, out_path, on_progress=
     if VH > max_h:
         VW = int(round(VW * max_h / VH / 2) * 2); VH = max_h
     fps = getattr(config, "BLENDER3D_FPS", 24)   # 3D-specific fps (kam frames = tez)
+    # target_duration UI se preset string bhi ho sakta hai ("1min", "medium").
+    try:
+        target_seconds = float(target_duration or 0)
+    except (TypeError, ValueError):
+        import duration_planner
+        target_seconds = float(duration_planner.preset(target_duration)["seconds"])
+    selected_library = str(parsed.get("character_library") or "sbz").strip().lower()
     assignment = char3d_lib.assign(parsed.get("characters", []),
-                                   parsed.get("char_overrides"))   # {char_id: blend_path}
+                                   parsed.get("char_overrides"), library=selected_library)   # {char_id: blend_path}
     scene_map = {sc["id"]: sc for sc in parsed.get("scenes", [])}
     clips_dir = os.path.join(proj_dir, "clips3d"); os.makedirs(clips_dir, exist_ok=True)
     total = len(timeline)
@@ -513,20 +671,33 @@ def render_3d_video(parsed, timeline, scene_bg, proj_dir, out_path, on_progress=
         grade = looks.grade_for(config.STYLE); look_exposure = looks.exposure_for(config.STYLE)
     except Exception:
         grade = getattr(config, "COLOR_GRADE", "eq=saturation=1.5:contrast=1.12"); look_exposure = -0.2
+    if engine == "threejs":
+        _apply_character_action_safety(timeline, assignment, proj_dir)
     acting_lines = _prepare_acting_lines(timeline, casts, parsed, multi, engine)
     animation_plan = None
+    production_plan = None
     if engine == "threejs":
         import acting_state
         animation_plan = acting_state.build_plan(timeline, acting_lines, fps)
         acting_state.write_plan(proj_dir, animation_plan)
+        import production_director
+        production_plan = production_director.build_plan(
+            parsed, timeline, assignment, acting_lines, fps, acting_plan=animation_plan)
+        production_director.write_plan(proj_dir, production_plan)
+        for warning in production_plan.get("warnings", []):
+            print(f"  [direction warning] line {warning.get('line')}: "
+                  f"{warning.get('message')}", flush=True)
 
-    for i, e in enumerate(timeline, 1):
-        if should_cancel and should_cancel():        # STOP: yahin ruk jao (partial resumable)
-            raise Cancelled()
-        if on_progress:
-            on_progress(i, total, f"3D render line {i}/{total} [{e.get('speaker')}]")
+    # ---- PARALLEL 3D LINE RENDER (ThreeJS) ----
+    # Har line ek alag Node.js subprocess hai — inhe parallel chala saktay hain.
+    # Sequential fallback: THREEJS_RENDER_WORKERS=1 ya engine!=threejs.
+    n_workers = getattr(config, "THREEJS_RENDER_WORKERS", 3) if engine == "threejs" else 1
+
+    def _render_one_line(args):
+        """Worker function: ek line ka poora render (openness->threejs->encode).
+        Thread-safe: har line apni alag directory/files use karta hai."""
+        (i, e, acting_context, acting_line, directed_line) = args
         spk = e.get("speaker")
-        blend = assignment.get(spk) or _fallback_blend()
         audio = os.path.join(proj_dir, e["audio"])
         oj = os.path.join(clips_dir, f"open_{i}.json")
         viseme_ref = e.get("visemes") or ""
@@ -536,95 +707,181 @@ def render_3d_video(parsed, timeline, scene_bg, proj_dir, out_path, on_progress=
             vj = ""
         frames_dir = os.path.join(clips_dir, f"line_{i}")
         line_mp4 = os.path.join(clips_dir, f"line_{i}.mp4")
-        acting_context = acting_lines[i - 1]
-        acting_line = animation_plan["lines"][i - 1] if animation_plan else {}
         sidx = acting_context["scene_index"]
-        if _clip_is_valid(line_mp4, audio, fps, expected_size=(VW, VH)):
-            line_mp4s.append(line_mp4)
-            rendered_timeline.append(e)
-            continue
+
+        # cache check
+        clip_valid = _clip_is_valid(line_mp4, audio, fps, expected_size=(VW, VH))
+        revision_valid = engine != "threejs" or _render_revision_matches(line_mp4)
+        if clip_valid and revision_valid:
+            if on_progress:
+                on_progress(i, total, f"3D line {i}/{total} [{spk}] (cached)")
+            return (i, line_mp4, e, True)   # (index, path, entry, was_cached)
+
+        if on_progress:
+            on_progress(i, total, f"3D render line {i}/{total} [{spk}]...")
         if os.path.exists(line_mp4):
-            print(f"  [render cache reject] line {i}: truncated or one-frame clip", flush=True)
+            reason = ("outdated visual-direction revision" if clip_valid and not revision_valid
+                      else "truncated or one-frame clip")
+            print(f"  [render cache reject] line {i}: {reason}", flush=True)
             try:
                 os.remove(line_mp4)
             except OSError:
                 pass
-        try:
-            _clear_frames(frames_dir)
-            _openness(audio, fps, oj)
-            bg = scene_bg.get(e.get("scene"))
-            scene_data = scene_map.get(e.get("scene"), {})
-            env = _env_for(scene_data)
-            # multi-character scene: iss scene ke saare characters saath, speaker bolta
-            cast = acting_context["cast"]
-            if cast:
-                shot = _shot_for_line(e, sidx, cast)
-                focus = cast.index(spk)
-                # STORY ACTION: line text se speaker ka action + target (kis char par).
-                # Listeners speaker ki taraf dekhein (target=speaker slot) — eye contact.
-                spk_action, tgt_slot = acting_context["action"], acting_context["target"]
-                spec = {
-                    "out": frames_dir, "flimit": 0, "fps": fps, "res": res, "env": env or "",
-                    "shot": shot, "focus": focus, "exposure": look_exposure,
-                    "sceneLook": _scene_look(scene_data),
-                    "timeOffset": acting_line.get("timeOffset", 0.0),
-                    "animationStateSchema": animation_plan.get("schema_version") if animation_plan else 0,
-                    "chars": [{
-                        "id": cid,
-                        "blend": assignment.get(cid) or _fallback_blend(),
-                        **_lip_sync_inputs(cid, spk, oj, vj),
-                        "emotion": e.get("emotion", "neutral") if cid == spk else "neutral",
-                        "speaking": cid == spk, "slot": si,
-                        "costume": costume_map.get(cid, ""),
-                        "accessory": acc_map.get(cid, ""),
-                        "held": held_map.get(cid, ""),
-                        "action": spk_action if cid == spk else "none",
-                        "target": (tgt_slot if cid == spk else focus),
-                        "acting": acting_line.get("characters", {}).get(cid, {}),
-                    } for si, cid in enumerate(cast)],
-                }
-                if engine == "threejs":
-                    _render_scene_line_threejs(spec, frames_dir, should_cancel)
-                else:
-                    _render_scene_line(spec, frames_dir, should_cancel)
+
+        _clear_frames(frames_dir)
+        _openness(audio, fps, oj)
+        bg = scene_bg.get(e.get("scene"))
+        scene_data = scene_map.get(e.get("scene"), {})
+        env = _env_for(scene_data,
+                       preset=(directed_line.get("environment") or {}).get("preset")
+                       or _scene_look(scene_data))
+        cast = acting_context["cast"]
+        if cast:
+            shot = _capability_safe_shot(
+                directed_line.get("shot") or _shot_for_line(e, sidx, cast),
+                assignment.get(spk) or _fallback_blend(),
+            )
+            focus = cast.index(spk)
+            spk_action, tgt_slot = acting_context["action"], acting_context["target"]
+            spec = {
+                "out": frames_dir, "flimit": 0, "fps": fps, "res": res, "env": env or "",
+                "duration": float(e.get("duration") or _probe_duration(audio)),
+                "shot": shot, "focus": focus, "exposure": look_exposure,
+                "sceneLook": (directed_line.get("environment") or {}).get("preset")
+                             or _scene_look(scene_data),
+                "backgroundImage": bg or "",
+                "direction": directed_line.get("camera") or {},
+                "environmentMotion": directed_line.get("environment") or {},
+                "props": directed_line.get("props") or [],
+                "timeOffset": acting_line.get("timeOffset", 0.0),
+                "animationStateSchema": animation_plan.get("schema_version") if animation_plan else 0,
+                "chars": [{
+                    "id": cid,
+                    "blend": assignment.get(cid) or _fallback_blend(),
+                    **_character_sync_metadata(
+                        cid, spk, oj, vj, assignment.get(cid) or _fallback_blend()),
+                    "emotion": e.get("emotion", "neutral") if cid == spk else "neutral",
+                    "speaking": cid == spk, "slot": si,
+                    "costume": costume_map.get(cid, ""),
+                    "accessory": acc_map.get(cid, ""),
+                    "held": held_map.get(cid, ""),
+                    "action": ((directed_line.get("characters") or {}).get(cid) or {}).get(
+                        "action", spk_action if cid == spk else "none"),
+                    "sourceClip": ((directed_line.get("characters") or {}).get(cid) or {}).get("sourceClip", ""),
+                    **_character_render_directive(
+                        cid, assignment.get(cid) or _fallback_blend(),
+                        ((directed_line.get("characters") or {}).get(cid) or {}).get(
+                            "action", spk_action if cid == spk else "listen"),
+                        ((directed_line.get("characters") or {}).get(cid) or {}).get("sourceClip", "")),
+                    "baseClip": ((directed_line.get("characters") or {}).get(cid) or {}).get("baseClip", ""),
+                    "crossfadeSeconds": ((directed_line.get("characters") or {}).get(cid) or {}).get("crossfadeSeconds", 0.22),
+                    "blocking": ((directed_line.get("characters") or {}).get(cid) or {}).get("blocking", {}),
+                    "interaction": ((directed_line.get("characters") or {}).get(cid) or {}).get("interaction"),
+                    "target": (tgt_slot if cid == spk else focus),
+                    "acting": acting_line.get("characters", {}).get(cid, {}),
+                } for si, cid in enumerate(cast)],
+            }
+            if engine == "threejs":
+                _render_scene_line_threejs(spec, frames_dir, should_cancel)
             else:
-                _render_line(blend, oj, frames_dir, e.get("emotion", "neutral"), bg, res, env,
-                             costume_map.get(spk, ""), acc_map.get(spk, ""), held_map.get(spk, ""))
-            # frames + line audio -> mp4 (+ style-look color grade)
+                _render_scene_line(spec, frames_dir, should_cancel)
+        else:
+            _render_line(assignment.get(spk) or _fallback_blend(), oj, frames_dir,
+                         e.get("emotion", "neutral"), bg, res, env,
+                         costume_map.get(spk, ""), acc_map.get(spk, ""), held_map.get(spk, ""))
+
+        _encode_line_frames(frames_dir, audio, grade, line_mp4, VH, fps)
+
+        # Fail-safe: retry bad ensemble as single-speaker shot
+        if not _clip_is_valid(line_mp4, audio, fps, expected_size=(VW, VH)) and engine == "threejs":
+            print(f"  [render retry] line {i}: single-speaker safety fallback", flush=True)
+            _clear_frames(frames_dir)
+            fallback_spec = {
+                "out": frames_dir, "flimit": 0, "fps": fps, "res": res,
+                "duration": float(e.get("duration") or _probe_duration(audio)),
+                "env": env or "", "shot": "medium", "focus": 0,
+                "exposure": look_exposure,
+                "sceneLook": (directed_line.get("environment") or {}).get("preset")
+                             or _scene_look(scene_data),
+                "backgroundImage": bg or "",
+                "direction": directed_line.get("camera") or {},
+                "environmentMotion": directed_line.get("environment") or {},
+                "props": directed_line.get("props") or [],
+                "timeOffset": acting_line.get("timeOffset", 0.0),
+                "animationStateSchema": animation_plan.get("schema_version") if animation_plan else 0,
+                "chars": [{
+                    "id": spk,
+                    "blend": assignment.get(spk) or _fallback_blend(),
+                    **_character_sync_metadata(
+                        spk, spk, oj, vj, assignment.get(spk) or _fallback_blend()),
+                    "emotion": e.get("emotion", "neutral"),
+                    "speaking": True, "slot": 0, "costume": costume_map.get(spk, ""),
+                    "accessory": acc_map.get(spk, ""), "held": held_map.get(spk, ""),
+                    "action": acting_context["action"], "target": -1,
+                    "sourceClip": ((directed_line.get("characters") or {}).get(spk) or {}).get("sourceClip", ""),
+                    **_character_render_directive(
+                        spk, assignment.get(spk) or _fallback_blend(), acting_context["action"],
+                        ((directed_line.get("characters") or {}).get(spk) or {}).get("sourceClip", "")),
+                    "baseClip": ((directed_line.get("characters") or {}).get(spk) or {}).get("baseClip", ""),
+                    "crossfadeSeconds": ((directed_line.get("characters") or {}).get(spk) or {}).get("crossfadeSeconds", 0.22),
+                    "blocking": ((directed_line.get("characters") or {}).get(spk) or {}).get("blocking", {}),
+                    "interaction": ((directed_line.get("characters") or {}).get(spk) or {}).get("interaction"),
+                    "acting": acting_line.get("characters", {}).get(spk, {}),
+                }],
+            }
+            _render_scene_line_threejs(fallback_spec, frames_dir, should_cancel)
             _encode_line_frames(frames_dir, audio, grade, line_mp4, VH, fps)
 
-            # Fail-safe: retry a bad ensemble shot as a guaranteed single-speaker shot.
-            if not _clip_is_valid(line_mp4, audio, fps, expected_size=(VW, VH)) and engine == "threejs":
-                print(f"  [render retry] line {i}: single-speaker safety fallback", flush=True)
-                _clear_frames(frames_dir)
-                fallback_spec = {
-                    "out": frames_dir, "flimit": 0, "fps": fps, "res": res,
-                    "env": env or "", "shot": "medium", "focus": 0,
-                    "exposure": look_exposure, "sceneLook": _scene_look(scene_data),
-                    "timeOffset": acting_line.get("timeOffset", 0.0),
-                    "animationStateSchema": animation_plan.get("schema_version") if animation_plan else 0,
-                    "chars": [{
-                        "id": spk,
-                        "blend": assignment.get(spk) or _fallback_blend(),
-                        **_lip_sync_inputs(spk, spk, oj, vj),
-                        "emotion": e.get("emotion", "neutral"),
-                        "speaking": True, "slot": 0, "costume": costume_map.get(spk, ""),
-                        "accessory": acc_map.get(spk, ""), "held": held_map.get(spk, ""),
-                        "action": "none", "target": -1,
-                        "acting": acting_line.get("characters", {}).get(spk, {}),
-                    }],
-                }
-                _render_scene_line_threejs(fallback_spec, frames_dir, should_cancel)
-                _encode_line_frames(frames_dir, audio, grade, line_mp4, VH, fps)
+        if not _clip_is_valid(line_mp4, audio, fps, expected_size=(VW, VH)):
+            raise RuntimeError(f"line {i} failed duration/frame validation")
+        if engine == "threejs":
+            _write_render_revision(line_mp4)
+        return (i, line_mp4, e, False)   # (index, path, entry, was_cached)
 
-            if not _clip_is_valid(line_mp4, audio, fps, expected_size=(VW, VH)):
-                raise RuntimeError(f"line {i} failed duration/frame validation")
-            line_mp4s.append(line_mp4)
-            rendered_timeline.append(e)
-        except Cancelled:
-            raise
-        except Exception as ex:
-            raise RuntimeError(f"3D line {i} render failed; final assembly stopped: {ex}") from ex
+    # Build job list (only non-cancelled lines)
+    job_args = [
+        (i, e, acting_lines[i - 1],
+         animation_plan["lines"][i - 1] if animation_plan else {},
+         production_plan["lines"][i - 1] if production_plan else {})
+        for i, e in enumerate(timeline, 1)
+    ]
+
+    if n_workers > 1:
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        print(f"  [3D render] {n_workers} parallel workers (ThreeJS)", flush=True)
+        results = {}
+        with ThreadPoolExecutor(max_workers=n_workers) as pool:
+            futures = {pool.submit(_render_one_line, args): args[0] for args in job_args}
+            for fut in as_completed(futures):
+                if should_cancel and should_cancel():
+                    pool.shutdown(wait=False, cancel_futures=True)
+                    raise Cancelled()
+                try:
+                    idx, mp4, entry, _ = fut.result()
+                    results[idx] = (mp4, entry)
+                except Cancelled:
+                    raise
+                except Exception as ex:
+                    line_i = futures[fut]
+                    raise RuntimeError(f"3D line {line_i} render failed: {ex}") from ex
+        # Results ko original order mein sort karo
+        for i, _ in enumerate(timeline, 1):
+            mp4, entry = results[i]
+            line_mp4s.append(mp4)
+            rendered_timeline.append(entry)
+    else:
+        # Sequential fallback (THREEJS_RENDER_WORKERS=1 ya non-threejs engine)
+        for args in job_args:
+            if should_cancel and should_cancel():
+                raise Cancelled()
+            try:
+                _, mp4, entry, _ = _render_one_line(args)
+                line_mp4s.append(mp4)
+                rendered_timeline.append(entry)
+            except Cancelled:
+                raise
+            except Exception as ex:
+                raise RuntimeError(f"3D line {args[0]} render failed; final assembly stopped: {ex}") from ex
 
     if not line_mp4s:
         raise RuntimeError("Koi 3D clip nahi bana")
@@ -634,7 +891,7 @@ def render_3d_video(parsed, timeline, scene_bg, proj_dir, out_path, on_progress=
     # assemble: intro + clips + outro, music, burned subtitles
     if on_progress:
         on_progress(total, total, "Final assembly (intro/outro, subtitles, music)...")
-    _assemble(line_mp4s, proj_dir, rendered_timeline, parsed, out_path, VW, VH, fps)
+    _assemble(line_mp4s, proj_dir, rendered_timeline, parsed, out_path, VW, VH, fps, target_seconds=target_seconds)
     return out_path
 
 
@@ -749,7 +1006,7 @@ def _audio_qc(path):
         print(f"  [audio QC skip] {ex}", flush=True)
 
 
-def _assemble(mp4s, proj_dir, timeline, parsed, out_path, VW, VH, fps):
+def _assemble(mp4s, proj_dir, timeline, parsed, out_path, VW, VH, fps, target_seconds=0.0):
     import audio as audio_mod
     cdir = os.path.join(proj_dir, "clips3d")
     title = (parsed or {}).get("title", "") or "Cartoon"
@@ -785,24 +1042,78 @@ def _assemble(mp4s, proj_dir, timeline, parsed, out_path, VW, VH, fps):
             print(f"  [outro skip] {str(ex)[:100]}", flush=True)
 
     # Mixed editorial assembly: clean concat for cuts, xfade only at motivated
-    # boundaries. This replaces the old blanket treatment of every shot.
+    # boundaries. Windows cannot spawn a process whose command line contains
+    # hundreds of absolute clip paths.  Render small transition-aware batches
+    # first, then concatenate the batch outputs through FFmpeg's manifest
+    # demuxer.  This keeps long projects resumable and path-length safe.
     clip_durs = [_probe_duration(path) for path in clips]
-    filters, video_label, audio_label, assembled_duration = transitions.build_av_filter_graph(
-        clip_durs, clip_plan)
-    inputs = []
-    for path in clips:
-        inputs += ["-i", path]
     tmp = out_path + ".c.mp4"
-    subprocess.run(["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(filters),
-                    "-map", f"[{video_label}]", "-map", f"[{audio_label}]",
-                    *_vcodec(VH, fps), "-pix_fmt", "yuv420p", "-c:a", "aac",
-                    "-b:a", getattr(config, "AUDIO_BITRATE", "384k"),
-                    "-r", str(fps), "-movflags", "+faststart",
-                    tmp, "-loglevel", "error"], check=True)
+    max_batch_inputs = 10
+
+    def render_batch(batch_paths, batch_durations, batch_plan, batch_output):
+        filters, video_label, audio_label, batch_duration = transitions.build_av_filter_graph(
+            batch_durations, batch_plan)
+        inputs = []
+        for batch_path in batch_paths:
+            inputs += ["-i", batch_path]
+        subprocess.run(["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(filters),
+                        "-map", f"[{video_label}]", "-map", f"[{audio_label}]",
+                        *_vcodec(VH, fps), "-pix_fmt", "yuv420p", "-c:a", "aac",
+                        "-b:a", getattr(config, "AUDIO_BITRATE", "384k"),
+                        "-r", str(fps), "-movflags", "+faststart",
+                        batch_output, "-loglevel", "error"], check=True)
+        return batch_duration
+
+    if len(clips) <= max_batch_inputs:
+        filters, video_label, audio_label, assembled_duration = transitions.build_av_filter_graph(
+            clip_durs, clip_plan)
+        inputs = []
+        for path in clips:
+            inputs += ["-i", path]
+        subprocess.run(["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(filters),
+                        "-map", f"[{video_label}]", "-map", f"[{audio_label}]",
+                        *_vcodec(VH, fps), "-pix_fmt", "yuv420p", "-c:a", "aac",
+                        "-b:a", getattr(config, "AUDIO_BITRATE", "384k"),
+                        "-r", str(fps), "-movflags", "+faststart",
+                        tmp, "-loglevel", "error"], check=True)
+    else:
+        batch_dir = os.path.join(cdir, "_assembly_batches")
+        os.makedirs(batch_dir, exist_ok=True)
+        batch_outputs = []
+        assembled_duration = 0.0
+        # A transition across a batch boundary is deliberately converted to a
+        # clean cut. Dialogue already defaults to hard cuts, and this avoids
+        # attempting a 144-input filter graph just to preserve one boundary.
+        for batch_no, batch_start in enumerate(range(0, len(clips), max_batch_inputs), 1):
+            batch_end = min(len(clips), batch_start + max_batch_inputs)
+            if batch_start:
+                clip_plan[batch_start - 1] = transitions.decision(
+                    "hard_cut", reason="long-render assembly batch boundary")
+            batch_paths = clips[batch_start:batch_end]
+            batch_durations = clip_durs[batch_start:batch_end]
+            batch_plan = clip_plan[batch_start:batch_end - 1]
+            batch_output = os.path.join(batch_dir, f"batch_{batch_no:03d}.mp4")
+            assembled_duration += render_batch(batch_paths, batch_durations, batch_plan, batch_output)
+            batch_outputs.append(batch_output)
+
+        manifest = os.path.join(batch_dir, "concat.txt")
+        with open(manifest, "w", encoding="utf-8", newline="\n") as handle:
+            for batch_output in batch_outputs:
+                # concat demuxer accepts forward-slash absolute paths with
+                # -safe 0; quote escaping keeps project names safe as well.
+                escaped = os.path.abspath(batch_output).replace("\\", "/").replace("'", r"'\\''")
+                handle.write(f"file '{escaped}'\n")
+        subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", manifest,
+                        "-c", "copy", "-movflags", "+faststart", tmp,
+                        "-loglevel", "error"], check=True)
+        print(f"  [assembly] {len(clips)} clips -> {len(batch_outputs)} Windows-safe batches", flush=True)
 
     first_line_index = 1 if have_intro else 0
     last_line_index = len(clip_durs) - (1 if have_outro else 0)
     line_durs = clip_durs[first_line_index:last_line_index]
+    # Take the persisted plan from the final clip plan, because long renders
+    # convert only batch-boundary transitions to clean cuts.
+    line_plan = clip_plan[first_line_index:first_line_index + max(0, len(line_durs) - 1)]
     line_offset = (clip_durs[0] - transitions.overlap(clip_plan[0])
                    if have_intro else 0.0)
     line_starts = transitions.timeline_starts(line_durs, line_plan, line_offset)
@@ -824,7 +1135,8 @@ def _assemble(mp4s, proj_dir, timeline, parsed, out_path, VW, VH, fps):
         audiopost.ensure_synth_sfx()                     # out-of-box sfx (user override kar sakta)
         track = None
         try:
-            track = audio_mod.select_music([e.get("mood") for e in timeline])
+            track = audio_mod.select_music([e.get("mood") for e in timeline],
+                                           selection=getattr(config, "MUSIC_TRACK", "auto"))
         except Exception:
             pass
         # SFX events (action/emotion + scene-transition whoosh + subscribe CTA) — overuse mat karo
@@ -866,6 +1178,16 @@ def _assemble(mp4s, proj_dir, timeline, parsed, out_path, VW, VH, fps):
         print(f"  [audio master fail -> raw] {str(ex)[:150]}", flush=True)
         os.replace(tmp, tmp2)
 
+    tmp2, time_scale, duration_action = _enforce_target_duration(tmp2, target_seconds, fps)
+    if duration_action and duration_action.startswith("kept natural"):
+        expected_duration = _probe_duration(tmp2)
+    else:
+        expected_duration = float(target_seconds or assembled_duration)
+    if duration_action:
+        print(f"  [duration] {duration_action}; delivery target {expected_duration:.2f}s", flush=True)
+    if time_scale != 1.0:
+        line_starts = [start / time_scale for start in line_starts]
+        line_durs = [duration / time_scale for duration in line_durs]
     # burned subtitles (accurate SRT from script) — libass, relative path (Windows-safe)
     if getattr(config, "SUBTITLES_ON", True):
         try:
@@ -887,11 +1209,11 @@ def _assemble(mp4s, proj_dir, timeline, parsed, out_path, VW, VH, fps):
             # ffmpeg ne cdir mein out banaya -> move to out_path
             made = os.path.join(cdir, os.path.basename(out_path))
             os.replace(made, out_path); os.remove(tmp2)
-            _validate_final_duration(out_path, assembled_duration, fps)
+            _validate_final_duration(out_path, expected_duration, fps)
             _audio_qc(out_path)
             return
         except Exception as ex:
             print(f"  [subtitles skip] {str(ex)[:120]}", flush=True)
     os.replace(tmp2, out_path)
-    _validate_final_duration(out_path, assembled_duration, fps)
+    _validate_final_duration(out_path, expected_duration, fps)
     _audio_qc(out_path)

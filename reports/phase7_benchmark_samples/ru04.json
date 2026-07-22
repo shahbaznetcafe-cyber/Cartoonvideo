@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "roman_urdu",
+    "scenes": [
+      {
+        "id": "chai-dhaba-1",
+        "lines": [
+          {
+            "speaker": "Aloo",
+            "text": "Yar Tamatar, teri chai mein itna namak hai ke samandar bhi sharminda ho jaye.",
+            "emotion": "mazak",
+            "action": "chai ka cup utha kar hawa mein hilata hai"
+          },
+          {
+            "speaker": "Tamatar",
+            "text": "Oye Aloo, tu to apni chai mein cheeni daal ke sharbat bana leta hai!",
+            "emotion": "haste hue",
+            "action": "apni chai ki taraf ishara karta hai"
+          },
+          {
+            "speaker": "Aloo",
+            "text": "Cheeni? Main to keh raha hoon tu namak factory mein chai peeta hai.",
+            "emotion": "mazak",
+            "action": "ankhen bada kar ke dikhata hai"
+          },
+          {
+            "speaker": "Tamatar",
+            "text": "Achha, tu bata de chai ka maza namak se aata hai ya cheeni se?",
+            "emotion": "sawaal",
+            "action": "chai ka ghoont leta hai"
+          },
+          {
+            "speaker": "Aloo",
+            "text": "Maza to doodh se aata hai, lekin tu to doodh bhi namak se dho leta hai!",
+            "emotion": "funny",
+            "action": "hasta hai aur sar hilata hai"
+          },
+          {
+            "speaker": "Tamatar",
+            "text": "Chal be, teri chai mein itni cheeni hai ke diabetes ka patient bhi dar jaye.",
+            "emotion": "jawab mein mazak",
+            "action": "chai ka cup aage badhata hai"
+          },
+          {
+            "speaker": "Aloo",
+            "text": "Theek hai, aaj se main bhi namak daal kar peeta hoon—tere naam par!",
+            "emotion": "sulh",
+            "action": "chai ka cup utha kar toast karta hai"
+          },
+          {
+            "speaker": "Tamatar",
+            "text": "Aur main cheeni daal kar peeta hoon—tere naam par! Phir dekhte hain kaun zyada funny hai.",
+            "emotion": "masti",
+            "action": "apna cup utha kar wapis toast karta hai"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "4e484556-7a4d-421b-851c-99e69e35e336",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.deepseek.v4.flash",
+    "modelAir": "deepseek:v4@flash",
+    "modelDisplayName": "DeepSeek V4 Flash",
+    "transport": "openai_compatible",
+    "latencyMs": 14162,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 285,
+      "completion_tokens": 615,
+      "total_tokens": 900
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "56979021bf05f033534bc5a33ffe3df28fde711e2bac415b787578bf73eea717",
+    "promptVersion": "phase7.1",
+    "contentSha256": "51fc4ec90cf8e352afede0638f9e36bb5957b42f3fe7b57b43d1440adfd1386a",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

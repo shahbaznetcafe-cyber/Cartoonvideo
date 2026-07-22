@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "hi",
+    "scenes": [
+      {
+        "id": "scene-1",
+        "lines": [
+          {
+            "speaker": "दादी",
+            "text": "आज मन कर रहा है चाय में नमक डालूँ... सुना है अबकल लोग 'नमक वाली चाय' का बहुत चर्चा कर रहे हैं!",
+            "emotion": "विचारशील",
+            "action": "चूल्हे पर केतली रखते हुए"
+          },
+          {
+            "speaker": "मोहन",
+            "text": "अरे दादी! चाय में नमक? यह तो चाय के साथ बड़ा बेवफ़ाई होगी! चाय में चीनी होनी चाहिए, नमक तो दाल-सब्ज़ी का काम है।",
+            "emotion": "हैरान",
+            "action": "हैरानी से"
+          },
+          {
+            "speaker": "दादी",
+            "text": "अरे वैसे तुम्हारी चाय भी तो कम नमकीन नहीं होती, जितनी शक्कर तुम डाल लेते हो, चाय हो या शरबत!",
+            "emotion": "खुश",
+            "action": "हँसते हुए"
+          },
+          {
+            "speaker": "मोहन",
+            "text": "दादी, वो तो मीठी चाय है! लेकिन नमक वाली चाय... सोचकर ही जी मचल रहा है। लगेगा जैसे किसी ने बारिश के पानी में चुल्लू भरकर नमक मिलाया हो!",
+            "emotion": "मुस्कुराते हुए",
+            "action": "मुस्कुराते हुए"
+          },
+          {
+            "speaker": "दादी",
+            "text": "ख़ैर, छोड़ो वो नमक-नमक। आज तो मैं तुम्हें असली दादी की मसाला चाय बनाती हूँ... बस थोड़ा सा नमक चाय की चम्मच में लगा दूँगी, ताकि चीनी का स्वाद और उभर कर आए!",
+            "emotion": "मज़ाकिया",
+            "action": "चाय बनाते हुए"
+          },
+          {
+            "speaker": "मोहन",
+            "text": "दादी, ये आपका नया फ़ॉर्मूला है? चलिए, आपकी मसाला चाय ही सबसे बेस्ट है, चाहे उसमें चुटकी भर नमक ही क्यों न हो!",
+            "emotion": "प्रसन्न",
+            "action": "जोर से हँसते हुए"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "4679f846-17ff-431d-bcd5-1391b741c95a",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.zai.glm.5.1",
+    "modelAir": "zai:glm@5.1",
+    "modelDisplayName": "GLM 5.1",
+    "transport": "openai_compatible",
+    "latencyMs": 36982,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 1020,
+      "completion_tokens": 982,
+      "total_tokens": 2002,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "retryCount": 1,
+    "repairCount": 1,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "85697d7ea672e00062641f3df8881932907d1e3a8843e46ba3ecdc706b480011",
+    "promptVersion": "phase7.1",
+    "contentSha256": "007ed077dc255a2dc9c4c3be37eddcfc909b848f11ca666ed29ba8396a1b0660",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

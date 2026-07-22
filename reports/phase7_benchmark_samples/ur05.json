@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "stage": "story_outline",
+  "approved": false,
+  "output": {
+    "title": "ننھے روبوٹ کا بجلی بچانے کا سبق",
+    "logline": "ایک ننھا روبوٹ بجلی ضائع کرنے کی عادت سیکھتا ہے، لیکن جب بجلی ختم ہونے کا خطرہ پیدا ہوتا ہے تو وہ بجلی بچانے کی اہمیت سمجھتا ہے۔",
+    "beats": [
+      "روبو شہر میں ننھا روبوٹ رونی اپنے تمام کھلونے ایک ساتھ چلا کر خوش ہوتا ہے۔",
+      "اس کی ماں اسے سمجھاتی ہیں کہ بجلی ضائع کرنے سے بیٹری ختم ہو سکتی ہے، مگر وہ نہیں سنتا۔",
+      "اچانک شہر کی بجلی چلی جاتی ہے اور رونی کے کھلونے بند ہو جاتے ہیں۔",
+      "رونی کو احساس ہوتا ہے کہ اس کی لاپرواہی کی وجہ سے بجلی ختم ہوئی، اور وہ بجلی بچانے کا عہد کرتا ہے۔"
+    ],
+    "ending": "رونی نے بجلی بچانے کے طریقے سیکھے اور شہر والوں کو بھی سکھائے، جس سے روبو شہر میں دوبارہ روشنی لوٹ آئی۔"
+  },
+  "metadata": {
+    "requestId": "9acb4e7a-2810-4ef9-bc10-db0fd90c0a57",
+    "taskType": "STORY_ARCHITECT",
+    "modelInternalId": "runware.deepseek.v4.pro",
+    "modelAir": "deepseek:v4@pro",
+    "modelDisplayName": "DeepSeek V4 Pro",
+    "transport": "openai_compatible",
+    "latencyMs": 9116,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 224,
+      "completion_tokens": 361,
+      "total_tokens": 585
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "792586cd5f71afa6e11d305e8bfc352f8bc1765bd33160013a763d99d99c5914",
+    "promptVersion": "phase7.1",
+    "contentSha256": "6c4e3512d57dd9239d63a42dcc462d766b9db6488587b8373def54617939afdf",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/02_story_outline.json"
+}

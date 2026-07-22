@@ -119,6 +119,22 @@ def clean_voice(in_path, out_path, target_i=-16.0):
     return probe_duration(out_path), max(0.0, lead - pad_start)
 
 
+def pad_tail(path, seconds):
+    """Line ke aakhir mein saans ka waqfa (silence append) — kids pacing.
+    Idle motion runtime silence ke doran chalti rehti hai (frozen frame nahi)."""
+    seconds = max(0.0, float(seconds or 0))
+    if seconds < 0.05:
+        return probe_duration(path)
+    tmp = path + ".pad.mp3"
+    try:
+        _run(["ffmpeg", "-y", "-i", path, "-af", f"apad=pad_dur={seconds:.3f}",
+              "-ar", str(SR), tmp, "-loglevel", "error"])
+        os.replace(tmp, path)
+    except Exception:
+        pass
+    return probe_duration(path)
+
+
 # ---------------- SFX ----------------
 # action/emotion -> sfx naam. "" = koi sfx nahi (overuse se bacho).
 ACTION_SFX = {

@@ -13,7 +13,6 @@ import config
 import story_parser
 import voice_engine
 import assets as assets_mod
-import compositor
 
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -40,16 +39,15 @@ def apply_settings(s):
     simple = {
         "style": ("STYLE", str), "quality": ("VIDEO_QUALITY", str),
         "aspect": ("ASPECT", str), "fps": ("FPS", int),
-        "motion_preset": ("MOTION_PRESET", str), "render_mode": ("RENDER_MODE", str),
         "fast_preview": ("FAST_PREVIEW", bool), "gpu": ("GPU_ENCODE", str),
-        "music_volume": ("MUSIC_VOLUME", float), "vignette": ("VIGNETTE", bool),
+        "music_volume": ("MUSIC_VOLUME", float), "music_track": ("MUSIC_TRACK", str), "vignette": ("VIGNETTE", bool),
         "voice_volume": ("VOICE_VOLUME", str), "tts_provider": ("TTS_PROVIDER", str),
         "voice_speed": ("VOICE_SPEED", float), "edge_voice": ("EDGE_VOICE", str),
         "google_tts_voice": ("GOOGLE_TTS_VOICE", str),
         "elevenlabs_voice_id": ("ELEVENLABS_VOICE_ID", str),
         "llm_provider": ("LLM_PROVIDER", str), "llm_model": ("LLM_MODEL", str),
         "image_provider": ("IMAGE_PROVIDER", str),
-        "render_workers": ("RENDER_WORKERS", int), "story_mode": ("STORY_MODE", str),
+        "render_workers": ("RENDER_WORKERS", int),
         "multi_char": ("BLENDER3D_MULTI", bool), "render_engine": ("RENDER_ENGINE", str),
         "subtitles_on": ("SUBTITLES_ON", bool), "intro_on": ("INTRO_ON", bool),
         "outro_on": ("OUTRO_ON", bool),
@@ -84,38 +82,6 @@ def apply_settings(s):
         config.SUBTITLES_ON = bool(config.CAPTIONS["enabled"])
 
 
-def _cinematic_scene_images(parsed, timeline, proj_dir, on_progress=None):
-    """Har timeline line ke liye ek full-scene AI image (parallel). scene_image attach."""
-    import cinematic
-    from concurrent.futures import ThreadPoolExecutor
-    all_lines = [(sc, ln) for sc in parsed.get("scenes", []) for ln in sc.get("lines", [])]
-    chars_by_id = {c["id"]: c for c in parsed.get("characters", [])}
-    VW, VH = config.get_dimensions()
-    sdir = os.path.join(proj_dir, "scenes")
-    os.makedirs(sdir, exist_ok=True)
-    total = min(len(all_lines), len(timeline))
-    done = [0]
-
-    def work(idx):
-        sc, ln = all_lines[idx]
-        e = timeline[idx]
-        img = os.path.join(sdir, f"scene_{idx + 1}.png")
-        if not (os.path.exists(img) and os.path.getsize(img) > 10000):
-            try:
-                cinematic.generate_scene(cinematic.scene_prompt(parsed, ln, chars_by_id),
-                                         img, VW, VH)
-            except Exception as ex:
-                print(f"  [scene img {idx + 1} fail] {ex}", flush=True)
-                return
-        e["scene_image"] = img
-        done[0] += 1
-        if on_progress:
-            on_progress(done[0], total, f"Scene image {done[0]}/{total}")
-
-    with ThreadPoolExecutor(max_workers=4) as ex:
-        list(ex.map(work, range(total)))
-
-
 def build(script_text, proj_name=None, on_progress=None, settings=None, parsed=None,
           should_cancel=None):
     """
@@ -124,6 +90,7 @@ def build(script_text, proj_name=None, on_progress=None, settings=None, parsed=N
     parsed: agar diya ho (preview se edit hua plan) to LLM parse skip, seedha isi par render.
     """
     apply_settings(settings)
+    target_dur = (settings or {}).get("target_duration") or (settings or {}).get("length")
     def stage(name):
         def cb(i, t, m):
             if on_progress:
@@ -140,21 +107,19 @@ def build(script_text, proj_name=None, on_progress=None, settings=None, parsed=N
     if parsed:
         parsed = story_parser._assign_voices(parsed)   # edited plan — voices ensure karo
     else:
-        parsed = story_parser.parse_script(script_text)
+        target_dur = (settings or {}).get("target_duration") or (settings or {}).get("length")
+        parsed = story_parser.parse_script(script_text, target_duration=target_dur)
+    story_parser.normalize_parsed_directions(parsed)
+    import character_performance
+    character_performance.annotate_story_requirements(parsed)
     json.dump(parsed, open(os.path.join(proj_dir, "story.json"), "w", encoding="utf-8"),
               ensure_ascii=False, indent=2)
     nc, ns, nl = story_parser.stats(parsed)
     stage("story")(1, 1, f"{nc} characters, {ns} scenes, {nl} lines")
 
-    cinematic_mode = config.STORY_MODE == "cinematic"
-    blender3d_mode = config.STORY_MODE == "blender3d"
-    if cinematic_mode:
-        import cinematic
-        stage("story")(1, 1, "Cinematic tayyari: character bibles + costumes...")
-        cinematic.prepare(parsed)
-
     print("[2/4] 🎙️  Voices...")
-    timeline = voice_engine.generate_voices(parsed, proj_dir, on_progress=stage("voice"))
+    timeline = voice_engine.generate_voices(
+        parsed, proj_dir, on_progress=stage("voice"), should_cancel=should_cancel)
     json.dump(timeline, open(os.path.join(proj_dir, "timeline.json"), "w", encoding="utf-8"),
               ensure_ascii=False, indent=2)
     if should_cancel and should_cancel():
@@ -163,29 +128,22 @@ def build(script_text, proj_name=None, on_progress=None, settings=None, parsed=N
 
     out_path = os.path.join(proj_dir, "final.mp4")
 
-    if blender3d_mode:
-        # BLENDER 3D: character asal 3D ENVIRONMENT glb mein khada hota hai -> AI 2D
-        # background use NAHI hota. Isliye background generation SKIP (tez + koi
-        # Runware/network cost/crash nahi). Style ab 3D-look (rang/roshni) control karta.
-        stage("asset")(1, 1, "3D environment (background gen skip — tez)")
-        scene_bg = {}
-        print("[4/4] 🧊 Blender 3D render (per line)...")
-        import blender3d
-        blender3d.render_3d_video(parsed, timeline, scene_bg, proj_dir, out_path,
-                                  on_progress=stage("render"), should_cancel=should_cancel)
+    # 3D pipeline: character asal 3D ENVIRONMENT glb mein khada hota hai. AI 2D
+    # background sirf threejs engine ke reusable plates ke liye generate hota hai.
+    stage("asset")(1, 1, "3D environment")
+    # The selected renderer comes from apply_settings(); resolve it before the background gate.
+    engine = getattr(config, "RENDER_ENGINE", "threejs")
+    if getattr(config, "THREEJS_AI_BACKGROUNDS", True) and engine == "threejs":
+        print("[3/4] Reusable AI background plates...")
+        scene_bg = assets_mod.build_scene_backgrounds(
+            parsed, proj_dir, on_progress=stage("asset"))
     else:
-        if cinematic_mode:
-            print("[3/4] 🎬 Cinematic scene images (per line)...")
-            scene_bg, char_avatar, char_rigs = {}, {}, {}
-            _cinematic_scene_images(parsed, timeline, proj_dir, on_progress=stage("asset"))
-        else:
-            print("[3/4] 🎨 Assets (backgrounds + characters + rigs)...")
-            scene_bg, char_avatar, char_rigs = assets_mod.build_assets(
-                parsed, proj_dir, on_progress=stage("asset"))
-
-        print("[4/4] 🎬 Compositing + render...")
-        compositor.render(timeline, scene_bg, char_avatar, parsed, proj_dir, out_path,
-                          on_progress=stage("render"), char_rigs=char_rigs)
+        scene_bg = {}
+    print("[4/4] 🧊 3D render (per line)...")
+    import blender3d
+    blender3d.render_3d_video(parsed, timeline, scene_bg, proj_dir, out_path,
+                              on_progress=stage("render"), should_cancel=should_cancel,
+                              target_duration=target_dur)
 
     # P7 — project metadata (list/load ke liye)
     try:

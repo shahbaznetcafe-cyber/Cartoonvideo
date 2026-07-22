@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "stage": "scene_breakdown",
+  "approved": false,
+  "output": {
+    "schemaVersion": 1,
+    "title": "अनाम कहानी",
+    "language": "hindi",
+    "characters": [
+      {
+        "id": "meera",
+        "name": "मीरा",
+        "role": "छात्रा"
+      },
+      {
+        "id": "kabir",
+        "name": "कबीर",
+        "role": "छात्र"
+      }
+    ],
+    "scenes": [
+      {
+        "id": "scene1",
+        "location": "स्कूल",
+        "timeOfDay": "दिन",
+        "characters": [
+          "meera",
+          "kabir"
+        ],
+        "estimatedDuration": 0.5,
+        "elements": [
+          {
+            "type": "dialogue",
+            "speaker": "meera",
+            "text": "यह आवाज़ कहाँ से आई?",
+            "language": "hindi",
+            "emotion": null,
+            "physicalAction": null,
+            "actionTarget": null,
+            "prop": null,
+            "entranceExit": "none",
+            "cameraIntent": null,
+            "soundCue": null,
+            "environmentalEvent": null,
+            "estimatedDuration": 0.2,
+            "continuityReferences": []
+          },
+          {
+            "type": "dialogue",
+            "speaker": "kabir",
+            "text": "मैं दरवाज़े की ओर देखता हूँ।",
+            "language": "hindi",
+            "emotion": null,
+            "physicalAction": null,
+            "actionTarget": null,
+            "prop": null,
+            "entranceExit": "none",
+            "cameraIntent": null,
+            "soundCue": null,
+            "environmentalEvent": null,
+            "estimatedDuration": 0.3,
+            "continuityReferences": []
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "954aa57c-76c9-48ba-b672-f43f5688631f",
+    "taskType": "FAST_PARSER",
+    "modelInternalId": "runware.deepseek.v4.flash",
+    "modelAir": "deepseek:v4@flash",
+    "modelDisplayName": "DeepSeek V4 Flash",
+    "transport": "openai_compatible",
+    "latencyMs": 47786,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 675,
+      "completion_tokens": 423,
+      "total_tokens": 1098
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": true,
+    "fallbackReason": "http_error",
+    "cache": "hit",
+    "cacheKey": "0dadf53ca2290c266813e692fb9782d2e899bb6749416d3f722da4e868cdc019",
+    "promptVersion": "phase7.1",
+    "contentSha256": "04f228581b2c5ab2f75949b80627654de0a9b181ce1802eeea4b9815340087f3",
+    "finishReason": "stop"
+  },
+  "diagnostics": [
+    {
+      "model": "runware.google.gemini.3.5.flash",
+      "reason": "http_error",
+      "message": "Runware HTTP 400: {\n    \"errors\": [\n        {\n            \"code\": \"invalidProviderContent\",\n            \"message\": \"Invalid content detected. The generated content was flagged and rejected by Google Gemini's content moderation system.\",\n            \"responseContent\": \"Content blocked by Gemini safet",
+      "validation": []
+    }
+  ],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/04_scene_breakdown.json"
+}

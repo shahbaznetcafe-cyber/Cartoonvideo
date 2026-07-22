@@ -1,0 +1,76 @@
+﻿{
+    "schemaVersion":  1,
+    "generatedAt":  "2026-07-16T01:35:02.1750427+05:00",
+    "verdict":  "PASS",
+    "output":  "D:\\flayer\\sbz-studio\\outputs\\sbz_professional_character_showcase.mp4",
+    "sha256":  "6080206bddd49750ca9d4842cf640acc252e11af108ef7ba00a57bb5467704c6",
+    "checksPassed":  12,
+    "checksTotal":  12,
+    "checks":  {
+                   "fileExistsAndNonEmpty":  true,
+                   "h264HighQualityDelivery":  true,
+                   "fullHdLandscape":  true,
+                   "deterministicFrameRate":  true,
+                   "expectedFrameCount":  true,
+                   "expectedDuration":  true,
+                   "youtubeCompatibleAudio":  true,
+                   "professionalAudioLevel":  true,
+                   "noDetectedBlackSegments":  true,
+                   "multiCharacterCapturePassed":  true,
+                   "directedStoryValidationPassed":  true,
+                   "milestoneVisualReviewPresent":  true
+               },
+    "media":  {
+                  "programs":  [
+
+                               ],
+                  "stream_groups":  [
+
+                                    ],
+                  "streams":  [
+                                  {
+                                      "index":  0,
+                                      "codec_name":  "h264",
+                                      "codec_type":  "video",
+                                      "width":  1920,
+                                      "height":  1080,
+                                      "pix_fmt":  "yuv420p",
+                                      "r_frame_rate":  "24/1",
+                                      "duration":  "37.458333",
+                                      "nb_frames":  "899"
+                                  },
+                                  {
+                                      "index":  1,
+                                      "codec_name":  "aac",
+                                      "codec_type":  "audio",
+                                      "sample_rate":  "48000",
+                                      "channels":  2,
+                                      "r_frame_rate":  "0/0",
+                                      "duration":  "37.450000",
+                                      "nb_frames":  "1755"
+                                  }
+                              ],
+                  "format":  {
+                                 "duration":  "37.458333",
+                                 "size":  "22597546",
+                                 "bit_rate":  "4826172"
+                             }
+              },
+    "audioAnalysis":  {
+                          "meanVolumeDb":  -21.1,
+                          "maxVolumeDb":  -6.6
+                      },
+    "blackSegments":  [
+
+                      ],
+    "sources":  {
+                    "directedStoryValidation":  "D:\\flayer\\sbz-studio\\reports\\adventurer_directed_production_regression.json",
+                    "visualContactSheet":  "D:\\flayer\\sbz-studio\\outputs\\sbz_professional_character_showcase_contact_sheet.jpg",
+                    "multiCharacterMetrics":  "D:\\flayer\\sbz-studio\\reports\\phase4_multi_character_metrics.json"
+                },
+    "knownLimitations":  [
+                             "Quaternius characters in this showcase are body-animation characters and are not classified FACIAL_READY.",
+                             "The showcase intentionally contains no dialogue or lip-sync claim.",
+                             "The opening title is intentionally static between its short fade-in and fade-out."
+                         ]
+}

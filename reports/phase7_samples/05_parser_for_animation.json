@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "stage": "scene_breakdown",
+  "approved": false,
+  "output": {
+    "schemaVersion": 1,
+    "title": "Jungle Ka Box",
+    "language": "roman_urdu",
+    "characters": [
+      {
+        "id": "ali",
+        "name": "Ali",
+        "role": "Protagonist",
+        "voiceNotes": "Young curious boy"
+      }
+    ],
+    "scenes": [
+      {
+        "id": "scene_1",
+        "location": "Forest path",
+        "timeOfDay": "day",
+        "characters": [
+          "ali"
+        ],
+        "elements": [
+          {
+            "type": "narration",
+            "estimatedDuration": 3.0,
+            "text": "Ali jungle ke raste par aahista chal raha hai. "
+          },
+          {
+            "type": "dialogue",
+            "estimatedDuration": 2.5,
+            "speaker": "ali",
+            "text": "Yeh box yahan kaise aaya? "
+          },
+          {
+            "type": "action",
+            "estimatedDuration": 1.5,
+            "physicalAction": "points towards the box",
+            "prop": "box"
+          }
+        ],
+        "estimatedDuration": 7.0
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "bad939c3-59a2-4da0-96bd-ea2c0e2be0e9",
+    "taskType": "FAST_PARSER",
+    "modelInternalId": "runware.google.gemini.3.5.flash",
+    "modelAir": "google:gemini@3.5-flash",
+    "modelDisplayName": "Gemini 3.5 Flash",
+    "transport": "native",
+    "latencyMs": 4586,
+    "cost": 0.003678,
+    "usage": {
+      "promptTokens": 1534,
+      "completionTokens": 153,
+      "totalTokens": 1687,
+      "costBreakdown": {
+        "tokens": {
+          "prompt": {
+            "modalities": [
+              {
+                "modality": "TEXT",
+                "tokens": 1534,
+                "cost": 0.002301,
+                "costDisplay": "0.002301"
+              }
+            ],
+            "billableTokens": 1534,
+            "cost": 0.002301,
+            "costDisplay": "0.002301"
+          },
+          "cache": {
+            "modalities": [],
+            "billableTokens": 0,
+            "cost": 0,
+            "costDisplay": "0.000000"
+          },
+          "completion": {
+            "billableTokens": 153,
+            "textTokens": 153,
+            "reasoningTokens": 0,
+            "cost": 0.001377,
+            "costDisplay": "0.001377"
+          }
+        },
+        "features": {
+          "search": {
+            "count": 0,
+            "cost": 0,
+            "costDisplay": "0.000000"
+          },
+          "maps": {
+            "count": 0,
+            "cost": 0,
+            "costDisplay": "0.000000"
+          }
+        },
+        "total": 0.003678,
+        "totalDisplay": "0.003678"
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "0873e84b8ce56d6745a41e68ad9327a0faf91751743bef55d98713b2bd77ed85",
+    "promptVersion": "phase7.1",
+    "contentSha256": "b26652b1cb01087bd898ff29a76c9f2a91626982ec372bdc0547eece064361a9",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-proof/script_pipeline/04_scene_breakdown.json"
+}

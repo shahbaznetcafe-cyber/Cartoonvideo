@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "roman_urdu",
+    "scenes": [
+      {
+        "id": "library",
+        "lines": [
+          {
+            "speaker": "Sameer",
+            "text": "Yaar, yeh kitaab toh mujhe chahiye hi nahi!",
+            "emotion": "frustrated",
+            "action": "speaking loudly"
+          },
+          {
+            "speaker": "Librarian",
+            "text": "Beta, library mein aawaz nahi nikaalte. Dheere bolo, please.",
+            "emotion": "gentle",
+            "action": "smiling"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "1ef15f29-622f-4d4e-98cd-3ad602681ae7",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.deepseek.v4.flash",
+    "modelAir": "deepseek:v4@flash",
+    "modelDisplayName": "DeepSeek V4 Flash",
+    "transport": "openai_compatible",
+    "latencyMs": 10451,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 282,
+      "completion_tokens": 151,
+      "total_tokens": 433
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "f01986140f0bdd58607b963adb6a6b8428546c5af29bbae6c7ab083e38eba9eb",
+    "promptVersion": "phase7.1",
+    "contentSha256": "6940ef3fc61335af238cb708a9a897f902b6d1739d6400300293495c6b38b2e5",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

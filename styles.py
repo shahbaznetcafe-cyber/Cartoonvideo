@@ -102,7 +102,8 @@ CUSTOM_FILE = os.path.join(config.BASE_DIR, "styles_custom.json")
 def _load_custom():
     if os.path.exists(CUSTOM_FILE):
         try:
-            return json.load(open(CUSTOM_FILE, encoding="utf-8"))
+            with open(CUSTOM_FILE, encoding="utf-8") as custom_file:
+                return json.load(custom_file)
         except Exception:
             return {}
     return {}
@@ -130,8 +131,8 @@ def apply_style(prompt, name):
 def add_custom(name, description):
     c = _load_custom()
     c[name.strip()] = description
-    json.dump(c, open(CUSTOM_FILE, "w", encoding="utf-8"),
-              ensure_ascii=False, indent=2)
+    with open(CUSTOM_FILE, "w", encoding="utf-8") as custom_file:
+        json.dump(c, custom_file, ensure_ascii=False, indent=2)
     return name
 
 

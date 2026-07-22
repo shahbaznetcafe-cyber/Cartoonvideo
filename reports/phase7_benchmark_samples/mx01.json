@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "stage": "script_doctor",
+  "approved": false,
+  "output": {
+    "script": "[Scene: School]\nRavi: Main project complete karta hoon and then main teacher ko deta hoon.\nAsha: Good, lekin pehle spelling check karna.",
+    "language": "hinglish",
+    "changes": [],
+    "preservedFacts": [
+      "Scene is set in a school",
+      "Ravi is completing a project and giving it to the teacher",
+      "Asha advises checking spelling first"
+    ]
+  },
+  "metadata": {
+    "requestId": "beb77da8-88c3-4bf7-aac5-8b4c701ccd14",
+    "taskType": "SCRIPT_DOCTOR",
+    "modelInternalId": "runware.deepseek.v4.flash",
+    "modelAir": "deepseek:v4@flash",
+    "modelDisplayName": "DeepSeek V4 Flash",
+    "transport": "openai_compatible",
+    "latencyMs": 7651,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 261,
+      "completion_tokens": 105,
+      "total_tokens": 366
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "9966c01fd9952248e2ae26233dc77067002a40c44a9de10c7b62d2dcafdc311e",
+    "promptVersion": "phase7.1",
+    "contentSha256": "614f20437aa466611d850729dffc94949be8f23eb21ef7147a7ebae70f50faef",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/06_script_doctor.json"
+}

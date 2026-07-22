@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "title": "The Suspicious Box",
+  "durationSeconds": 30,
+  "fps": 24,
+  "totalFrames": 720,
+  "dialogue": false,
+  "character": "Quaternius Adventurer",
+  "prop": "Suspicious forest box",
+  "beats": [
+    {
+      "id": "establish_forest",
+      "start": 0,
+      "end": 2.25,
+      "storyAction": "An empty forest path establishes the destination and suspicious box before the Adventurer arrives.",
+      "sourceClip": "Idle",
+      "characterVisibility": "offscreen",
+      "shot": "establishing wide",
+      "cameraMotivation": "Show the path, layered forest depth, foreground foliage and the box as the story destination.",
+      "milestoneFrame": 24
+    },
+    {
+      "id": "enter_path",
+      "start": 2.25,
+      "end": 6.75,
+      "storyAction": "The Adventurer enters from outside frame and walks along the forest path.",
+      "sourceClip": "Walk",
+      "clipCycles": 3,
+      "characterVisibility": "onscreen",
+      "shot": "tracking medium",
+      "cameraMotivation": "Track the arrival and preserve forward screen direction toward the box.",
+      "milestoneFrame": 108
+    },
+    {
+      "id": "notice_box",
+      "start": 6.75,
+      "end": 8.75,
+      "storyAction": "The Adventurer stops, notices the suspicious box and turns attention toward it.",
+      "sourceClip": "Idle_Neutral",
+      "characterVisibility": "background",
+      "shot": "prop detail close-up",
+      "cameraMotivation": "Reveal the box as the cause of the stop while keeping the Adventurer in spatial context.",
+      "milestoneFrame": 180
+    },
+    {
+      "id": "cautious_approach",
+      "start": 8.75,
+      "end": 12.75,
+      "storyAction": "The Adventurer approaches carefully without losing sight of the box.",
+      "sourceClip": "Walk",
+      "clipCycles": 2,
+      "characterVisibility": "onscreen",
+      "shot": "motivated two-shot",
+      "cameraMotivation": "Keep both character and box visible as their distance closes.",
+      "milestoneFrame": 258
+    },
+    {
+      "id": "reach_and_contact",
+      "start": 12.75,
+      "end": 15.5,
+      "storyAction": "The Adventurer reaches toward the box; contact triggers a lid pop, box shake and leaf-particle burst.",
+      "sourceClip": "Interact",
+      "characterVisibility": "onscreen",
+      "shot": "contact close-up",
+      "cameraMotivation": "Show the hand-to-prop relationship and the visible consequence in the same composition.",
+      "milestoneFrame": 330,
+      "consequenceFrame": 342
+    },
+    {
+      "id": "surprised_reaction",
+      "start": 15.5,
+      "end": 17,
+      "storyAction": "The box moves and the Adventurer recoils in surprise.",
+      "sourceClip": "HitRecieve_2",
+      "characterVisibility": "onscreen",
+      "shot": "character reaction close-up",
+      "cameraMotivation": "Prioritize readable body acting because the character has no facial controls.",
+      "milestoneFrame": 378
+    },
+    {
+      "id": "step_backward",
+      "start": 17,
+      "end": 19.75,
+      "storyAction": "Still facing the box, the Adventurer steps backward to create distance.",
+      "sourceClip": "Run_Back",
+      "clipCycles": 2,
+      "characterVisibility": "onscreen",
+      "shot": "reverse medium",
+      "cameraMotivation": "Show backward displacement and preserve the box as the threat.",
+      "milestoneFrame": 444
+    },
+    {
+      "id": "point_warning",
+      "start": 19.75,
+      "end": 23,
+      "storyAction": "The Adventurer points toward the suspicious box as a warning.",
+      "sourceClip": "Idle_Gun_Pointing",
+      "characterVisibility": "onscreen",
+      "shot": "over-shoulder warning shot",
+      "cameraMotivation": "Align the authored forward-pointing pose with the box rather than presenting an isolated gesture.",
+      "milestoneFrame": 516
+    },
+    {
+      "id": "quick_exit",
+      "start": 23,
+      "end": 27.5,
+      "storyAction": "The Adventurer turns away and exits quickly beyond the frame.",
+      "sourceClip": "Run",
+      "clipCycles": 5,
+      "characterVisibility": "exits frame",
+      "shot": "tracking exit wide",
+      "cameraMotivation": "Follow briefly, then let the character leave so the unresolved box remains behind.",
+      "milestoneFrame": 588
+    },
+    {
+      "id": "box_aftermath",
+      "start": 27.5,
+      "end": 30,
+      "storyAction": "The camera returns to the box; its lid twitches while leaves drift through the quiet forest.",
+      "sourceClip": "Idle",
+      "characterVisibility": "offscreen",
+      "shot": "prop aftermath close-up",
+      "cameraMotivation": "End on the story question rather than an empty stage or character pose.",
+      "milestoneFrame": 690
+    }
+  ],
+  "cuts": [2.25, 6.75, 8.75, 12.75, 15.5, 17, 19.75, 23, 27.5],
+  "visualRules": {
+    "transition": "motivated hard cuts only",
+    "blackFrames": false,
+    "toonGrade": true,
+    "foregroundOcclusion": true,
+    "deterministicEnvironmentMotion": true
+  }
+}

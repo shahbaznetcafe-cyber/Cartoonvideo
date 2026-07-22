@@ -462,5 +462,1835 @@
     ],
     "blend": "amy_humanoid.blend",
     "thumb": "amy_humanoid.png"
+  },
+  {
+    "name": "Quaternius Adventurer",
+    "keywords": [
+      "adventurer",
+      "hero",
+      "explorer",
+      "humanoid",
+      "animated"
+    ],
+    "blend": "quaternius_adventurer.blend",
+    "thumb": null,
+    "capability_id": "quaternius_adventurer",
+    "animation_tier": "SKELETAL_INTERACTIVE"
+  },
+  {
+    "name": "Quaternius Alien",
+    "keywords": [
+      "alien",
+      "animated",
+      "character",
+      "monsters",
+      "quaternius"
+    ],
+    "blend": "quaternius_alien.blend",
+    "thumb": null,
+    "capability_id": "quaternius_alien",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Alpaking",
+    "keywords": [
+      "alpaking",
+      "animals",
+      "animated",
+      "character",
+      "quaternius"
+    ],
+    "blend": "quaternius_alpaking.blend",
+    "thumb": null,
+    "capability_id": "quaternius_alpaking",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Alpaking Evolved",
+    "keywords": [
+      "alpaking_evolved",
+      "animals",
+      "animated",
+      "character",
+      "quaternius"
+    ],
+    "blend": "quaternius_alpaking_evolved.blend",
+    "thumb": null,
+    "capability_id": "quaternius_alpaking_evolved",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Armabee",
+    "keywords": [
+      "animals",
+      "animated",
+      "armabee",
+      "character",
+      "quaternius"
+    ],
+    "blend": "quaternius_armabee.blend",
+    "thumb": null,
+    "capability_id": "quaternius_armabee",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Armabee Evolved",
+    "keywords": [
+      "animals",
+      "animated",
+      "armabee_evolved",
+      "character",
+      "quaternius"
+    ],
+    "blend": "quaternius_armabee_evolved.blend",
+    "thumb": null,
+    "capability_id": "quaternius_armabee_evolved",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Astronaut BarbaraTheBee",
+    "keywords": [
+      "animated",
+      "astronaut_barbarathebee",
+      "character",
+      "quaternius",
+      "space"
+    ],
+    "blend": "quaternius_astronaut_barbarathebee.blend",
+    "thumb": null,
+    "capability_id": "quaternius_astronaut_barbarathebee",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Astronaut FernandoTheFlamingo",
+    "keywords": [
+      "animated",
+      "astronaut_fernandotheflamingo",
+      "character",
+      "quaternius",
+      "space"
+    ],
+    "blend": "quaternius_astronaut_fernandotheflamingo.blend",
+    "thumb": null,
+    "capability_id": "quaternius_astronaut_fernandotheflamingo",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Astronaut FinnTheFrog",
+    "keywords": [
+      "animated",
+      "astronaut_finnthefrog",
+      "character",
+      "quaternius",
+      "space"
+    ],
+    "blend": "quaternius_astronaut_finnthefrog.blend",
+    "thumb": null,
+    "capability_id": "quaternius_astronaut_finnthefrog",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Astronaut RaeTheRedPanda",
+    "keywords": [
+      "animated",
+      "astronaut_raetheredpanda",
+      "character",
+      "quaternius",
+      "space"
+    ],
+    "blend": "quaternius_astronaut_raetheredpanda.blend",
+    "thumb": null,
+    "capability_id": "quaternius_astronaut_raetheredpanda",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Beach",
+    "keywords": [
+      "beach",
+      "summer",
+      "casual",
+      "humanoid",
+      "animated"
+    ],
+    "blend": "quaternius_beach.blend",
+    "thumb": null,
+    "capability_id": "quaternius_beach",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Birb",
+    "keywords": [
+      "animals",
+      "animated",
+      "birb",
+      "character",
+      "quaternius"
+    ],
+    "blend": "quaternius_birb.blend",
+    "thumb": null,
+    "capability_id": "quaternius_birb",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius BlueDemon",
+    "keywords": [
+      "animated",
+      "bluedemon",
+      "character",
+      "monsters",
+      "quaternius"
+    ],
+    "blend": "quaternius_bluedemon.blend",
+    "thumb": null,
+    "capability_id": "quaternius_bluedemon",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius BlueSoldier Female",
+    "keywords": [
+      "bluesoldier_female",
+      "character",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_bluesoldier_female.blend",
+    "thumb": null,
+    "capability_id": "quaternius_bluesoldier_female",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius BlueSoldier Male",
+    "keywords": [
+      "bluesoldier_male",
+      "character",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_bluesoldier_male.blend",
+    "thumb": null,
+    "capability_id": "quaternius_bluesoldier_male",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Bunny",
+    "keywords": [
+      "animals",
+      "animated",
+      "bunny",
+      "character",
+      "quaternius"
+    ],
+    "blend": "quaternius_bunny.blend",
+    "thumb": null,
+    "capability_id": "quaternius_bunny",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Cactoro",
+    "keywords": [
+      "animated",
+      "cactoro",
+      "character",
+      "monsters",
+      "quaternius"
+    ],
+    "blend": "quaternius_cactoro.blend",
+    "thumb": null,
+    "capability_id": "quaternius_cactoro",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Casual",
+    "keywords": [
+      "casual",
+      "character",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_casual.blend",
+    "thumb": null,
+    "capability_id": "quaternius_casual",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Casual 2",
+    "keywords": [
+      "casual",
+      "man",
+      "boy",
+      "humanoid",
+      "animated"
+    ],
+    "blend": "quaternius_casual_2.blend",
+    "thumb": null,
+    "capability_id": "quaternius_casual_2",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Casual Bald",
+    "keywords": [
+      "casual_bald",
+      "character",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_casual_bald.blend",
+    "thumb": null,
+    "capability_id": "quaternius_casual_bald",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Casual Female",
+    "keywords": [
+      "casual_female",
+      "character",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_casual_female.blend",
+    "thumb": null,
+    "capability_id": "quaternius_casual_female",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Casual Hoodie",
+    "keywords": [
+      "casual",
+      "hoodie",
+      "boy",
+      "humanoid",
+      "animated"
+    ],
+    "blend": "quaternius_casual_hoodie.blend",
+    "thumb": null,
+    "capability_id": "quaternius_casual_hoodie",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Casual Male",
+    "keywords": [
+      "casual_male",
+      "character",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_casual_male.blend",
+    "thumb": null,
+    "capability_id": "quaternius_casual_male",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Casual2 Female",
+    "keywords": [
+      "casual2_female",
+      "character",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_casual2_female.blend",
+    "thumb": null,
+    "capability_id": "quaternius_casual2_female",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Casual2 Male",
+    "keywords": [
+      "casual2_male",
+      "character",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_casual2_male.blend",
+    "thumb": null,
+    "capability_id": "quaternius_casual2_male",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Casual3 Female",
+    "keywords": [
+      "casual3_female",
+      "character",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_casual3_female.blend",
+    "thumb": null,
+    "capability_id": "quaternius_casual3_female",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Casual3 Male",
+    "keywords": [
+      "casual3_male",
+      "character",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_casual3_male.blend",
+    "thumb": null,
+    "capability_id": "quaternius_casual3_male",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Cat",
+    "keywords": [
+      "animals",
+      "animated",
+      "cat",
+      "character",
+      "quaternius"
+    ],
+    "blend": "quaternius_cat.blend",
+    "thumb": null,
+    "capability_id": "quaternius_cat",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Chef Female",
+    "keywords": [
+      "character",
+      "chef_female",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_chef_female.blend",
+    "thumb": null,
+    "capability_id": "quaternius_chef_female",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Chef Male",
+    "keywords": [
+      "character",
+      "chef_male",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_chef_male.blend",
+    "thumb": null,
+    "capability_id": "quaternius_chef_male",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Chicken",
+    "keywords": [
+      "animals",
+      "animated",
+      "character",
+      "chicken",
+      "quaternius"
+    ],
+    "blend": "quaternius_chicken.blend",
+    "thumb": null,
+    "capability_id": "quaternius_chicken",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Cow",
+    "keywords": [
+      "animals",
+      "character",
+      "cow",
+      "quaternius"
+    ],
+    "blend": "quaternius_cow.blend",
+    "thumb": null,
+    "capability_id": "quaternius_cow",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Cowboy Female",
+    "keywords": [
+      "character",
+      "cowboy_female",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_cowboy_female.blend",
+    "thumb": null,
+    "capability_id": "quaternius_cowboy_female",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Cowboy Male",
+    "keywords": [
+      "character",
+      "cowboy_male",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_cowboy_male.blend",
+    "thumb": null,
+    "capability_id": "quaternius_cowboy_male",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Demon",
+    "keywords": [
+      "animated",
+      "character",
+      "demon",
+      "monsters",
+      "quaternius"
+    ],
+    "blend": "quaternius_demon.blend",
+    "thumb": null,
+    "capability_id": "quaternius_demon",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Dino",
+    "keywords": [
+      "animals",
+      "animated",
+      "character",
+      "dino",
+      "quaternius"
+    ],
+    "blend": "quaternius_dino.blend",
+    "thumb": null,
+    "capability_id": "quaternius_dino",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Doctor Female Old",
+    "keywords": [
+      "character",
+      "doctor_female_old",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_doctor_female_old.blend",
+    "thumb": null,
+    "capability_id": "quaternius_doctor_female_old",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Doctor Female Young",
+    "keywords": [
+      "character",
+      "doctor_female_young",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_doctor_female_young.blend",
+    "thumb": null,
+    "capability_id": "quaternius_doctor_female_young",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Doctor Male Old",
+    "keywords": [
+      "character",
+      "doctor_male_old",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_doctor_male_old.blend",
+    "thumb": null,
+    "capability_id": "quaternius_doctor_male_old",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Doctor Male Young",
+    "keywords": [
+      "character",
+      "doctor_male_young",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_doctor_male_young.blend",
+    "thumb": null,
+    "capability_id": "quaternius_doctor_male_young",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Dog",
+    "keywords": [
+      "animals",
+      "animated",
+      "character",
+      "dog",
+      "quaternius"
+    ],
+    "blend": "quaternius_dog.blend",
+    "thumb": null,
+    "capability_id": "quaternius_dog",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Dragon",
+    "keywords": [
+      "animals",
+      "animated",
+      "character",
+      "dragon",
+      "quaternius"
+    ],
+    "blend": "quaternius_dragon.blend",
+    "thumb": null,
+    "capability_id": "quaternius_dragon",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Dragon Evolved",
+    "keywords": [
+      "animals",
+      "animated",
+      "character",
+      "dragon_evolved",
+      "quaternius"
+    ],
+    "blend": "quaternius_dragon_evolved.blend",
+    "thumb": null,
+    "capability_id": "quaternius_dragon_evolved",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Elf",
+    "keywords": [
+      "character",
+      "elf",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_elf.blend",
+    "thumb": null,
+    "capability_id": "quaternius_elf",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Enemy ExtraSmall",
+    "keywords": [
+      "animated",
+      "character",
+      "enemy_extrasmall",
+      "quaternius",
+      "space"
+    ],
+    "blend": "quaternius_enemy_extrasmall.blend",
+    "thumb": null,
+    "capability_id": "quaternius_enemy_extrasmall",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Enemy Flying",
+    "keywords": [
+      "animated",
+      "character",
+      "enemy_flying",
+      "quaternius",
+      "space"
+    ],
+    "blend": "quaternius_enemy_flying.blend",
+    "thumb": null,
+    "capability_id": "quaternius_enemy_flying",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Enemy Large",
+    "keywords": [
+      "animated",
+      "character",
+      "enemy_large",
+      "quaternius",
+      "space"
+    ],
+    "blend": "quaternius_enemy_large.blend",
+    "thumb": null,
+    "capability_id": "quaternius_enemy_large",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Enemy Small",
+    "keywords": [
+      "animated",
+      "character",
+      "enemy_small",
+      "quaternius",
+      "space"
+    ],
+    "blend": "quaternius_enemy_small.blend",
+    "thumb": null,
+    "capability_id": "quaternius_enemy_small",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Farmer",
+    "keywords": [
+      "farmer",
+      "kisan",
+      "village",
+      "humanoid",
+      "animated"
+    ],
+    "blend": "quaternius_farmer.blend",
+    "thumb": null,
+    "capability_id": "quaternius_farmer",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Fish",
+    "keywords": [
+      "animals",
+      "animated",
+      "character",
+      "fish",
+      "quaternius"
+    ],
+    "blend": "quaternius_fish.blend",
+    "thumb": null,
+    "capability_id": "quaternius_fish",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Formal",
+    "keywords": [
+      "character",
+      "formal",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_formal.blend",
+    "thumb": null,
+    "capability_id": "quaternius_formal",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Frog",
+    "keywords": [
+      "animals",
+      "animated",
+      "character",
+      "frog",
+      "quaternius"
+    ],
+    "blend": "quaternius_frog.blend",
+    "thumb": null,
+    "capability_id": "quaternius_frog",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius GermanShepherd",
+    "keywords": [
+      "animals",
+      "animated",
+      "character",
+      "germanshepherd",
+      "quaternius"
+    ],
+    "blend": "quaternius_germanshepherd.blend",
+    "thumb": null,
+    "capability_id": "quaternius_germanshepherd",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Ghost",
+    "keywords": [
+      "animated",
+      "character",
+      "ghost",
+      "monsters",
+      "quaternius"
+    ],
+    "blend": "quaternius_ghost.blend",
+    "thumb": null,
+    "capability_id": "quaternius_ghost",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Ghost Skull",
+    "keywords": [
+      "animated",
+      "character",
+      "ghost_skull",
+      "monsters",
+      "quaternius"
+    ],
+    "blend": "quaternius_ghost_skull.blend",
+    "thumb": null,
+    "capability_id": "quaternius_ghost_skull",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Glub",
+    "keywords": [
+      "animated",
+      "character",
+      "glub",
+      "monsters",
+      "quaternius"
+    ],
+    "blend": "quaternius_glub.blend",
+    "thumb": null,
+    "capability_id": "quaternius_glub",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Glub Evolved",
+    "keywords": [
+      "animated",
+      "character",
+      "glub_evolved",
+      "monsters",
+      "quaternius"
+    ],
+    "blend": "quaternius_glub_evolved.blend",
+    "thumb": null,
+    "capability_id": "quaternius_glub_evolved",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Goblin Female",
+    "keywords": [
+      "character",
+      "goblin_female",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_goblin_female.blend",
+    "thumb": null,
+    "capability_id": "quaternius_goblin_female",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Goblin Male",
+    "keywords": [
+      "character",
+      "goblin_male",
+      "humans",
+      "quaternius"
+    ],
+    "blend": "quaternius_goblin_male.blend",
+    "thumb": null,
+    "capability_id": "quaternius_goblin_male",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Goleling",
+    "keywords": [
+      "animated",
+      "character",
+      "goleling",
+      "monsters",
+      "quaternius"
+    ],
+    "blend": "quaternius_goleling.blend",
+    "thumb": null,
+    "capability_id": "quaternius_goleling",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Goleling Evolved",
+    "keywords": [
+      "animated",
+      "character",
+      "goleling_evolved",
+      "monsters",
+      "quaternius"
+    ],
+    "blend": "quaternius_goleling_evolved.blend",
+    "thumb": null,
+    "capability_id": "quaternius_goleling_evolved",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius GreenBlob",
+    "keywords": [
+      "animated",
+      "character",
+      "greenblob",
+      "monsters",
+      "quaternius"
+    ],
+    "blend": "quaternius_greenblob.blend",
+    "thumb": null,
+    "capability_id": "quaternius_greenblob",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius GreenSpikyBlob",
+    "keywords": [
+      "animated",
+      "character",
+      "greenspikyblob",
+      "monsters",
+      "quaternius"
+    ],
+    "blend": "quaternius_greenspikyblob.blend",
+    "thumb": null,
+    "capability_id": "quaternius_greenspikyblob",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Hywirl",
+    "keywords": [
+      "animated",
+      "character",
+      "hywirl",
+      "monsters",
+      "quaternius"
+    ],
+    "blend": "quaternius_hywirl.blend",
+    "thumb": null,
+    "capability_id": "quaternius_hywirl",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Kimono Female",
+    "keywords": [
+      "character",
+      "humans",
+      "kimono_female",
+      "quaternius"
+    ],
+    "blend": "quaternius_kimono_female.blend",
+    "thumb": null,
+    "capability_id": "quaternius_kimono_female",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Kimono Male",
+    "keywords": [
+      "character",
+      "humans",
+      "kimono_male",
+      "quaternius"
+    ],
+    "blend": "quaternius_kimono_male.blend",
+    "thumb": null,
+    "capability_id": "quaternius_kimono_male",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius King",
+    "keywords": [
+      "king",
+      "raja",
+      "royal",
+      "humanoid",
+      "animated"
+    ],
+    "blend": "quaternius_king.blend",
+    "thumb": null,
+    "capability_id": "quaternius_king",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Knight Golden Female",
+    "keywords": [
+      "character",
+      "humans",
+      "knight_golden_female",
+      "quaternius"
+    ],
+    "blend": "quaternius_knight_golden_female.blend",
+    "thumb": null,
+    "capability_id": "quaternius_knight_golden_female",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Knight Golden Male",
+    "keywords": [
+      "character",
+      "humans",
+      "knight_golden_male",
+      "quaternius"
+    ],
+    "blend": "quaternius_knight_golden_male.blend",
+    "thumb": null,
+    "capability_id": "quaternius_knight_golden_male",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Knight Male",
+    "keywords": [
+      "character",
+      "humans",
+      "knight_male",
+      "quaternius"
+    ],
+    "blend": "quaternius_knight_male.blend",
+    "thumb": null,
+    "capability_id": "quaternius_knight_male",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Lis",
+    "keywords": [
+      "animated",
+      "character",
+      "lis",
+      "quaternius",
+      "zombie"
+    ],
+    "blend": "quaternius_lis.blend",
+    "thumb": null,
+    "capability_id": "quaternius_lis",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Lis SingleWeapon",
+    "keywords": [
+      "animated",
+      "character",
+      "lis_singleweapon",
+      "quaternius",
+      "zombie"
+    ],
+    "blend": "quaternius_lis_singleweapon.blend",
+    "thumb": null,
+    "capability_id": "quaternius_lis_singleweapon",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Matt",
+    "keywords": [
+      "animated",
+      "character",
+      "matt",
+      "quaternius",
+      "zombie"
+    ],
+    "blend": "quaternius_matt.blend",
+    "thumb": null,
+    "capability_id": "quaternius_matt",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Matt SingleWeapon",
+    "keywords": [
+      "animated",
+      "character",
+      "matt_singleweapon",
+      "quaternius",
+      "zombie"
+    ],
+    "blend": "quaternius_matt_singleweapon.blend",
+    "thumb": null,
+    "capability_id": "quaternius_matt_singleweapon",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Mech BarbaraTheBee",
+    "keywords": [
+      "animated",
+      "character",
+      "mech_barbarathebee",
+      "quaternius",
+      "space"
+    ],
+    "blend": "quaternius_mech_barbarathebee.blend",
+    "thumb": null,
+    "capability_id": "quaternius_mech_barbarathebee",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Mech FernandoTheFlamingo",
+    "keywords": [
+      "animated",
+      "character",
+      "mech_fernandotheflamingo",
+      "quaternius",
+      "space"
+    ],
+    "blend": "quaternius_mech_fernandotheflamingo.blend",
+    "thumb": null,
+    "capability_id": "quaternius_mech_fernandotheflamingo",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Mech FinnTheFrog",
+    "keywords": [
+      "animated",
+      "character",
+      "mech_finnthefrog",
+      "quaternius",
+      "space"
+    ],
+    "blend": "quaternius_mech_finnthefrog.blend",
+    "thumb": null,
+    "capability_id": "quaternius_mech_finnthefrog",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Mech RaeTheRedPanda",
+    "keywords": [
+      "animated",
+      "character",
+      "mech_raetheredpanda",
+      "quaternius",
+      "space"
+    ],
+    "blend": "quaternius_mech_raetheredpanda.blend",
+    "thumb": null,
+    "capability_id": "quaternius_mech_raetheredpanda",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Medieval",
+    "keywords": [
+      "character",
+      "humans",
+      "medieval",
+      "quaternius"
+    ],
+    "blend": "quaternius_medieval.blend",
+    "thumb": null,
+    "capability_id": "quaternius_medieval",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Monkroose",
+    "keywords": [
+      "animals",
+      "animated",
+      "character",
+      "monkroose",
+      "quaternius"
+    ],
+    "blend": "quaternius_monkroose.blend",
+    "thumb": null,
+    "capability_id": "quaternius_monkroose",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Mushnub",
+    "keywords": [
+      "animated",
+      "character",
+      "monsters",
+      "mushnub",
+      "quaternius"
+    ],
+    "blend": "quaternius_mushnub.blend",
+    "thumb": null,
+    "capability_id": "quaternius_mushnub",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Mushnub Evolved",
+    "keywords": [
+      "animated",
+      "character",
+      "monsters",
+      "mushnub_evolved",
+      "quaternius"
+    ],
+    "blend": "quaternius_mushnub_evolved.blend",
+    "thumb": null,
+    "capability_id": "quaternius_mushnub_evolved",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius MushroomKing",
+    "keywords": [
+      "animated",
+      "character",
+      "monsters",
+      "mushroomking",
+      "quaternius"
+    ],
+    "blend": "quaternius_mushroomking.blend",
+    "thumb": null,
+    "capability_id": "quaternius_mushroomking",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Ninja",
+    "keywords": [
+      "animated",
+      "character",
+      "monsters",
+      "ninja",
+      "quaternius"
+    ],
+    "blend": "quaternius_ninja.blend",
+    "thumb": null,
+    "capability_id": "quaternius_ninja",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Ninja Female",
+    "keywords": [
+      "character",
+      "humans",
+      "ninja_female",
+      "quaternius"
+    ],
+    "blend": "quaternius_ninja_female.blend",
+    "thumb": null,
+    "capability_id": "quaternius_ninja_female",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Ninja Male",
+    "keywords": [
+      "character",
+      "humans",
+      "ninja_male",
+      "quaternius"
+    ],
+    "blend": "quaternius_ninja_male.blend",
+    "thumb": null,
+    "capability_id": "quaternius_ninja_male",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Ninja Sand",
+    "keywords": [
+      "character",
+      "humans",
+      "ninja_sand",
+      "quaternius"
+    ],
+    "blend": "quaternius_ninja_sand.blend",
+    "thumb": null,
+    "capability_id": "quaternius_ninja_sand",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Ninja Sand Female",
+    "keywords": [
+      "character",
+      "humans",
+      "ninja_sand_female",
+      "quaternius"
+    ],
+    "blend": "quaternius_ninja_sand_female.blend",
+    "thumb": null,
+    "capability_id": "quaternius_ninja_sand_female",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius OldClassy Female",
+    "keywords": [
+      "character",
+      "humans",
+      "oldclassy_female",
+      "quaternius"
+    ],
+    "blend": "quaternius_oldclassy_female.blend",
+    "thumb": null,
+    "capability_id": "quaternius_oldclassy_female",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius OldClassy Male",
+    "keywords": [
+      "character",
+      "humans",
+      "oldclassy_male",
+      "quaternius"
+    ],
+    "blend": "quaternius_oldclassy_male.blend",
+    "thumb": null,
+    "capability_id": "quaternius_oldclassy_male",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Orc",
+    "keywords": [
+      "animated",
+      "character",
+      "monsters",
+      "orc",
+      "quaternius"
+    ],
+    "blend": "quaternius_orc.blend",
+    "thumb": null,
+    "capability_id": "quaternius_orc",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Orc Skull",
+    "keywords": [
+      "animated",
+      "character",
+      "monsters",
+      "orc_skull",
+      "quaternius"
+    ],
+    "blend": "quaternius_orc_skull.blend",
+    "thumb": null,
+    "capability_id": "quaternius_orc_skull",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Pigeon",
+    "keywords": [
+      "animals",
+      "animated",
+      "character",
+      "pigeon",
+      "quaternius"
+    ],
+    "blend": "quaternius_pigeon.blend",
+    "thumb": null,
+    "capability_id": "quaternius_pigeon",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius PinkBlob",
+    "keywords": [
+      "animated",
+      "character",
+      "monsters",
+      "pinkblob",
+      "quaternius"
+    ],
+    "blend": "quaternius_pinkblob.blend",
+    "thumb": null,
+    "capability_id": "quaternius_pinkblob",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Pirate Female",
+    "keywords": [
+      "character",
+      "humans",
+      "pirate_female",
+      "quaternius"
+    ],
+    "blend": "quaternius_pirate_female.blend",
+    "thumb": null,
+    "capability_id": "quaternius_pirate_female",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Pirate Male",
+    "keywords": [
+      "character",
+      "humans",
+      "pirate_male",
+      "quaternius"
+    ],
+    "blend": "quaternius_pirate_male.blend",
+    "thumb": null,
+    "capability_id": "quaternius_pirate_male",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Pug",
+    "keywords": [
+      "animals",
+      "animated",
+      "character",
+      "pug",
+      "quaternius"
+    ],
+    "blend": "quaternius_pug.blend",
+    "thumb": null,
+    "capability_id": "quaternius_pug",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Punk",
+    "keywords": [
+      "punk",
+      "rebel",
+      "young",
+      "humanoid",
+      "animated"
+    ],
+    "blend": "quaternius_punk.blend",
+    "thumb": null,
+    "capability_id": "quaternius_punk",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Sam",
+    "keywords": [
+      "animated",
+      "character",
+      "quaternius",
+      "sam",
+      "zombie"
+    ],
+    "blend": "quaternius_sam.blend",
+    "thumb": null,
+    "capability_id": "quaternius_sam",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Sam SingleWeapon",
+    "keywords": [
+      "animated",
+      "character",
+      "quaternius",
+      "sam_singleweapon",
+      "zombie"
+    ],
+    "blend": "quaternius_sam_singleweapon.blend",
+    "thumb": null,
+    "capability_id": "quaternius_sam_singleweapon",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius SciFi",
+    "keywords": [
+      "character",
+      "humans",
+      "quaternius",
+      "scifi"
+    ],
+    "blend": "quaternius_scifi.blend",
+    "thumb": null,
+    "capability_id": "quaternius_scifi",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Shaun",
+    "keywords": [
+      "animated",
+      "character",
+      "quaternius",
+      "shaun",
+      "zombie"
+    ],
+    "blend": "quaternius_shaun.blend",
+    "thumb": null,
+    "capability_id": "quaternius_shaun",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Shaun SingleWeapon",
+    "keywords": [
+      "animated",
+      "character",
+      "quaternius",
+      "shaun_singleweapon",
+      "zombie"
+    ],
+    "blend": "quaternius_shaun_singleweapon.blend",
+    "thumb": null,
+    "capability_id": "quaternius_shaun_singleweapon",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Soldier",
+    "keywords": [
+      "character",
+      "humans",
+      "quaternius",
+      "soldier"
+    ],
+    "blend": "quaternius_soldier.blend",
+    "thumb": null,
+    "capability_id": "quaternius_soldier",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Soldier Female",
+    "keywords": [
+      "character",
+      "humans",
+      "quaternius",
+      "soldier_female"
+    ],
+    "blend": "quaternius_soldier_female.blend",
+    "thumb": null,
+    "capability_id": "quaternius_soldier_female",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Soldier Male",
+    "keywords": [
+      "character",
+      "humans",
+      "quaternius",
+      "soldier_male"
+    ],
+    "blend": "quaternius_soldier_male.blend",
+    "thumb": null,
+    "capability_id": "quaternius_soldier_male",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Spacesuit",
+    "keywords": [
+      "spacesuit",
+      "astronaut",
+      "space",
+      "humanoid",
+      "animated"
+    ],
+    "blend": "quaternius_spacesuit.blend",
+    "thumb": null,
+    "capability_id": "quaternius_spacesuit",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Squidle",
+    "keywords": [
+      "animals",
+      "animated",
+      "character",
+      "quaternius",
+      "squidle"
+    ],
+    "blend": "quaternius_squidle.blend",
+    "thumb": null,
+    "capability_id": "quaternius_squidle",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Suit",
+    "keywords": [
+      "suit",
+      "businessman",
+      "office",
+      "humanoid",
+      "animated"
+    ],
+    "blend": "quaternius_suit.blend",
+    "thumb": null,
+    "capability_id": "quaternius_suit",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Suit Female",
+    "keywords": [
+      "character",
+      "humans",
+      "quaternius",
+      "suit_female"
+    ],
+    "blend": "quaternius_suit_female.blend",
+    "thumb": null,
+    "capability_id": "quaternius_suit_female",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Suit Male",
+    "keywords": [
+      "character",
+      "humans",
+      "quaternius",
+      "suit_male"
+    ],
+    "blend": "quaternius_suit_male.blend",
+    "thumb": null,
+    "capability_id": "quaternius_suit_male",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius SWAT",
+    "keywords": [
+      "swat",
+      "police",
+      "soldier",
+      "humanoid",
+      "animated"
+    ],
+    "blend": "quaternius_swat.blend",
+    "thumb": null,
+    "capability_id": "quaternius_swat",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Tribal",
+    "keywords": [
+      "animated",
+      "character",
+      "monsters",
+      "quaternius",
+      "tribal"
+    ],
+    "blend": "quaternius_tribal.blend",
+    "thumb": null,
+    "capability_id": "quaternius_tribal",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Viking Female",
+    "keywords": [
+      "character",
+      "humans",
+      "quaternius",
+      "viking_female"
+    ],
+    "blend": "quaternius_viking_female.blend",
+    "thumb": null,
+    "capability_id": "quaternius_viking_female",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Viking Male",
+    "keywords": [
+      "character",
+      "humans",
+      "quaternius",
+      "viking_male"
+    ],
+    "blend": "quaternius_viking_male.blend",
+    "thumb": null,
+    "capability_id": "quaternius_viking_male",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Witch",
+    "keywords": [
+      "character",
+      "humans",
+      "quaternius",
+      "witch"
+    ],
+    "blend": "quaternius_witch.blend",
+    "thumb": null,
+    "capability_id": "quaternius_witch",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Wizard",
+    "keywords": [
+      "animated",
+      "character",
+      "monsters",
+      "quaternius",
+      "wizard"
+    ],
+    "blend": "quaternius_wizard.blend",
+    "thumb": null,
+    "capability_id": "quaternius_wizard",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Worker",
+    "keywords": [
+      "worker",
+      "mazdoor",
+      "construction",
+      "humanoid",
+      "animated"
+    ],
+    "blend": "quaternius_worker.blend",
+    "thumb": null,
+    "capability_id": "quaternius_worker",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Worker Female",
+    "keywords": [
+      "character",
+      "humans",
+      "quaternius",
+      "worker_female"
+    ],
+    "blend": "quaternius_worker_female.blend",
+    "thumb": null,
+    "capability_id": "quaternius_worker_female",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Worker Male",
+    "keywords": [
+      "character",
+      "humans",
+      "quaternius",
+      "worker_male"
+    ],
+    "blend": "quaternius_worker_male.blend",
+    "thumb": null,
+    "capability_id": "quaternius_worker_male",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Yeti",
+    "keywords": [
+      "animals",
+      "animated",
+      "character",
+      "quaternius",
+      "yeti"
+    ],
+    "blend": "quaternius_yeti.blend",
+    "thumb": null,
+    "capability_id": "quaternius_yeti",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Zombie Basic",
+    "keywords": [
+      "animated",
+      "character",
+      "quaternius",
+      "zombie",
+      "zombie_basic"
+    ],
+    "blend": "quaternius_zombie_basic.blend",
+    "thumb": null,
+    "capability_id": "quaternius_zombie_basic",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Zombie Chubby",
+    "keywords": [
+      "animated",
+      "character",
+      "quaternius",
+      "zombie",
+      "zombie_chubby"
+    ],
+    "blend": "quaternius_zombie_chubby.blend",
+    "thumb": null,
+    "capability_id": "quaternius_zombie_chubby",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Zombie Female",
+    "keywords": [
+      "character",
+      "quaternius",
+      "zombie",
+      "zombie_female"
+    ],
+    "blend": "quaternius_zombie_female.blend",
+    "thumb": null,
+    "capability_id": "quaternius_zombie_female",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Zombie Male",
+    "keywords": [
+      "character",
+      "quaternius",
+      "zombie",
+      "zombie_male"
+    ],
+    "blend": "quaternius_zombie_male.blend",
+    "thumb": null,
+    "capability_id": "quaternius_zombie_male",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Anne",
+    "keywords": [
+      "anne",
+      "pirate",
+      "girl",
+      "sailor",
+      "humanoid",
+      "animated"
+    ],
+    "blend": "quaternius_anne.blend",
+    "thumb": null,
+    "capability_id": "quaternius_anne",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Captain Barbarossa",
+    "keywords": [
+      "captain",
+      "barbarossa",
+      "pirate",
+      "kaptaan",
+      "humanoid",
+      "animated"
+    ],
+    "blend": "quaternius_captain_barbarossa.blend",
+    "thumb": null,
+    "capability_id": "quaternius_captain_barbarossa",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Henry",
+    "keywords": [
+      "henry",
+      "pirate",
+      "boy",
+      "sailor",
+      "humanoid",
+      "animated"
+    ],
+    "blend": "quaternius_henry.blend",
+    "thumb": null,
+    "capability_id": "quaternius_henry",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Mako",
+    "keywords": [
+      "mako",
+      "pirate",
+      "sailor",
+      "humanoid",
+      "animated"
+    ],
+    "blend": "quaternius_mako.blend",
+    "thumb": null,
+    "capability_id": "quaternius_mako",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Shark",
+    "keywords": [
+      "shark",
+      "machli",
+      "sea",
+      "animal",
+      "animated"
+    ],
+    "blend": "quaternius_shark.blend",
+    "thumb": null,
+    "capability_id": "quaternius_shark",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Sharky",
+    "keywords": [
+      "sharky",
+      "shark",
+      "sea",
+      "cute",
+      "animal",
+      "animated"
+    ],
+    "blend": "quaternius_sharky.blend",
+    "thumb": null,
+    "capability_id": "quaternius_sharky",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Skeleton",
+    "keywords": [
+      "skeleton",
+      "dhancha",
+      "spooky",
+      "pirate",
+      "animated"
+    ],
+    "blend": "quaternius_skeleton.blend",
+    "thumb": null,
+    "capability_id": "quaternius_skeleton",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Skeleton Headless",
+    "keywords": [
+      "skeleton",
+      "headless",
+      "spooky",
+      "pirate",
+      "animated"
+    ],
+    "blend": "quaternius_skeleton_headless.blend",
+    "thumb": null,
+    "capability_id": "quaternius_skeleton_headless",
+    "animation_tier": "SKELETAL_BASIC"
+  },
+  {
+    "name": "Quaternius Tentacle",
+    "keywords": [
+      "tentacle",
+      "octopus",
+      "sea",
+      "monster",
+      "animated"
+    ],
+    "blend": "quaternius_tentacle.blend",
+    "thumb": null,
+    "capability_id": "quaternius_tentacle",
+    "animation_tier": "SKELETAL_BASIC"
   }
 ]

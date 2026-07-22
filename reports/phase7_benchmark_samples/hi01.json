@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "hi",
+    "scenes": [
+      {
+        "id": "scene-1",
+        "lines": [
+          {
+            "speaker": "मीरा",
+            "text": "अरे! वह क्या है?",
+            "emotion": "घबराते हुए",
+            "action": "रुककर"
+          },
+          {
+            "speaker": "मीरा",
+            "text": "ओह नहीं! इस छोटी चिड़िया के पंख में चोट लगी है। यह उड़ नहीं पा रही।",
+            "emotion": "दया और चिंता से"
+          },
+          {
+            "speaker": "कबीर",
+            "text": "क्या हुआ मीरा? इतनी चिंतित क्यों हो?",
+            "emotion": "शांत",
+            "action": "तेज़ी से आते हुए"
+          },
+          {
+            "speaker": "मीरा",
+            "text": "कबीर भैया, देखो! यह चिड़िया घायल है। इसके पंख से खून निकल रहा है। मैं इसे कैसे पकड़ूं? इसे बहुत दर्द हो रहा है।",
+            "emotion": "आँखों में आंसू लिए"
+          },
+          {
+            "speaker": "कबीर",
+            "text": "घबरा मत मीरा। जल्दबाजी में इसे पकड़ने से इसे और चोट लग सकती है। जरा पीछे हटकर खड़ी हो जा।",
+            "emotion": "शांत स्वर में"
+          },
+          {
+            "speaker": "कबीर",
+            "text": "अब जल्दी से क्लासरूम से मेरी बैग ले आ। उसमें पेट्रोलेम जेली (मरहम) और रुई है, जो मैंने प्रोजेक्ट के लिए रखी थी। और हाँ, पानी की छोटी बोतल भी ले आना।",
+            "emotion": "शांत"
+          },
+          {
+            "speaker": "मीरा",
+            "text": "क्या यह ठीक हो जाएगी?",
+            "emotion": "राहत की सांस लेते हुए"
+          },
+          {
+            "speaker": "कबीर",
+            "text": "हाँ मीरा, जख्म गहरा नहीं है। यह जल्दी ही ठीक हो जाएगी। चलो, इसे स्कूल के पीछे वाले छोटे से कुटिया नुमा अलमारी (स्टोर रूम) में सुरक्षित रख देते हैं, जहाँ बिल्लियाँ या बाज पक्षी इसे न पकड़ सकें। दोपहर में हम इसे थोड़ा दाना भी लाएंगे।",
+            "emotion": "मुस्कुराते हुए"
+          },
+          {
+            "speaker": "मीरा",
+            "text": "धन्यवाद कबीर भैया। तुम न होते तो मैं क्या करती?",
+            "emotion": "मन ही मन"
+          },
+          {
+            "speaker": "कबीर",
+            "text": "यह हमारी जिम्मेदारी है मीरा। इंसान को हमेशा कमजोर और मददगार का साथ देना चाहिए, चाहे वह इंसान हो या कोई चिड़िया।",
+            "emotion": "मुस्कुराकर"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "3f55e6f6-bf77-4dea-b63c-65948482a828",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.zai.glm.5.1",
+    "modelAir": "zai:glm@5.1",
+    "modelDisplayName": "GLM 5.1",
+    "transport": "openai_compatible",
+    "latencyMs": 68864,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 2541,
+      "completion_tokens": 1225,
+      "total_tokens": 3766,
+      "prompt_tokens_details": {
+        "cached_tokens": 192
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "retryCount": 1,
+    "repairCount": 1,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "b5bd1e0ff57f4e4f90417d4d5da2ac36fd2fae956d9b5bc06ff56b13c0c86643",
+    "promptVersion": "phase7.1",
+    "contentSha256": "17460bb0944747b57dfe9c7562eb407f9db70141886b882c28708dcfad879d8b",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

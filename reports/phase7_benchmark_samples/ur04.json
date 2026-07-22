@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "stage": "story_outline",
+  "approved": false,
+  "output": {
+    "title": "شرارتی طوطا اور اسکول کی گھنٹی",
+    "logline": "ایک شرارتی طوطا اسکول کی گھنٹی چھپا دیتا ہے، جس سے سب بچے پریشان ہو جاتے ہیں، مگر پھر وہ اپنی غلطی سمجھ کر ہنسی خوشی اسے واپس لا کر سب کی مدد کرتا ہے۔",
+    "beats": [
+      "صبح کے وقت اسکول میں بچے قطار بنا رہے ہوتے ہیں کہ طوطا چپکے سے گھنٹی اٹھا کر ایک درخت کے پیچھے چھپا دیتا ہے، اور گھنٹی بجنے کے بجائے سب حیران رہ جاتے ہیں۔",
+      "ہیڈ ماسٹر، ٹیچر اور بچے گھنٹی ڈھونڈنے لگتے ہیں، طوطا اپنی شرارت پر ہنستا ہے، مگر جب وہ دیکھتا ہے کہ سب کو دیر ہو رہی ہے تو اسے اپنی غلطی کا احساس ہوتا ہے۔",
+      "طوطا گھنٹی واپس لانے کے لیے ایک مزاحیہ منصوبہ بناتا ہے؛ وہ بچوں کی مدد سے چھپنے کی جگہ تک جاتا ہے، راستے میں چھوٹی چھوٹی شرارتیں بھی کرتا ہے، مگر آخرکار گھنٹی ڈھونڈ لیتا ہے۔",
+      "طوطا سب کے سامنے معافی مانگتا ہے اور گھنٹی واپس لگا دیتا ہے، پھر خود ہی گھنٹی بجا کر اعلان کرتا ہے کہ اب اسکول شروع ہو گیا ہے، اور سب بچے ہنستے ہوئے تالیاں بجاتے ہیں۔"
+    ],
+    "ending": "آخر میں طوطا وعدہ کرتا ہے کہ آئندہ کسی چیز کو چھپانے کے بجائے مدد کرے گا، اور اسکول کی گھنٹی خوشی سے بجتی رہتی ہے۔"
+  },
+  "metadata": {
+    "requestId": "b1ebaba6-dd4b-4403-9e41-eb9e17ce1efd",
+    "taskType": "STORY_ARCHITECT",
+    "modelInternalId": "runware.openai.gpt.5.4.mini",
+    "modelAir": "openai:gpt@5.4-mini",
+    "modelDisplayName": "GPT-5.4 Mini",
+    "transport": "native",
+    "latencyMs": 5979,
+    "cost": 0.001857,
+    "usage": {
+      "promptTokens": 280,
+      "completionTokens": 366,
+      "totalTokens": 646,
+      "completionTokensDetails": {
+        "reasoningTokens": 0
+      },
+      "promptTokensDetails": {
+        "cachedTokens": 0
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "9758c984f667d3dda47b8926a672ba42126cd29512272bbe2dcbcd956c2fe05d",
+    "promptVersion": "phase7.1",
+    "contentSha256": "5683869783320d6726c29b84b1deaabc0f99c3434a423412cf0f7bbcf720c33f",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/02_story_outline.json"
+}

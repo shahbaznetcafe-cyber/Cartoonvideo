@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "title": "Representative Quaternius Multi-Character Proof",
+  "fps": 24,
+  "durationSeconds": 6,
+  "totalFrames": 144,
+  "characters": [
+    {"id": "quaternius_casual_2", "realClip": "Walk", "screenRole": "left moving performer"},
+    {"id": "quaternius_farmer", "realClip": "Wave", "screenRole": "center greeting performer"},
+    {"id": "quaternius_king", "realClip": "Listen", "screenRole": "right listening performer"}
+  ],
+  "proofContract": {
+    "independentLoaderObjectGraphs": true,
+    "independentAnimationMixers": true,
+    "independentAnimationStates": true,
+    "sharedBoneUuidIntersectionMustBeEmpty": true,
+    "runtimeGroundingTolerance": 0.02,
+    "cameraUsesCombinedProportionBounds": true,
+    "facialAnimationClaimed": false,
+    "blenderAllowedAtRuntime": false
+  },
+  "status": "implemented_capture_and_validation_enabled"
+}

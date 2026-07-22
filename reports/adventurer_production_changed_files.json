@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "scope": "Phase 3 isolated single-scene production integration",
+  "created": [
+    "assets/characters/capability_registry.json",
+    "threejs_render/production/character_capability_registry.js",
+    "threejs_render/production/animation_director.js",
+    "threejs_render/production/shot_director.js",
+    "threejs_render/production/interaction_system.js",
+    "threejs_render/production/environment_motion.js",
+    "threejs_render/production/export_production_plan.mjs",
+    "threejs_render/production/extract_encoded_milestones.mjs",
+    "threejs_render/production/validate_production_scene.mjs",
+    "threejs_render/production_scene/index.html",
+    "threejs_render/tests/production_directors.test.mjs",
+    "reports/sbz_adventurer_production_scene.json",
+    "reports/adventurer_directed_execution_plan.json",
+    "reports/adventurer_production_clip_mapping.json",
+    "reports/adventurer_directed_production_metrics.json",
+    "reports/adventurer_directed_production_regression.json",
+    "reports/adventurer_encoded_milestone_manifest.json",
+    "reports/adventurer_encoded_visual_review.json",
+    "reports/adventurer_production_architecture.md",
+    "reports/adventurer_production_integration_diff.md",
+    "reports/adventurer_production_python_regression.json",
+    "reports/adventurer_production_remaining_limitations.md",
+    "reports/adventurer_production_review_handoff.md",
+    "reports/adventurer_production_untouched_legacy_files.json",
+    "outputs/adventurer_directed_production_scene.mp4",
+    "outputs/adventurer_directed_production_encoded_milestones/"
+  ],
+  "modifiedExistingPhase2ProofFilesForOptInOnly": [
+    "threejs_render/quaternius_phase2/story.js",
+    "threejs_render/quaternius_phase2/capture.mjs"
+  ],
+  "mainProductionPipelineModified": false,
+  "bulkCharacterConversionPerformed": false,
+  "facialSystemImplemented": false
+}

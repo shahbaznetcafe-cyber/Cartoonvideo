@@ -13,7 +13,7 @@ import json
 import os
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 STATE_FILENAME = "scene_animation_state.json"
 
 _EMOTION_ALIASES = {
@@ -32,8 +32,9 @@ _REST_POSES = {
     "fear":     (11.0, -11.0, 15.0, 0.95),
 }
 
-_LOCOMOTION = {"walk": 0.34, "come": 0.34, "go": 0.34,
-               "approach": 0.34, "run": 0.58}
+_LOCOMOTION = {"walk": 0.9, "come": 0.8, "go": 0.8,
+               "approach": 0.58, "run": 1.45, "exit": 2.4,
+               "retreat": -0.8}
 _ASSIST = {"help", "rescue", "pull", "save", "guide", "lift"}
 
 
@@ -135,19 +136,23 @@ def build_plan(timeline, line_contexts, fps=24):
         if speaker in char_states:
             speaker_slot = cast.index(speaker)
             direction = _target_direction(speaker_slot, target_slot, len(cast))
+            if action == "exit":
+                # Exit must cross toward the nearest frame edge, not toward the
+                # dialogue partner.  The shot director only partially follows.
+                direction = -1.0 if speaker_slot <= (len(cast) - 1) / 2.0 else 1.0
             if action in _LOCOMOTION:
                 end_x = char_states[speaker]["end"]["position"]["x"] + direction * _LOCOMOTION[action]
-                char_states[speaker]["end"]["position"]["x"] = round(_clamp(end_x, -0.68, 0.68), 6)
+                char_states[speaker]["end"]["position"]["x"] = round(_clamp(end_x, -2.8, 2.8), 6)
             elif action == "slip":
                 end_x = char_states[speaker]["end"]["position"]["x"] + direction * 0.12
-                char_states[speaker]["end"]["position"]["x"] = round(_clamp(end_x, -0.68, 0.68), 6)
+                char_states[speaker]["end"]["position"]["x"] = round(_clamp(end_x, -2.8, 2.8), 6)
             elif action in _ASSIST and isinstance(target_slot, int) and 0 <= target_slot < len(cast):
                 target_id = cast[target_slot]
                 if target_id in char_states and target_id != speaker:
                     speaker_x = char_states[speaker]["end"]["position"]["x"] + direction * 0.18
                     target_x = char_states[target_id]["end"]["position"]["x"] - direction * 0.14
-                    char_states[speaker]["end"]["position"]["x"] = round(_clamp(speaker_x, -0.68, 0.68), 6)
-                    char_states[target_id]["end"]["position"]["x"] = round(_clamp(target_x, -0.68, 0.68), 6)
+                    char_states[speaker]["end"]["position"]["x"] = round(_clamp(speaker_x, -2.8, 2.8), 6)
+                    char_states[target_id]["end"]["position"]["x"] = round(_clamp(target_x, -2.8, 2.8), 6)
 
         for cid, data in char_states.items():
             current[cid] = _copy_state(data["end"])

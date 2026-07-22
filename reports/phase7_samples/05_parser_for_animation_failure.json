@@ -1,0 +1,23 @@
+{
+  "name": "05_parser_for_animation",
+  "stage": "scene_breakdown",
+  "status": "FAIL",
+  "errorType": "OutputValidationError",
+  "error": "All configured script models failed",
+  "diagnostics": [
+    {
+      "model": "runware.google.gemini.3.5.flash",
+      "reason": "http_error",
+      "message": "Runware HTTP 400: {\n    \"data\": [],\n    \"errors\": [\n        {\n            \"code\": \"invalidValue\",\n            \"message\": \"Invalid value for 'jsonSchema' parameter. The parameter must be of type 'object with a \\\"schema\\\" key, e.g. {name, schema, strict}'.\",\n            \"parameter\": \"jsonSchema\",\n    ",
+      "validation": []
+    },
+    {
+      "model": "runware.deepseek.v4.flash",
+      "reason": "OutputValidationError",
+      "message": "Parsed story failed semantic validation",
+      "validation": [
+        "$.scenes[0]: element timing does not match scene duration"
+      ]
+    }
+  ]
+}

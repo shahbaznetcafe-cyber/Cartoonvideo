@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "stage": "script_doctor",
+  "approved": false,
+  "output": {
+    "script": "[Scene: Jungle]\nRaju: This box is stupid, main isay tod dunga.\nSana: Stop, pehle safely check karte hain.",
+    "language": "hinglish",
+    "changes": [],
+    "preservedFacts": [
+      "Scene is a jungle",
+      "Raju wants to break the box",
+      "Sana advises caution"
+    ]
+  },
+  "metadata": {
+    "requestId": "b428b41e-239c-4590-ad01-e6df8c1176bd",
+    "taskType": "SCRIPT_DOCTOR",
+    "modelInternalId": "runware.deepseek.v4.flash",
+    "modelAir": "deepseek:v4@flash",
+    "modelDisplayName": "DeepSeek V4 Flash",
+    "transport": "openai_compatible",
+    "latencyMs": 10141,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 255,
+      "completion_tokens": 85,
+      "total_tokens": 340
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "bd55590c01f2e23fc3d77dcc2ec7a943444054afe242e225eb89386dcd46944e",
+    "promptVersion": "phase7.1",
+    "contentSha256": "b49306b73f09eeb4454693759206b30be5c43e9115f682fcd755032d87175c53",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/06_script_doctor.json"
+}

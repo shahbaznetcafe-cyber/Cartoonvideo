@@ -8,6 +8,7 @@ import re
 
 import config
 import dialogue_style
+import actions
 from runware_client import post_tasks, new_uuid
 
 
@@ -47,15 +48,17 @@ Rules:
 - Split into logical scenes whenever location/time/topic changes.
 - Open on the story problem, surprise, or funniest action in the FIRST spoken line. Do
   not begin with greetings, channel branding, or setup that can be inferred visually.
-- For a normal YouTube episode, target 5-7 scenes, 4-7 purposeful lines per scene, and
-  roughly 30-42 spoken lines total. Consolidate repeated explanations and reactions.
-  Preserve additional lines only when the user explicitly requests a longer episode.
-- Keep each "text" as one natural spoken line. Prefer a concise line over splitting a
-  repeated idea into several dialogue turns.
+- PRESERVE ALL SPOKEN LINES. Do NOT drop, summarize, truncate, or consolidate dialogue lines from the input script. Extract every single line into the JSON structure so the rendered video duration matches the full length of the input script.
+- Keep each "text" as one natural spoken line.
 - Every scene must introduce a visibly different condition, location, action, or
-  consequence. Every line's action must be concrete enough to animate on screen.
+  consequence. Every line's action must be one concrete renderer-supported verb:
+  idle, look, listen, walk, run, approach, exit, wave, point, reach, pickup, give,
+  celebrate, jump, dance, nod, shake, hug, help, pull, punch, kick, hit, fall, sit,
+  stand, wash, slip, or splash. Never use vague directions such as "acts naturally".
 - Always include at least one character. Infer gender sensibly.
 - background_prompt must always be in ENGLISH and describe ONLY the scene (no people).
+  Include location type, time of day, lighting, weather, depth layers and story props
+  required by the actions. Keep the foreground clear enough for character performance.
 - Treat transition as the edit INTO this scene. Use hard_cut for the first scene and
   for normal dialogue continuity. Use a visible transition only when story action,
   camera movement, time change, montage, or a deliberate visual match motivates it.
@@ -101,12 +104,68 @@ def _assign_voices(data):
 
 
 _SCENE_RE = re.compile(r"^\s*\[\s*scene\s*:\s*(.+?)\s*\]\s*$", re.IGNORECASE)
-_DIALOGUE_RE = re.compile(r"^\s*([^:\n]{1,80})\s*:\s*(.+?)\s*$")
+_DIALOGUE_RE = re.compile(r"^\s*([^:\-\n\[]{1,60})\s*[:\-]\s*(.+?)\s*$")
 _DIRECTION_RE = re.compile(r"^\s*\(([^)]+)\)\s*(.*)$")
 _EMOTIONS = {
     "happy", "sad", "angry", "excited", "scared", "confused", "thinking",
     "surprised", "neutral", "relieved",
 }
+_EMOTION_ALIASES = {
+    "happy": ("खुश", "मुस्कुर", "प्रसन्न", "relief", "राहत", "khush", "muskur"),
+    "sad": ("उदास", "दुख", "रोते", "sad", "udaas", "dukhi"),
+    "angry": ("गुस्स", "क्रोधित", "नाराज़", "angry", "gussa", "naraz"),
+    "excited": ("उत्साहित", "जोश", "excited", "energetic", "हिम्मती"),
+    "scared": ("डर", "घबरा", "भय", "scared", "afraid", "dari", "dara"),
+    "confused": ("उलझ", "confused", "परेशान", "hairan pareshan"),
+    "thinking": ("सोच", "संदेह", "focused", "फोकस", "thinking", "गौर"),
+    "surprised": ("चौंक", "हैरान", "surpris", "shocked"),
+    "neutral": ("सतर्क", "शांत", "रुकते", "neutral", "calm", "alert"),
+}
+
+# Production templates use these common English acting cues.  Keep aliases
+# separate from the historical multilingual table to avoid misclassifying the
+# final location part in ``(emotion; action; location)``.
+_EMOTION_ALIASES["thinking"] += ("curious", "curiosity")
+_EMOTION_ALIASES["neutral"] += ("serious", "determined")
+
+
+def _normalize_emotion(value):
+    key = str(value or "").strip().casefold()
+    if key in _EMOTIONS:
+        return key
+    for emotion, markers in _EMOTION_ALIASES.items():
+        if any(marker in key for marker in markers):
+            return emotion
+    return None
+
+
+def normalize_parsed_directions(data):
+    """Repair saved/LLM plans so emotion and renderer action remain separate."""
+    for scene in (data or {}).get("scenes", []):
+        for line in scene.get("lines", []):
+            raw_action = str(line.get("action") or "").strip().casefold()
+            parts = [part.strip() for part in re.split(r"[;|]", raw_action) if part.strip()]
+            supported = next((part for part in reversed(parts)
+                              if part in actions.SUPPORTED_ACTIONS), None)
+            current_emotion = _normalize_emotion(line.get("emotion")) or "neutral"
+            if not raw_action:
+                line["emotion"] = current_emotion
+                continue
+            if current_emotion == "neutral":
+                for part in parts:
+                    if part == supported:
+                        continue
+                    inferred = _normalize_emotion(part)
+                    if inferred:
+                        current_emotion = inferred
+                        break
+            if supported:
+                line["action"] = supported
+            elif raw_action not in actions.SUPPORTED_ACTIONS:
+                detected = actions.detect(f"{raw_action} {line.get('text') or ''}", current_emotion)
+                line["action"] = "idle" if detected == "none" else detected
+            line["emotion"] = current_emotion
+    return data
 
 
 def _speaker_id(name):
@@ -128,7 +187,8 @@ def _detect_language(text):
 
 def _infer_gender(name):
     value = str(name).casefold()
-    if any(token in value for token in ("amy", "girl", "bibi", "aunty", "nani", "dadi", "amma")):
+    if any(token in value for token in ("amy", "girl", "bibi", "aunty", "nani", "dadi", "amma",
+                                             "मीरा", "रिया", "सिया", "परी", "लड़की", "महिला")):
         return "female"
     if any(token in value for token in ("kid", "child", "baby", "bacha", "bachi")):
         return "child"
@@ -181,16 +241,47 @@ def parse_structured_script(script_text):
 
         display_name = dialogue_match.group(1).strip()
         speaker = _speaker_id(display_name)
-        text = dialogue_match.group(2).strip()
+        text = dialogue_match.group(2).strip().strip('"\'“”«»')
         emotion, action = "neutral", ""
         direction = _DIRECTION_RE.match(text)
         if direction:
             cue = direction.group(1).strip().casefold()
-            text = direction.group(2).strip()
-            if cue in _EMOTIONS:
-                emotion = cue
-            else:
-                action = cue
+            text = direction.group(2).strip().strip('"\'“”«»')
+            # Professional generated scripts may provide ``emotion; action``.
+            # Older one-token cues remain fully backward compatible.
+            cue_parts = [part.strip() for part in re.split(r"[;|]", cue) if part.strip()]
+            action_parts, location_parts = [], []
+            for part in cue_parts:
+                normalized_emotion = _normalize_emotion(part)
+                normalized_action = part.casefold()
+                if normalized_emotion and emotion == "neutral" and normalized_action not in actions.SUPPORTED_ACTIONS:
+                    emotion = normalized_emotion
+                elif normalized_action in actions.SUPPORTED_ACTIONS:
+                    action_parts.append(normalized_action)
+                else:
+                    # Production templates use (emotion; action; location).
+                    # Keep that final location cue instead of treating it as a
+                    # broken action.  It can create a real scene boundary.
+                    location_parts.append(part)
+            action = "; ".join(action_parts)
+            location_cue = "; ".join(location_parts)
+        else:
+            location_cue = ""
+        if location_cue:
+            normalized_cue = location_cue.casefold()
+            current_location = str(current.get("location") or "").casefold()
+            # A repeated cue stays in the same scene.  A new cue starts a real
+            # storyboard scene so the background director can change location.
+            if current["lines"] and normalized_cue != current_location:
+                current = {
+                    "id": len(scenes) + 1, "location": location_cue, "time": "day",
+                    "mood": "neutral", "transition": "hard_cut",
+                    "transition_duration": 0.0, "background_prompt": location_cue, "lines": [],
+                }
+                scenes.append(current)
+            elif not current["lines"] or current_location == "story scene":
+                current["location"] = location_cue
+                current["background_prompt"] = location_cue
         if not text:
             continue
         current["lines"].append({
@@ -209,21 +300,26 @@ def parse_structured_script(script_text):
         return None
     for index, scene in enumerate(scenes, 1):
         scene["id"] = index
-    return _assign_voices({
+    return normalize_parsed_directions(_assign_voices({
         "title": scenes[0]["location"] or "Untitled",
         "language": _detect_language(script_text),
         "characters": list(speakers.values()),
         "scenes": scenes,
-    })
+    }))
 
 
-def parse_script(script_text):
+def parse_script(script_text, target_duration=None):
     structured = parse_structured_script(script_text)
     if structured:
+        if target_duration:
+            import duration_planner
+            structured, _ = duration_planner.auto_segment_scenes(
+                structured, script_text=script_text, selected=target_duration)
         return structured
     import providers
+    prompt_extra = f"\nTarget Duration: {target_duration}. Extract ALL spoken lines fully." if target_duration else ""
     raw = providers.llm_generate(
-        SYSTEM_PROMPT, f"SCRIPT:\n{script_text}",
+        SYSTEM_PROMPT + prompt_extra, f"SCRIPT:\n{script_text}",
         max_tokens=4000, temperature=0.4)
 
     try:
@@ -234,7 +330,12 @@ def parse_script(script_text):
     parsed.setdefault("title", "Untitled")
     parsed.setdefault("characters", [])
     parsed.setdefault("scenes", [])
-    return _assign_voices(parsed)
+    result = normalize_parsed_directions(_assign_voices(parsed))
+    if target_duration:
+        import duration_planner
+        result, _ = duration_planner.auto_segment_scenes(
+            result, script_text=script_text, selected=target_duration)
+    return result
 
 
 def stats(parsed):

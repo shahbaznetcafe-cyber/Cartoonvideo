@@ -1,0 +1,954 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "SBZ Animation Director",
+  "fps": 24,
+  "durationSeconds": 30,
+  "totalFrames": 720,
+  "character": {
+    "id": "quaternius_adventurer",
+    "displayName": "Quaternius Adventurer",
+    "sourcePack": "Ultimate Modular Men Pack",
+    "assetPath": "assets/characters/quaternius_master/master_character.glb",
+    "assetSha256": "da7728ee425af38456ef0e97f28dfbafcdcd853b528638b07174c2b81235a958",
+    "license": {
+      "status": "verified",
+      "name": "CC0 1.0",
+      "source": "https://quaternius.com/packs/ultimatemodularcharacters.html",
+      "localLicenseFilePresent": false
+    },
+    "tier": "SKELETAL_INTERACTIVE",
+    "skeleton": {
+      "armatureName": "QuaterniusMasterRig",
+      "boneCount": 62,
+      "skinnedMeshCount": 5
+    },
+    "skeletonMapping": {
+      "root": "Root",
+      "hips": "Hips",
+      "spine": "Abdomen",
+      "chest": "Chest",
+      "neck": "Neck",
+      "head": "Head",
+      "leftShoulder": "Shoulder.L",
+      "leftUpperArm": "UpperArm.L",
+      "leftLowerArm": "LowerArm.L",
+      "leftHand": "Wrist.L",
+      "rightShoulder": "Shoulder.R",
+      "rightUpperArm": "UpperArm.R",
+      "rightLowerArm": "LowerArm.R",
+      "rightHand": "Wrist.R",
+      "leftUpperLeg": "UpperLeg.L",
+      "leftLowerLeg": "LowerLeg.L",
+      "leftFoot": "Foot.L",
+      "rightUpperLeg": "UpperLeg.R",
+      "rightLowerLeg": "LowerLeg.R",
+      "rightFoot": "Foot.R"
+    },
+    "authoredClips": {
+      "Celebrate": {
+        "durationSeconds": 1.25,
+        "recommendedLoop": "once"
+      },
+      "Death": {
+        "durationSeconds": 1.041667,
+        "recommendedLoop": "once"
+      },
+      "Gun_Shoot": {
+        "durationSeconds": 0.583333,
+        "recommendedLoop": "once"
+      },
+      "HitRecieve": {
+        "durationSeconds": 0.541667,
+        "recommendedLoop": "once"
+      },
+      "HitRecieve_2": {
+        "durationSeconds": 0.541667,
+        "recommendedLoop": "once"
+      },
+      "Idle": {
+        "durationSeconds": 1.666667,
+        "recommendedLoop": "repeat"
+      },
+      "Idle_Gun": {
+        "durationSeconds": 1.666667,
+        "recommendedLoop": "repeat"
+      },
+      "Idle_Gun_Pointing": {
+        "durationSeconds": 1.666667,
+        "recommendedLoop": "repeat"
+      },
+      "Idle_Gun_Shoot": {
+        "durationSeconds": 0.666667,
+        "recommendedLoop": "once"
+      },
+      "Idle_Neutral": {
+        "durationSeconds": 1.666667,
+        "recommendedLoop": "repeat"
+      },
+      "Idle_Sword": {
+        "durationSeconds": 1.666667,
+        "recommendedLoop": "repeat"
+      },
+      "Interact": {
+        "durationSeconds": 1.25,
+        "recommendedLoop": "once"
+      },
+      "Kick_Left": {
+        "durationSeconds": 0.916667,
+        "recommendedLoop": "once"
+      },
+      "Kick_Right": {
+        "durationSeconds": 0.916667,
+        "recommendedLoop": "once"
+      },
+      "Listen": {
+        "durationSeconds": 1.666667,
+        "recommendedLoop": "repeat"
+      },
+      "Point": {
+        "durationSeconds": 1.666667,
+        "recommendedLoop": "once"
+      },
+      "Punch_Left": {
+        "durationSeconds": 0.833333,
+        "recommendedLoop": "once"
+      },
+      "Punch_Right": {
+        "durationSeconds": 0.833333,
+        "recommendedLoop": "once"
+      },
+      "Roll": {
+        "durationSeconds": 1.333333,
+        "recommendedLoop": "once"
+      },
+      "Run": {
+        "durationSeconds": 0.791667,
+        "recommendedLoop": "repeat"
+      },
+      "Run_Back": {
+        "durationSeconds": 0.833333,
+        "recommendedLoop": "repeat"
+      },
+      "Run_Left": {
+        "durationSeconds": 0.791667,
+        "recommendedLoop": "repeat"
+      },
+      "Run_Right": {
+        "durationSeconds": 0.791667,
+        "recommendedLoop": "repeat"
+      },
+      "Run_Shoot": {
+        "durationSeconds": 0.833333,
+        "recommendedLoop": "repeat"
+      },
+      "Sword_Slash": {
+        "durationSeconds": 1,
+        "recommendedLoop": "once"
+      },
+      "TalkIdle": {
+        "durationSeconds": 1.666667,
+        "recommendedLoop": "repeat"
+      },
+      "Walk": {
+        "durationSeconds": 1.333333,
+        "recommendedLoop": "repeat"
+      },
+      "Wave": {
+        "durationSeconds": 1.666667,
+        "recommendedLoop": "once"
+      }
+    },
+    "storyActionClips": {
+      "offscreen_hold": {
+        "realClip": "Idle",
+        "authored": true
+      },
+      "walk_path": {
+        "realClip": "Walk",
+        "authored": true
+      },
+      "notice_prop": {
+        "realClip": "Idle_Neutral",
+        "authored": true
+      },
+      "cautious_approach": {
+        "realClip": "Walk",
+        "authored": true
+      },
+      "reach_prop": {
+        "realClip": "Interact",
+        "authored": true
+      },
+      "surprise_recoil": {
+        "realClip": "HitRecieve_2",
+        "authored": true
+      },
+      "retreat_backward": {
+        "realClip": "Run_Back",
+        "authored": true
+      },
+      "warning_point": {
+        "realClip": "Idle_Gun_Pointing",
+        "authored": true,
+        "disclosure": "The source clip is a gun-pointing idle; the scene blocks its arm direction toward the prop."
+      },
+      "quick_exit": {
+        "realClip": "Run",
+        "authored": true
+      },
+      "aftermath_hold": {
+        "realClip": "Idle",
+        "authored": true
+      }
+    },
+    "locomotionProfiles": {
+      "Walk": {
+        "worldUnitsPerCycle": 1.37,
+        "nativeWorldUnitsPerSecond": 1.0275,
+        "maximumDistanceMismatchRatio": 0.08,
+        "cyclePolicy": "whole_cycles"
+      },
+      "Run": {
+        "worldUnitsPerCycle": 1.5614,
+        "nativeWorldUnitsPerSecond": 1.9722,
+        "maximumDistanceMismatchRatio": 0.08,
+        "cyclePolicy": "whole_cycles"
+      },
+      "Run_Back": {
+        "worldUnitsPerCycle": 0.7229,
+        "nativeWorldUnitsPerSecond": 0.8675,
+        "maximumDistanceMismatchRatio": 0.08,
+        "cyclePolicy": "whole_cycles"
+      }
+    },
+    "rootMotion": {
+      "treatment": "in_place_clip_plus_grounded_holder",
+      "worldTranslationOwner": "character_holder",
+      "animatedBonePositionTracks": "preserved",
+      "groundCorrection": true
+    },
+    "interaction": {
+      "enabled": true,
+      "handIK": false,
+      "validatedBone": "Wrist.R",
+      "supported": {
+        "right_hand_reach": {
+          "realClip": "Interact",
+          "wristBone": "Wrist.R",
+          "maximumContactDistance": 0.2,
+          "preferredStandOff": 0.89,
+          "cameraGapMasking": true
+        }
+      }
+    },
+    "facial": {
+      "ready": false,
+      "jaw": false,
+      "visemes": false,
+      "blink": false,
+      "eyeTarget": false,
+      "emotionMorphs": false,
+      "dialogueLipSync": false
+    },
+    "cameraPolicy": {
+      "reject": [
+        "dialogue_close_up",
+        "facial_close_up"
+      ],
+      "allowBodyReactionClose": true,
+      "preferOffCenterComposition": true
+    },
+    "limitations": [
+      "No facial morph targets, jaw control, blink controls, eye targets or lip-sync.",
+      "No hand IK; contact requires distance validation and camera gap masking.",
+      "Authored locomotion requires matched world displacement to control foot sliding.",
+      "Idle_Gun_Pointing is disclosed by its real source name and is not renamed as a native warning animation."
+    ],
+    "validation": {
+      "status": "passed_for_skeletal_interactive_single_scene",
+      "machineReport": "assets/characters/quaternius_master/validation.json",
+      "visualEvidence": "outputs/adventurer_directed_production_scene.mp4",
+      "facialValidation": "failed_missing_controls",
+      "promotedByEvidence": true
+    }
+  },
+  "beats": [
+    {
+      "id": "establish_forest",
+      "start": 0,
+      "end": 2.25,
+      "storyAction": "offscreen_hold",
+      "purpose": "establish",
+      "characterVisibility": "offscreen",
+      "environmentEvents": [
+        "wind",
+        "leaves",
+        "birds"
+      ],
+      "index": 0,
+      "startFrame": 0,
+      "endFrame": 54,
+      "clipStartSeconds": 0,
+      "clipEndSeconds": 2.25,
+      "sourceClip": "Idle",
+      "sourceClipDurationSeconds": 1.666667,
+      "clipDisclosure": null,
+      "loop": true,
+      "clampWhenFinished": false,
+      "crossfadeSeconds": 0.24,
+      "interruptible": false,
+      "loopCount": 2,
+      "movement": null,
+      "camera": {
+        "type": "establishing_wide",
+        "purpose": "establish",
+        "composition": "off_center_rule_of_thirds",
+        "permanentlyCentered": false,
+        "facialCloseUp": false,
+        "transition": "hard_cut"
+      },
+      "interaction": null,
+      "startPosition": [
+        -6.65,
+        0,
+        0.58
+      ],
+      "endPosition": [
+        -6.65,
+        0,
+        0.58
+      ],
+      "startFacingYaw": 0,
+      "facingYaw": 0,
+      "lookTarget": null,
+      "lookMode": "none",
+      "eyeTarget": false
+    },
+    {
+      "id": "enter_path",
+      "start": 2.25,
+      "end": 6.75,
+      "storyAction": "walk_path",
+      "purpose": "locomotion",
+      "movement": {
+        "from": [
+          -6.65,
+          0,
+          0.58
+        ],
+        "to": [
+          -2.45,
+          0,
+          0.34
+        ],
+        "distance": 4.206851554309945,
+        "expectedDistance": 4.11,
+        "mismatchRatio": 0.02356485506324687,
+        "maximumMismatchRatio": 0.08,
+        "worldUnitsPerSecond": 0.9348559009577655,
+        "worldUnitsPerCycle": 1.4022838514366482,
+        "registeredWorldUnitsPerCycle": 1.37,
+        "clipCycles": 3,
+        "clipTimeScale": 0.8888886666666668,
+        "cycleMatched": true,
+        "rootMotionTreatment": "in_place_clip_plus_grounded_holder"
+      },
+      "index": 1,
+      "startFrame": 54,
+      "endFrame": 162,
+      "clipStartSeconds": 2.25,
+      "clipEndSeconds": 6.75,
+      "sourceClip": "Walk",
+      "sourceClipDurationSeconds": 1.333333,
+      "clipDisclosure": null,
+      "loop": true,
+      "clampWhenFinished": false,
+      "crossfadeSeconds": 0.24,
+      "interruptible": false,
+      "loopCount": 3,
+      "camera": {
+        "type": "tracking_medium",
+        "purpose": "locomotion",
+        "composition": "off_center_rule_of_thirds",
+        "permanentlyCentered": false,
+        "facialCloseUp": false,
+        "transition": "hard_cut"
+      },
+      "interaction": null,
+      "environmentEvents": [],
+      "startPosition": [
+        -6.65,
+        0,
+        0.58
+      ],
+      "endPosition": [
+        -2.45,
+        0,
+        0.34
+      ],
+      "startFacingYaw": 0,
+      "facingYaw": 1.6278771092011612,
+      "lookTarget": null,
+      "lookMode": "none",
+      "eyeTarget": false
+    },
+    {
+      "id": "notice_box",
+      "start": 6.75,
+      "end": 8.75,
+      "storyAction": "notice_prop",
+      "purpose": "prop_reveal",
+      "facingTarget": [
+        1.05,
+        0,
+        0.24
+      ],
+      "lookTarget": [
+        0.77,
+        1.1,
+        0.4
+      ],
+      "turnFromPrevious": true,
+      "index": 2,
+      "startFrame": 162,
+      "endFrame": 210,
+      "clipStartSeconds": 6.75,
+      "clipEndSeconds": 8.75,
+      "sourceClip": "Idle_Neutral",
+      "sourceClipDurationSeconds": 1.666667,
+      "clipDisclosure": null,
+      "loop": true,
+      "clampWhenFinished": false,
+      "crossfadeSeconds": 0.24,
+      "interruptible": false,
+      "loopCount": 2,
+      "movement": null,
+      "camera": {
+        "type": "prop_detail_close",
+        "purpose": "prop_reveal",
+        "composition": "prop_weighted_rule_of_thirds",
+        "permanentlyCentered": false,
+        "facialCloseUp": false,
+        "transition": "hard_cut"
+      },
+      "interaction": null,
+      "environmentEvents": [],
+      "startPosition": [
+        -2.45,
+        0,
+        0.34
+      ],
+      "endPosition": [
+        -2.45,
+        0,
+        0.34
+      ],
+      "startFacingYaw": 1.6278771092011612,
+      "facingYaw": 1.5993599846336568,
+      "lookMode": "head_only",
+      "eyeTarget": false
+    },
+    {
+      "id": "cautious_approach",
+      "start": 8.75,
+      "end": 12.75,
+      "storyAction": "cautious_approach",
+      "purpose": "relationship",
+      "facingTarget": [
+        1.05,
+        0,
+        0.24
+      ],
+      "lookTarget": [
+        0.77,
+        1.1,
+        0.4
+      ],
+      "movement": {
+        "from": [
+          -2.45,
+          0,
+          0.34
+        ],
+        "to": [
+          0.22,
+          0,
+          0.3
+        ],
+        "distance": 2.670299608658175,
+        "expectedDistance": 2.74,
+        "mismatchRatio": 0.025438099029863232,
+        "maximumMismatchRatio": 0.08,
+        "worldUnitsPerSecond": 0.6675749021645437,
+        "worldUnitsPerCycle": 1.3351498043290875,
+        "registeredWorldUnitsPerCycle": 1.37,
+        "clipCycles": 2,
+        "clipTimeScale": 0.6666665,
+        "cycleMatched": true,
+        "rootMotionTreatment": "in_place_clip_plus_grounded_holder"
+      },
+      "index": 3,
+      "startFrame": 210,
+      "endFrame": 306,
+      "clipStartSeconds": 8.75,
+      "clipEndSeconds": 12.75,
+      "sourceClip": "Walk",
+      "sourceClipDurationSeconds": 1.333333,
+      "clipDisclosure": null,
+      "loop": true,
+      "clampWhenFinished": false,
+      "crossfadeSeconds": 0.24,
+      "interruptible": false,
+      "loopCount": 2,
+      "camera": {
+        "type": "motivated_two_shot",
+        "purpose": "relationship",
+        "composition": "off_center_rule_of_thirds",
+        "permanentlyCentered": false,
+        "facialCloseUp": false,
+        "transition": "hard_cut"
+      },
+      "interaction": null,
+      "environmentEvents": [],
+      "startPosition": [
+        -2.45,
+        0,
+        0.34
+      ],
+      "endPosition": [
+        0.22,
+        0,
+        0.3
+      ],
+      "startFacingYaw": 1.5993599846336568,
+      "facingYaw": 1.5993599846336568,
+      "lookMode": "head_only",
+      "eyeTarget": false
+    },
+    {
+      "id": "reach_and_contact",
+      "start": 12.75,
+      "end": 15.5,
+      "storyAction": "reach_prop",
+      "purpose": "contact",
+      "loop": false,
+      "lookTarget": [
+        0.77,
+        1.1,
+        0.4
+      ],
+      "interaction": {
+        "target": {
+          "propId": "suspicious_box",
+          "name": "reach_handle",
+          "position": [
+            0.77,
+            1.1,
+            0.4
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "forward": [
+            0,
+            0,
+            1
+          ],
+          "handPreference": "right"
+        },
+        "capability": "right_hand_reach",
+        "wristBone": "Wrist.R",
+        "realClip": "Interact",
+        "characterPosition": [
+          0.22,
+          0,
+          0.3
+        ],
+        "facingYaw": 1.3909428270024182,
+        "maximumContactDistance": 0.2,
+        "acceptableFacingErrorDegrees": 12,
+        "triggerTime": 13.75,
+        "triggerFrame": 330,
+        "consequenceEvent": "box_lid_pop",
+        "handIK": false,
+        "futureCapability": "optional_hand_ik",
+        "cameraGapMasking": true
+      },
+      "environmentEvents": [
+        "box_lid_pop",
+        "box_shake",
+        "particle_burst"
+      ],
+      "index": 4,
+      "startFrame": 306,
+      "endFrame": 372,
+      "clipStartSeconds": 12.75,
+      "clipEndSeconds": 15.5,
+      "sourceClip": "Interact",
+      "sourceClipDurationSeconds": 1.25,
+      "clipDisclosure": null,
+      "clampWhenFinished": true,
+      "crossfadeSeconds": 0.24,
+      "interruptible": false,
+      "loopCount": 1,
+      "movement": null,
+      "camera": {
+        "type": "contact_oblique_close",
+        "purpose": "contact",
+        "composition": "off_center_rule_of_thirds",
+        "permanentlyCentered": false,
+        "facialCloseUp": false,
+        "transition": "hard_cut"
+      },
+      "startPosition": [
+        0.22,
+        0,
+        0.3
+      ],
+      "endPosition": [
+        0.22,
+        0,
+        0.3
+      ],
+      "startFacingYaw": 1.5993599846336568,
+      "facingYaw": 1.3909428270024182,
+      "lookMode": "head_only",
+      "eyeTarget": false
+    },
+    {
+      "id": "surprised_reaction",
+      "start": 15.5,
+      "end": 17,
+      "storyAction": "surprise_recoil",
+      "purpose": "body_reaction",
+      "loop": false,
+      "interruptible": true,
+      "facingTarget": [
+        1.05,
+        0,
+        0.24
+      ],
+      "index": 5,
+      "startFrame": 372,
+      "endFrame": 408,
+      "clipStartSeconds": 15.5,
+      "clipEndSeconds": 17,
+      "sourceClip": "HitRecieve_2",
+      "sourceClipDurationSeconds": 0.541667,
+      "clipDisclosure": null,
+      "clampWhenFinished": true,
+      "crossfadeSeconds": 0.24,
+      "loopCount": 1,
+      "movement": null,
+      "camera": {
+        "type": "body_reaction_medium_close",
+        "purpose": "body_reaction",
+        "composition": "off_center_rule_of_thirds",
+        "permanentlyCentered": false,
+        "facialCloseUp": false,
+        "transition": "hard_cut"
+      },
+      "interaction": null,
+      "environmentEvents": [],
+      "startPosition": [
+        0.22,
+        0,
+        0.3
+      ],
+      "endPosition": [
+        0.22,
+        0,
+        0.3
+      ],
+      "startFacingYaw": 1.3909428270024182,
+      "facingYaw": 1.6429599557545542,
+      "lookTarget": null,
+      "lookMode": "none",
+      "eyeTarget": false
+    },
+    {
+      "id": "step_backward",
+      "start": 17,
+      "end": 19.75,
+      "storyAction": "retreat_backward",
+      "purpose": "retreat",
+      "facingTarget": [
+        1.05,
+        0,
+        0.24
+      ],
+      "movement": {
+        "from": [
+          0.22,
+          0,
+          0.3
+        ],
+        "to": [
+          -1.22,
+          0,
+          0.43
+        ],
+        "distance": 1.4458561477546787,
+        "expectedDistance": 1.4458,
+        "mismatchRatio": 0.000038835077243581624,
+        "maximumMismatchRatio": 0.08,
+        "worldUnitsPerSecond": 0.5257658719107923,
+        "worldUnitsPerCycle": 0.7229280738773394,
+        "registeredWorldUnitsPerCycle": 0.7229,
+        "clipCycles": 2,
+        "clipTimeScale": 0.6060603636363636,
+        "cycleMatched": true,
+        "rootMotionTreatment": "in_place_clip_plus_grounded_holder"
+      },
+      "index": 6,
+      "startFrame": 408,
+      "endFrame": 474,
+      "clipStartSeconds": 17,
+      "clipEndSeconds": 19.75,
+      "sourceClip": "Run_Back",
+      "sourceClipDurationSeconds": 0.833333,
+      "clipDisclosure": null,
+      "loop": true,
+      "clampWhenFinished": false,
+      "crossfadeSeconds": 0.24,
+      "interruptible": false,
+      "loopCount": 2,
+      "camera": {
+        "type": "reverse_medium",
+        "purpose": "retreat",
+        "composition": "off_center_rule_of_thirds",
+        "permanentlyCentered": false,
+        "facialCloseUp": false,
+        "transition": "hard_cut"
+      },
+      "interaction": null,
+      "environmentEvents": [],
+      "startPosition": [
+        0.22,
+        0,
+        0.3
+      ],
+      "endPosition": [
+        -1.22,
+        0,
+        0.43
+      ],
+      "startFacingYaw": 1.6429599557545542,
+      "facingYaw": 1.6429599557545542,
+      "lookTarget": null,
+      "lookMode": "none",
+      "eyeTarget": false
+    },
+    {
+      "id": "point_warning",
+      "start": 19.75,
+      "end": 23,
+      "storyAction": "warning_point",
+      "purpose": "warning",
+      "facingTarget": [
+        1.05,
+        0,
+        0.24
+      ],
+      "lookTarget": [
+        0.77,
+        1.1,
+        0.4
+      ],
+      "index": 7,
+      "startFrame": 474,
+      "endFrame": 552,
+      "clipStartSeconds": 19.75,
+      "clipEndSeconds": 23,
+      "sourceClip": "Idle_Gun_Pointing",
+      "sourceClipDurationSeconds": 1.666667,
+      "clipDisclosure": "The source clip is a gun-pointing idle; the scene blocks its arm direction toward the prop.",
+      "loop": true,
+      "clampWhenFinished": false,
+      "crossfadeSeconds": 0.24,
+      "interruptible": false,
+      "loopCount": 2,
+      "movement": null,
+      "camera": {
+        "type": "over_shoulder_prop",
+        "purpose": "warning",
+        "composition": "prop_weighted_rule_of_thirds",
+        "permanentlyCentered": false,
+        "facialCloseUp": false,
+        "transition": "hard_cut"
+      },
+      "interaction": null,
+      "environmentEvents": [],
+      "startPosition": [
+        -1.22,
+        0,
+        0.43
+      ],
+      "endPosition": [
+        -1.22,
+        0,
+        0.43
+      ],
+      "startFacingYaw": 1.6429599557545542,
+      "facingYaw": 1.654302123012794,
+      "lookMode": "head_only",
+      "eyeTarget": false
+    },
+    {
+      "id": "quick_exit",
+      "start": 23,
+      "end": 27.5,
+      "storyAction": "quick_exit",
+      "purpose": "exit",
+      "turnFromPrevious": true,
+      "movement": {
+        "from": [
+          -1.22,
+          0,
+          0.43
+        ],
+        "to": [
+          -9,
+          0,
+          -0.22
+        ],
+        "distance": 7.807105737723807,
+        "expectedDistance": 7.8069999999999995,
+        "mismatchRatio": 0.000013543963597776565,
+        "maximumMismatchRatio": 0.08,
+        "worldUnitsPerSecond": 1.734912386160846,
+        "worldUnitsPerCycle": 1.5614211475447615,
+        "registeredWorldUnitsPerCycle": 1.5614,
+        "clipCycles": 5,
+        "clipTimeScale": 0.87963,
+        "cycleMatched": true,
+        "rootMotionTreatment": "in_place_clip_plus_grounded_holder"
+      },
+      "index": 8,
+      "startFrame": 552,
+      "endFrame": 660,
+      "clipStartSeconds": 23,
+      "clipEndSeconds": 27.5,
+      "sourceClip": "Run",
+      "sourceClipDurationSeconds": 0.791667,
+      "clipDisclosure": null,
+      "loop": true,
+      "clampWhenFinished": false,
+      "crossfadeSeconds": 0.24,
+      "interruptible": false,
+      "loopCount": 5,
+      "camera": {
+        "type": "tracking_exit_wide",
+        "purpose": "exit",
+        "composition": "off_center_rule_of_thirds",
+        "permanentlyCentered": false,
+        "facialCloseUp": false,
+        "transition": "hard_cut"
+      },
+      "interaction": null,
+      "environmentEvents": [],
+      "startPosition": [
+        -1.22,
+        0,
+        0.43
+      ],
+      "endPosition": [
+        -9,
+        0,
+        -0.22
+      ],
+      "startFacingYaw": 1.654302123012794,
+      "facingYaw": -1.6541503020053065,
+      "lookTarget": null,
+      "lookMode": "none",
+      "eyeTarget": false
+    },
+    {
+      "id": "box_aftermath",
+      "start": 27.5,
+      "end": 30,
+      "storyAction": "aftermath_hold",
+      "purpose": "aftermath",
+      "characterVisibility": "offscreen",
+      "environmentEvents": [
+        "box_lid_twitch",
+        "wind",
+        "leaves"
+      ],
+      "index": 9,
+      "startFrame": 660,
+      "endFrame": 720,
+      "clipStartSeconds": 27.5,
+      "clipEndSeconds": 30,
+      "sourceClip": "Idle",
+      "sourceClipDurationSeconds": 1.666667,
+      "clipDisclosure": null,
+      "loop": true,
+      "clampWhenFinished": false,
+      "crossfadeSeconds": 0.24,
+      "interruptible": false,
+      "loopCount": 2,
+      "movement": null,
+      "camera": {
+        "type": "prop_aftermath_close",
+        "purpose": "aftermath",
+        "composition": "prop_weighted_rule_of_thirds",
+        "permanentlyCentered": false,
+        "facialCloseUp": false,
+        "transition": "hard_cut"
+      },
+      "interaction": null,
+      "startPosition": [
+        -9,
+        0,
+        -0.22
+      ],
+      "endPosition": [
+        -9,
+        0,
+        -0.22
+      ],
+      "startFacingYaw": -1.6541503020053065,
+      "facingYaw": -1.6541503020053065,
+      "lookTarget": null,
+      "lookMode": "none",
+      "eyeTarget": false
+    }
+  ],
+  "environment": {
+    "config": {
+      "enabled": true,
+      "seed": 20260715,
+      "windStrength": 0.62,
+      "leaves": 28,
+      "clouds": 2,
+      "ambientActors": 3,
+      "instancedVegetation": true
+    },
+    "deterministic": true,
+    "instancing": {
+      "enabled": true,
+      "groups": [
+        {
+          "id": "path_edge_grass",
+          "instances": 52,
+          "useInstancedMesh": true
+        },
+        {
+          "id": "path_pebbles",
+          "instances": 48,
+          "useInstancedMesh": true
+        }
+      ]
+    },
+    "ambient": {
+      "leaves": 28,
+      "clouds": 2,
+      "actors": 3
+    }
+  },
+  "mixerPolicy": "AnimationMixer owns animated bones; directors modify holder/world transforms only.",
+  "handIKImplemented": false
+}
