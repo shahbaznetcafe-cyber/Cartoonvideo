@@ -278,5 +278,77 @@ class MetadataContractTests(unittest.TestCase):
         self.assertEqual(out["titles"], ["T"])
 
 
+class EmotionArcAndCtaAnchorTests(unittest.TestCase):
+    def _rc(self):
+        import retention_critic
+        return retention_critic
+
+    def test_beatsheet_exposes_cta_anchor(self):
+        brief = duration_planner.writing_brief("1min")
+        for genre in beatsheets.BEAT_SHEETS:
+            built = beatsheets.build(genre, brief)
+            self.assertIn(built["ctaAnchor"], {"after_payoff", "mid_cliffhanger"})
+
+    def test_story_without_any_tension_is_flagged(self):
+        rc = self._rc()
+        script = ("A: (happy; point; x) Aaj bohat acha din hai yahan.\n"
+                  "B: (warm; walk; x) Haan chalo bagh mein chalte hain.\n"
+                  "A: (cheerful; reach; x) Phool bohat khoobsurat lag rahe.\n"
+                  "B: (proud; celebrate; x) Sab kuch perfect hai bilkul.")
+        report = rc.analyze(script)
+        self.assertIn("no_tension_beat", report["flags"])
+
+    def test_story_with_tension_passes(self):
+        rc = self._rc()
+        script = ("A: (happy; point; x) Aaj bohat acha din hai yahan.\n"
+                  "B: (worried; walk; x) Lekin raasta band ho gaya hai.\n"
+                  "A: (tense; reach; x) Jaldi koi hal nikalna hoga abhi.\n"
+                  "B: (relief; celebrate; x) Shukar hai, mil gaya raasta.")
+        report = rc.analyze(script)
+        self.assertNotIn("no_tension_beat", report["flags"])
+
+    def test_collapsed_arc_flagged_against_plan(self):
+        rc = self._rc()
+        planned = ["curious", "intrigued", "warm", "worried", "surprised",
+                   "tense", "tense", "relief", "warm"]
+        script = ("A: (calm; point; x) Pehli baat yahan par hai.\n"
+                  "B: (calm; walk; x) Doosri baat udhar par hai.\n"
+                  "A: (worried; reach; x) Teesri baat idhar par hai.\n"
+                  "B: (calm; celebrate; x) Chauthi baat wahan par hai.")
+        report = rc.analyze(script, planned_arc=planned)
+        self.assertIn("arc_off_plan", report["flags"])
+
+    def test_arc_following_plan_passes(self):
+        rc = self._rc()
+        planned = ["curious", "worried", "tense", "relief"]
+        script = ("A: (curious; point; x) Ye kya cheez hai yahan par.\n"
+                  "B: (worried; walk; x) Mujhe dar lag raha hai ab.\n"
+                  "A: (tense; reach; x) Jaldi karo warna der ho jayegi.\n"
+                  "B: (relief; celebrate; x) Shukar hai sab theek hua.")
+        report = rc.analyze(script, planned_arc=planned)
+        self.assertNotIn("arc_off_plan", report["flags"])
+
+    def test_mid_cliffhanger_anchor_flags_cta_at_very_end(self):
+        rc = self._rc()
+        cta = "Agla part dekhna mat bhoolna!"
+        script = ("A: (curious; point; x) Ye kya cheez hai yahan par.\n"
+                  "B: (worried; walk; x) Mujhe dar lag raha hai ab.\n"
+                  "A: (tense; reach; x) Jaldi karo warna der ho jayegi.\n"
+                  "B: (relief; celebrate; x) " + cta)
+        report = rc.analyze(script, cta=cta, cta_anchor="mid_cliffhanger")
+        self.assertIn("cta_off_anchor", report["flags"])
+
+    def test_after_payoff_anchor_accepts_end_cta(self):
+        rc = self._rc()
+        cta = "Comment karo doston abhi!"
+        script = ("A: (curious; point; x) Ye kya cheez hai yahan par.\n"
+                  "B: (worried; walk; x) Mujhe dar lag raha hai ab.\n"
+                  "A: (tense; reach; x) Jaldi karo warna der ho jayegi.\n"
+                  "B: (relief; celebrate; x) " + cta)
+        report = rc.analyze(script, cta=cta, cta_anchor="after_payoff")
+        self.assertNotIn("cta_off_anchor", report["flags"])
+        self.assertNotIn("cta_too_early", report["flags"])
+
+
 if __name__ == "__main__":
     unittest.main()

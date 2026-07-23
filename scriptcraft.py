@@ -199,9 +199,13 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
     # draft already passes every structural check, the rewrite is skipped.
     chosen_cta = plan.get("cta", "")
     chosen_promise = plan.get("promise", "")
+    critic_args = {
+        "hook": plan.get("hook", ""), "cta": chosen_cta, "promise": chosen_promise,
+        "planned_arc": built_sheet["emotionArc"],
+        "cta_anchor": built_sheet.get("ctaAnchor", "after_payoff"),
+    }
     if polish:
-        report = retention_critic.analyze(draft, hook=plan.get("hook", ""),
-                                          cta=chosen_cta, promise=chosen_promise)
+        report = retention_critic.analyze(draft, **critic_args)
         fixes = retention_critic.fix_instructions(report)
         script = _polish(providers, draft, language, lang_name, duration_brief,
                          performance_rule, max_tokens=token_budget, targeted_fixes=fixes) \
@@ -209,8 +213,7 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
     else:
         script = draft
     # Re-analyze the final script so the review UI shows the shipped state.
-    retention_report = retention_critic.analyze(
-        script, hook=plan.get("hook", ""), cta=chosen_cta, promise=chosen_promise)
+    retention_report = retention_critic.analyze(script, **critic_args)
 
     return {
         "script": script,
@@ -227,6 +230,7 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
         "beats": [b["id"] for b in built_sheet["beats"]],
         "beatSheet": built_sheet["beats"],
         "emotionArc": built_sheet["emotionArc"],
+        "ctaAnchor": built_sheet.get("ctaAnchor", "after_payoff"),
         "retentionReport": retention_report,
         "cta": plan.get("cta", ""),
         "character_performance": [

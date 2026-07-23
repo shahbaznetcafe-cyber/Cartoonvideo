@@ -193,6 +193,19 @@ BEAT_SHEETS = {
 
 DEFAULT_GENRE = "moral_story"
 
+# Where the engagement line belongs for each genre.  "after_payoff" = land the
+# resolution first, then ask (default for self-contained stories).
+# "mid_cliffhanger" suits serialised stories that tease the next episode.
+CTA_ANCHORS = {
+    "moral_story": "after_payoff",
+    "comedy_skit": "after_payoff",
+    "adventure": "after_payoff",
+    "mystery": "after_payoff",
+    "friendship": "after_payoff",
+    "learning": "after_payoff",
+}
+DEFAULT_CTA_ANCHOR = "after_payoff"
+
 # Free-text genres and story_templates ids -> a beat sheet.
 GENRE_ALIASES = {
     "auto": DEFAULT_GENRE, "": DEFAULT_GENRE, "story": DEFAULT_GENRE,
@@ -277,6 +290,7 @@ def build(genre, brief):
         "genre": key,
         "beats": beats,
         "emotionArc": [b["emotion"] for b in beats],
+        "ctaAnchor": CTA_ANCHORS.get(key, DEFAULT_CTA_ANCHOR),
         "totalWords": sum(words),
     }
 

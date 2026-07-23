@@ -34,6 +34,16 @@ RESOLUTION_EMOTIONS = {
     "cheerful", "delighted", "peaceful",
 }
 
+# A story with no tension anywhere has nothing for the payoff to resolve, which
+# is the classic "nothing happens" retention killer.
+TENSION_EMOTIONS = {
+    "worried", "tense", "scared", "afraid", "nervous", "shocked", "surprised",
+    "angry", "sad", "puzzled", "confused", "anxious", "desperate", "determined",
+    "suspicious", "frustrated", "urgent", "alarmed",
+}
+# Fraction of the planned distinct emotions the script should actually use.
+ARC_COVERAGE_MIN = 0.5
+
 
 def _tokens(text):
     return [t for t in re.findall(r"[^\W\d_]+", str(text or "").lower()) if len(t) > 1]
@@ -95,7 +105,8 @@ def _overlap(a, b):
     return len(ta & tb) / len(ta | tb)
 
 
-def analyze(script, *, hook="", cta="", promise="", beat_sheet=None):
+def analyze(script, *, hook="", cta="", promise="", beat_sheet=None,
+            planned_arc=None, cta_anchor="after_payoff"):
     """Deterministic retention analysis. Returns a report dict.
 
     ``promise`` is accepted for the title↔script contract, but the delivery check
@@ -173,7 +184,7 @@ def analyze(script, *, hook="", cta="", promise="", beat_sheet=None):
         if not any(ln["hasAction"] for ln in mid) and len(emotions) <= 1:
             flags.append("missing_mid_interrupt")
 
-    # 7) CTA placement: engagement line should be at/after the climax, not cold.
+    # 7) CTA placement, anchored to the beat sheet's intent.
     if cta and n:
         pos = None
         for ln in lines:
@@ -181,6 +192,13 @@ def analyze(script, *, hook="", cta="", promise="", beat_sheet=None):
                 pos = ln["index"]
         if pos is None:
             flags.append("cta_missing")
+        elif cta_anchor == "mid_cliffhanger":
+            # Serialised stories tease mid-story; a CTA on the final line (or in
+            # the last quarter) misses the cliffhanger moment.  Compare against
+            # the last index explicitly so short scripts are handled correctly.
+            if pos == n - 1 or pos >= 0.75 * n:
+                add(pos, "CTA should land on the mid-story cliffhanger, not the very end", "med")
+                flags.append("cta_off_anchor")
         elif pos < CTA_ZONE * n:
             add(pos, "CTA appears too early (should land after the payoff)", "med")
             flags.append("cta_too_early")
@@ -196,6 +214,22 @@ def analyze(script, *, hook="", cta="", promise="", beat_sheet=None):
         if emotions and not resolves:
             add(lines[-1]["index"], "ends on unresolved emotion — land a satisfying payoff", "med")
             flags.append("weak_payoff")
+
+    # 9) No tension anywhere: the payoff has nothing to resolve.
+    script_emotions = [ln["emotion"] for ln in lines if ln["emotion"]]
+    if n >= 4 and script_emotions and not any(
+            e in TENSION_EMOTIONS for e in script_emotions):
+        flags.append("no_tension_beat")
+
+    # 10) Emotion arc vs the planned beat-sheet arc: the script should actually
+    #     travel through the intended moods, not collapse them into one or two.
+    if planned_arc:
+        planned_distinct = {str(e).lower() for e in planned_arc if e}
+        used_distinct = set(script_emotions)
+        if planned_distinct:
+            coverage = len(used_distinct) / len(planned_distinct)
+            if coverage < ARC_COVERAGE_MIN:
+                flags.append("arc_off_plan")
 
     high = sum(1 for j in judgements if j["retentionRisk"] == "high")
     med = sum(1 for j in judgements if j["retentionRisk"] == "med")
@@ -225,6 +259,12 @@ _FIX_TEXT = {
         "the payoff.",
     "weak_payoff": "The ending doesn't resolve — deliver the title's promise with a clear, "
         "satisfying payoff (relief/joy/pride), not unresolved tension.",
+    "cta_off_anchor": "Move the engagement line to the mid-story cliffhanger where the "
+        "curiosity peaks, not the final line.",
+    "no_tension_beat": "Nothing is at stake anywhere — add a real complication or worry "
+        "before the ending so the payoff means something.",
+    "arc_off_plan": "The emotional journey collapsed: move through the planned moods "
+        "(curious -> worried -> tense -> relief) instead of staying in one register.",
 }
 
 
