@@ -15,6 +15,7 @@ import beatsheets
 import dialogue_style
 import duration_planner
 import hooklab
+import retention_critic
 
 LANG_NAME = dialogue_style.LANGUAGE_NAMES
 LENGTH_LINES = {
@@ -118,7 +119,12 @@ def _draft(providers, plan, idea, language, lang_name, n, duration_brief, cast_r
     return _clean(providers.llm_generate(sysp, user, max_tokens=max_tokens, temperature=0.85))
 
 
-def _polish(providers, draft, language, lang_name, duration_brief, performance_rule="", max_tokens=1400):
+def _polish(providers, draft, language, lang_name, duration_brief, performance_rule="",
+            max_tokens=1400, targeted_fixes=""):
+    # Phase 2: the deterministic retention critic supplies targeted fixes; if it
+    # found no structural problems, targeted_fixes is empty and we skip below.
+    targeted = (f"RETENTION FIXES (apply these specifically):\n{targeted_fixes}\n"
+                if targeted_fixes else "")
     sysp = (
         "You are a ruthless script editor. Improve this cartoon script. Silently CHECK:\n"
         "- Is line 1 an instant, scroll-stopping hook? If weak, make it punchier.\n"
@@ -126,6 +132,7 @@ def _polish(providers, draft, language, lang_name, duration_brief, performance_r
         "- Any repeated words/phrases/ideas across lines? Remove repetition.\n"
         "- Is the pacing tight (no filler) and the ending a satisfying payoff?\n"
         "- Does every line sound natural spoken aloud in " + lang_name + "?\n"
+        + targeted
         + "Preserve a total spoken-word range of {}-{} words for the {} target; never shorten it below range just to make it punchy.\n".format(
             duration_brief["minimum_words"], duration_brief["maximum_words"], duration_brief["target_label"])
         + dialogue_style.full_prompt_policy(language) + "\n"
@@ -186,9 +193,21 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
     draft = _draft(providers, plan, idea, language, lang_name, n, duration_brief, cast_rule,
                    performance_rule, max_tokens=token_budget,
                    beatsheet_text=beatsheet_text, emotion_arc=built_sheet["emotionArc"])
-    script = (_polish(providers, draft, language, lang_name, duration_brief,
-                      performance_rule, max_tokens=token_budget)
-              if polish else draft)
+
+    # Phase 2 — deterministic retention critic drives a targeted polish. If the
+    # draft already passes every structural check, the rewrite is skipped.
+    chosen_cta = plan.get("cta", "")
+    if polish:
+        report = retention_critic.analyze(draft, hook=plan.get("hook", ""), cta=chosen_cta)
+        fixes = retention_critic.fix_instructions(report)
+        script = _polish(providers, draft, language, lang_name, duration_brief,
+                         performance_rule, max_tokens=token_budget, targeted_fixes=fixes) \
+            if fixes else draft
+    else:
+        script = draft
+    # Re-analyze the final script so the review UI shows the shipped state.
+    retention_report = retention_critic.analyze(
+        script, hook=plan.get("hook", ""), cta=chosen_cta)
 
     return {
         "script": script,
@@ -203,6 +222,7 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
         "beats": [b["id"] for b in built_sheet["beats"]],
         "beatSheet": built_sheet["beats"],
         "emotionArc": built_sheet["emotionArc"],
+        "retentionReport": retention_report,
         "cta": plan.get("cta", ""),
         "character_performance": [
             {key: profile.get(key) for key in (

@@ -115,5 +115,97 @@ class HookScoringTests(unittest.TestCase):
         self.assertAlmostEqual(sum(hooklab.RUBRIC_WEIGHTS.values()), 1.0, places=6)
 
 
+class RetentionCriticTests(unittest.TestCase):
+    def _rc(self):
+        import retention_critic
+        return retention_critic
+
+    def test_parse_extracts_speaker_emotion_action(self):
+        rc = self._rc()
+        script = ("[Scene: Jungle]\n"
+                  "Kachwa: (calm; walk; path) Main dheere chalta hoon.\n"
+                  "Khargosh: (proud; none; path) Main tez hoon!")
+        parsed = rc.parse_script(script)
+        self.assertEqual(parsed["scene"].lower().startswith("[scene"), True)
+        self.assertEqual(len(parsed["lines"]), 2)
+        self.assertEqual(parsed["lines"][0]["speaker"], "Kachwa")
+        self.assertEqual(parsed["lines"][0]["emotion"], "calm")
+        self.assertTrue(parsed["lines"][0]["hasAction"])
+        self.assertFalse(parsed["lines"][1]["hasAction"])   # action 'none'
+
+    def test_hook_not_first_is_flagged(self):
+        rc = self._rc()
+        script = ("Aloo: (calm; walk; dhaba) Aaj mausam acha hai.\n"
+                  "Tamatar: (happy; point; dhaba) Chalo khelte hain.")
+        report = rc.analyze(script, hook="Ruko! Kisne meri chai mein cheeni daali?")
+        self.assertIn("hook_not_first", report["flags"])
+        self.assertEqual(report["lineJudgements"][0]["retentionRisk"], "high")
+
+    def test_hook_present_first_passes(self):
+        rc = self._rc()
+        hook = "Ruko! Kisne meri chai mein cheeni daali?"
+        script = (f"Aloo: (excited; point; dhaba) {hook}\n"
+                  "Tamatar: (smug; walk; dhaba) Maine namak daala tha.")
+        report = rc.analyze(script, hook=hook)
+        self.assertNotIn("hook_not_first", report["flags"])
+
+    def test_static_talking_heads_flagged(self):
+        rc = self._rc()
+        script = ("A: (calm; none; room) Line one alag baat.\n"
+                  "B: (happy; none; room) Line two doosri baat.")
+        report = rc.analyze(script)
+        self.assertIn("static_talking_heads", report["flags"])
+
+    def test_flat_arc_flagged(self):
+        rc = self._rc()
+        script = ("A: (calm; walk; x) Pehli alag baat idhar.\n"
+                  "B: (calm; point; x) Doosri nayi baat udhar.\n"
+                  "A: (calm; reach; x) Teesri aur baat yahan.")
+        report = rc.analyze(script)
+        self.assertTrue(report["arcFlatness"])
+        self.assertIn("flat_arc", report["flags"])
+
+    def test_duplicate_lines_flagged_high_risk(self):
+        rc = self._rc()
+        script = ("A: (calm; walk; x) Chalo ghar chalte hain abhi.\n"
+                  "B: (happy; point; x) Chalo ghar chalte hain abhi.")
+        report = rc.analyze(script)
+        self.assertIn("duplicate_lines", report["flags"])
+        self.assertEqual(report["lineJudgements"][1]["retentionRisk"], "high")
+
+    def test_cta_too_early_flagged(self):
+        rc = self._rc()
+        cta = "Comment karo apna jawab!"
+        script = (f"A: (excited; point; x) {cta}\n"
+                  "B: (calm; walk; x) Phir kahani shuru hoti hai.\n"
+                  "A: (happy; reach; x) Aur aage badhti hai yahan.\n"
+                  "B: (proud; celebrate; x) Aakhir mein sab khush hain.")
+        report = rc.analyze(script, cta=cta)
+        self.assertIn("cta_too_early", report["flags"])
+
+    def test_clean_script_has_no_flags_and_empty_fixes(self):
+        rc = self._rc()
+        hook = "Ruko! Aaj kuch ajeeb hone wala hai."
+        cta = "Aap batao, comment karo!"
+        script = (f"Aloo: (excited; point; dhaba) {hook}\n"
+                  "Tamatar: (surprised; walk; dhaba) Kya matlab, dikhao mujhe.\n"
+                  "Aloo: (worried; reach; market) Dekho wahan kuch gir gaya.\n"
+                  "Tamatar: (shocked; run; market) Jaldi chalo bachane!\n"
+                  "Aloo: (relieved; celebrate; market) Bach gaya, shukar hai.\n"
+                  f"Tamatar: (happy; wave; market) {cta}")
+        report = rc.analyze(script, hook=hook, cta=cta)
+        self.assertEqual(report["flags"], [])
+        self.assertEqual(rc.fix_instructions(report), "")
+
+    def test_fix_instructions_are_targeted(self):
+        rc = self._rc()
+        script = ("A: (calm; none; x) Aaj mausam acha hai bilkul.\n"
+                  "B: (calm; none; x) Aaj mausam acha hai bilkul.")
+        report = rc.analyze(script, hook="Ruko! Dhamaka hone wala hai.")
+        fixes = rc.fix_instructions(report)
+        self.assertIn("hook", fixes.lower())
+        self.assertIn("-", fixes)   # bulleted directives
+
+
 if __name__ == "__main__":
     unittest.main()
