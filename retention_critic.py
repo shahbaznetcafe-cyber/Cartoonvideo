@@ -106,7 +106,7 @@ def _overlap(a, b):
 
 
 def analyze(script, *, hook="", cta="", promise="", beat_sheet=None,
-            planned_arc=None, cta_anchor="after_payoff"):
+            planned_arc=None, cta_anchor="after_payoff", expected_cast=None):
     """Deterministic retention analysis. Returns a report dict.
 
     ``promise`` is accepted for the title↔script contract, but the delivery check
@@ -231,6 +231,21 @@ def analyze(script, *, hook="", cta="", promise="", beat_sheet=None,
             if coverage < ARC_COVERAGE_MIN:
                 flags.append("arc_off_plan")
 
+    # 11) Series cast drift: a recurring show must not invent new speakers, and
+    #     should actually use the established cast.
+    if expected_cast:
+        allowed = {str(name).strip().casefold() for name in expected_cast if str(name).strip()}
+        if allowed:
+            used = {ln["speaker"].casefold() for ln in lines}
+            intruders = sorted(used - allowed)
+            if intruders:
+                for ln in lines:
+                    if ln["speaker"].casefold() in intruders:
+                        add(ln["index"], f"'{ln['speaker']}' is not in the series cast", "high")
+                flags.append("cast_drift")
+            if allowed - used:
+                flags.append("cast_unused")
+
     high = sum(1 for j in judgements if j["retentionRisk"] == "high")
     med = sum(1 for j in judgements if j["retentionRisk"] == "med")
     return {
@@ -265,6 +280,10 @@ _FIX_TEXT = {
         "before the ending so the payoff means something.",
     "arc_off_plan": "The emotional journey collapsed: move through the planned moods "
         "(curious -> worried -> tense -> relief) instead of staying in one register.",
+    "cast_drift": "A speaker outside the series cast appeared — use only the established "
+        "recurring characters so the show stays recognisable.",
+    "cast_unused": "Some established cast members never speak — give each recurring "
+        "character at least one line.",
 }
 
 

@@ -327,7 +327,8 @@ def _clean_script(raw):
 
 def generate_freeform(idea, language="roman_urdu", characters=None,
                       length="medium", lines=None, genre="auto",
-                      cast_bios=None, continuity="", quality="pro", library=None):
+                      cast_bios=None, continuity="", quality="pro", library=None,
+                      series_memory=None):
     """
     Bina template, seedha idea se script. AI khud genre/structure/cast decide karta hai.
     quality="pro" -> multi-pass Quality Engine (plan->draft->polish, hook variants).
@@ -345,7 +346,8 @@ def generate_freeform(idea, language="roman_urdu", characters=None,
         import scriptcraft
         return scriptcraft.craft(idea, language=language, characters=chars,
                                  length=length, lines=lines, genre=genre,
-                                 cast_bios=cast_bios, continuity=continuity)
+                                 cast_bios=cast_bios, continuity=continuity,
+                                 series_memory=series_memory)
     import character_performance
     performance_rule = character_performance.script_guidance(chars)
     n = int(lines) if lines else LENGTH_LINES.get(length, 12)

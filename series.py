@@ -210,6 +210,46 @@ def _continuity_text(s):
     return "\n".join(lines)
 
 
+def series_memory(sid, data=None):
+    """Phase 5 — structured recall for the script engine.
+
+    Free text is easy for a model to drift from; a structured block makes the
+    recurring cast's persona, speech style and catchphrase explicit, plus the
+    events already established.  Returns ``None`` when the series is unknown.
+    """
+    d = data or load()
+    s = d.get("series", {}).get(sid)
+    if not s:
+        return None
+    index = _character_index(d)
+    characters = {}
+    for cid in _unique_ids(s.get("cast", [])):
+        ch = index.get(cid)
+        if not ch:
+            continue
+        characters[cid] = {
+            "name": ch.get("name", cid),
+            "persona": ch.get("trait", ""),
+            "role": ch.get("role", ""),
+            "catchphrase": ch.get("catchphrase", ""),
+            "speechStyle": ch.get("speech_style", ""),
+        }
+    episodes = s.get("episodes", []) or []
+    prior = [f"Episode {e.get('num')} — \"{e.get('title','')}\": {e.get('summary','')}"
+             for e in episodes[-6:]]
+    return {
+        "seriesId": sid,
+        "name": s.get("name", ""),
+        "premise": s.get("premise", ""),
+        "genre": s.get("genre", "auto"),
+        "language": s.get("language", "roman_urdu"),
+        "characters": characters,
+        "castNames": [c["name"] for c in characters.values()],
+        "priorEvents": prior,
+        "episodeCount": len(episodes),
+    }
+
+
 def _summarize(script, language):
     """Episode ka 1-2 line summary (agle episode ki continuity ke liye)."""
     import providers
@@ -260,7 +300,8 @@ def generate_episode(sid, idea="", length="medium", save_episode=True, on_progre
     else:
         res = story_templates.generate_freeform(
             full_idea, language=lang, characters=cast_names, length=length,
-            genre=genre, cast_bios=cast_bios, continuity=continuity)
+            genre=genre, cast_bios=cast_bios, continuity=continuity,
+            series_memory=series_memory(sid, d))
 
     script = res.get("script", "")
     summary = _summarize(script, lang)

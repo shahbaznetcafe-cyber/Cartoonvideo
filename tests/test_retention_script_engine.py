@@ -350,5 +350,78 @@ class EmotionArcAndCtaAnchorTests(unittest.TestCase):
         self.assertNotIn("cta_too_early", report["flags"])
 
 
+class SeriesMemoryTests(unittest.TestCase):
+    def _data(self):
+        return {
+            "characters": {
+                "aloo": {"id": "aloo", "name": "Aloo", "trait": "brave but silly",
+                         "catchphrase": "Aloo zindabad!", "role": "hero",
+                         "speech_style": "fast and loud"},
+                "tam": {"id": "tam", "name": "Tamatar", "trait": "deadpan",
+                        "catchphrase": "", "role": "rival"},
+            },
+            "series": {
+                "sbz": {"id": "sbz", "name": "Sabzi Squad", "premise": "Veg heroes",
+                        "genre": "comedy", "language": "roman_urdu",
+                        "cast": ["aloo", "tam"],
+                        "episodes": [{"num": 1, "title": "Start", "summary": "They met."}]},
+            },
+        }
+
+    def test_series_memory_is_structured(self):
+        import series
+        mem = series.series_memory("sbz", data=self._data())
+        self.assertEqual(mem["name"], "Sabzi Squad")
+        self.assertEqual(sorted(mem["castNames"]), ["Aloo", "Tamatar"])
+        self.assertEqual(mem["characters"]["aloo"]["catchphrase"], "Aloo zindabad!")
+        self.assertEqual(mem["characters"]["aloo"]["speechStyle"], "fast and loud")
+        self.assertEqual(mem["episodeCount"], 1)
+        self.assertIn("Episode 1", mem["priorEvents"][0])
+
+    def test_unknown_series_returns_none(self):
+        import series
+        self.assertIsNone(series.series_memory("nope", data=self._data()))
+
+    def test_memory_block_pins_persona_and_catchphrase(self):
+        import series, scriptcraft
+        mem = series.series_memory("sbz", data=self._data())
+        block = scriptcraft.series_memory_block(mem)
+        self.assertIn("Sabzi Squad", block)
+        self.assertIn("Aloo", block)
+        self.assertIn("Aloo zindabad!", block)
+        self.assertIn("fast and loud", block)
+        self.assertIn("STORY SO FAR", block)
+
+    def test_memory_block_empty_without_memory(self):
+        import scriptcraft
+        self.assertEqual(scriptcraft.series_memory_block(None), "")
+        self.assertEqual(scriptcraft.series_memory_block({}), "")
+
+    def test_cast_drift_flags_invented_speaker(self):
+        import retention_critic as rc
+        script = ("Aloo: (excited; point; x) Chalo shuru karte hain abhi.\n"
+                  "Gajar: (calm; walk; x) Main naya character hoon yahan.\n"
+                  "Tamatar: (relief; celebrate; x) Sab theek ho gaya.")
+        report = rc.analyze(script, expected_cast=["Aloo", "Tamatar"])
+        self.assertIn("cast_drift", report["flags"])
+        self.assertEqual(report["lineJudgements"][1]["retentionRisk"], "high")
+
+    def test_cast_unused_flagged_when_member_silent(self):
+        import retention_critic as rc
+        script = ("Aloo: (excited; point; x) Chalo shuru karte hain abhi.\n"
+                  "Aloo: (relief; celebrate; x) Sab theek ho gaya yaar.")
+        report = rc.analyze(script, expected_cast=["Aloo", "Tamatar"])
+        self.assertIn("cast_unused", report["flags"])
+
+    def test_on_cast_script_has_no_drift_flags(self):
+        import retention_critic as rc
+        script = ("Aloo: (excited; point; x) Chalo shuru karte hain abhi.\n"
+                  "Tamatar: (worried; walk; x) Lekin raasta band hai yahan.\n"
+                  "Aloo: (relief; celebrate; x) Shukar hai hal mil gaya.")
+        report = rc.analyze(script, expected_cast=["Aloo", "Tamatar"])
+        self.assertNotIn("cast_drift", report["flags"])
+        self.assertNotIn("cast_unused", report["flags"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -38,6 +38,36 @@ Aloo: (to camera) Aap batao — namak wali chai piyoge? Comment karo!
 --- END EXAMPLE ---"""
 
 
+def series_memory_block(memory):
+    """Phase 5 — render structured series memory as prompt text.
+
+    Pure and testable: turns ``series.series_memory()`` into an explicit block so
+    recurring characters keep the same persona, speech style and catchphrase
+    across episodes (recurring characters are what grow a channel).
+    """
+    if not memory:
+        return ""
+    lines = []
+    if memory.get("name") or memory.get("premise"):
+        lines.append(f"SERIES: {memory.get('name','')} — {memory.get('premise','')}".strip(" —"))
+    characters = memory.get("characters") or {}
+    if characters:
+        lines.append("RECURRING CAST (keep persona, speech style and catchphrase EXACTLY consistent):")
+        for cid, ch in characters.items():
+            bits = [b for b in (ch.get("persona"), ch.get("role")) if b]
+            if ch.get("speechStyle"):
+                bits.append(f"speaks: {ch['speechStyle']}")
+            if ch.get("catchphrase"):
+                bits.append(f'catchphrase: "{ch["catchphrase"]}"')
+            suffix = f" ({'; '.join(bits)})" if bits else ""
+            lines.append(f"- {ch.get('name', cid)}{suffix}")
+    events = memory.get("priorEvents") or []
+    if events:
+        lines.append("STORY SO FAR (stay consistent; you may reference these):")
+        lines.extend(f"- {e}" for e in events)
+    return "\n".join(lines)
+
+
 def _clean(raw):
     raw = (raw or "").strip()
     if raw.startswith("```"):
@@ -145,7 +175,8 @@ def _polish(providers, draft, language, lang_name, duration_brief, performance_r
 
 
 def craft(idea, language="roman_urdu", characters=None, length="medium", lines=None,
-          genre="auto", cast_bios=None, continuity="", structure_hint="", polish=True):
+          genre="auto", cast_bios=None, continuity="", structure_hint="", polish=True,
+          series_memory=None):
     """Multi-pass professional script. Returns dict."""
     import providers
     idea = (idea or "").strip()
@@ -165,7 +196,15 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
     lang_name = LANG_NAME.get(language, "Roman Urdu")
     g = (genre or "auto").lower()
 
-    if cast_bios:
+    memory_block = series_memory_block(series_memory)
+    if memory_block:
+        # Structured series memory supersedes free-text bios: it pins persona,
+        # speech style and catchphrase so episodes stay recognisably the same show.
+        cast_rule = (memory_block + "\nUse ONLY this cast, every one at least once. "
+                     "Do NOT invent others.")
+        if not continuity and series_memory.get("priorEvents"):
+            continuity = "\n".join(series_memory["priorEvents"])
+    elif cast_bios:
         cast_rule = ("CAST: use ONLY these recurring characters, personalities CONSISTENT, "
                      "har ek kam az kam ek baar:\n" + "\n".join(f"- {b}" for b in cast_bios)
                      + "\nDo NOT invent others.")
@@ -203,6 +242,8 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
         "hook": plan.get("hook", ""), "cta": chosen_cta, "promise": chosen_promise,
         "planned_arc": built_sheet["emotionArc"],
         "cta_anchor": built_sheet.get("ctaAnchor", "after_payoff"),
+        # Series episodes must stay on-cast; one-off scripts have no fixed cast.
+        "expected_cast": (series_memory or {}).get("castNames") or None,
     }
     if polish:
         report = retention_critic.analyze(draft, **critic_args)
