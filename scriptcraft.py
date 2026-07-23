@@ -11,8 +11,10 @@ import json
 import re
 
 import actions
+import beatsheets
 import dialogue_style
 import duration_planner
+import hooklab
 
 LANG_NAME = dialogue_style.LANGUAGE_NAMES
 LENGTH_LINES = {
@@ -69,21 +71,28 @@ def _plan(providers, idea, language, lang_name, n, duration_brief, genre, cast_r
         "Plan enough meaningful story beats to fill this natural speaking time; do not pad with repetition.\n".format(
             duration_brief["target_label"], duration_brief["minimum_words"],
             duration_brief["maximum_words"], duration_brief["average_words_per_line"]) +
+        "Also write a one-line PROMISE: the single curiosity or benefit the title "
+        "implies, which the ending MUST deliver (no clickbait the story can't pay off).\n"
         "Write 3 DISTINCT opening hook lines (different angles: shock / question / funny "
         "claim), then pick the single strongest as \"hook\" with a one-word reason.\n"
         "Reply with ONLY JSON (no markdown):\n"
         "{\"title\":\"catchy title in the story's language\",\"genre\":\"one word\","
-        "\"logline\":\"one sentence\",\"cast\":[{\"name\":\"..\",\"voice\":\"how they speak, 3-4 words\"}],"
+        "\"logline\":\"one sentence\",\"promise\":\"the click promise the ending delivers\","
+        "\"cast\":[{\"name\":\"..\",\"voice\":\"how they speak, 3-4 words\"}],"
         "\"hooks\":[\"h1\",\"h2\",\"h3\"],\"hook\":\"the chosen best hook line\","
-        "\"beats\":[\"setup\",\"escalation\",\"turn\",\"payoff\"],"
         "\"cta\":\"a comment-bait / engagement line for the end in the story's language\"}")
     user = f"Idea: {idea}\nLanguage for all text: {lang_name}{cont}"
     return _json_obj(providers.llm_generate(sysp, user, max_tokens=900, temperature=0.9))
 
 
-def _draft(providers, plan, idea, language, lang_name, n, duration_brief, cast_rule, performance_rule="", max_tokens=1400):
-    beats = " -> ".join(plan.get("beats", []))
+def _draft(providers, plan, idea, language, lang_name, n, duration_brief, cast_rule,
+           performance_rule="", max_tokens=1400, beatsheet_text="", emotion_arc=None):
+    beats = beatsheet_text or " -> ".join(plan.get("beats", []))
     voices = "; ".join(f"{c.get('name')}: {c.get('voice','')}" for c in plan.get("cast", []))
+    arc_line = (f"EMOTION ARC (make the mood move, don't stay flat): "
+                f"{' -> '.join(emotion_arc)}\n" if emotion_arc else "")
+    promise_line = (f"TITLE PROMISE the ending must deliver: {plan.get('promise','')}\n"
+                    if plan.get("promise") else "")
     sysp = (
         "You are a professional cartoon dialogue writer. Write the FULL script from this plan.\n"
         f"{EXEMPLAR}\n"
@@ -93,7 +102,10 @@ def _draft(providers, plan, idea, language, lang_name, n, duration_brief, cast_r
         f"{cast_rule}\n"
         f"{performance_rule}\n"
         f"CHARACTER VOICES (keep each DISTINCT): {voices}\n"
-        f"ARC (beats): {beats}\n"
+        f"{promise_line}"
+        f"BEAT SHEET — write the story beat by beat, honoring each beat's job and "
+        f"rough word budget:\n{beats}\n"
+        f"{arc_line}"
         f"OPENING HOOK (use as line 1, punchy): {plan.get('hook','')}\n"
         f"ENDING: land the payoff, then this engagement line: {plan.get('cta','')}\n"
         f"LENGTH: about {n} dialogue lines and {duration_brief['minimum_words']}-{duration_brief['maximum_words']} spoken words "
@@ -158,9 +170,22 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
 
     plan = _plan(providers, idea, language, lang_name, n, duration_brief, g, cast_rule, continuity,
                  structure_hint, performance_rule)
+
+    # Phase 1 — retention beat sheet (genre-tuned, duration-scaled) + Hook Lab.
+    # Genre comes from the caller, else the planner's auto-detected genre.
+    resolved_genre = g if g not in ("", "auto") else plan.get("genre", "")
+    built_sheet = beatsheets.build(resolved_genre, duration_brief)
+    beatsheet_text = beatsheets.as_prompt_lines(built_sheet)
+    hook_result = hooklab.generate_and_score(
+        providers, idea, plan.get("promise", "") or plan.get("logline", ""),
+        lang_name, fallback_hook=plan.get("hook", ""))
+    # Hook Lab wins over the planner's blind pick; keep planner hook as fallback.
+    plan["hook"] = hook_result["hook"] or plan.get("hook", "")
+
     token_budget = min(6000, max(1400, int(duration_brief["maximum_words"] * 2.2)))
     draft = _draft(providers, plan, idea, language, lang_name, n, duration_brief, cast_rule,
-                   performance_rule, max_tokens=token_budget)
+                   performance_rule, max_tokens=token_budget,
+                   beatsheet_text=beatsheet_text, emotion_arc=built_sheet["emotionArc"])
     script = (_polish(providers, draft, language, lang_name, duration_brief,
                       performance_rule, max_tokens=token_budget)
               if polish else draft)
@@ -168,12 +193,16 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
     return {
         "script": script,
         "title": plan.get("title", ""),
-        "genre": plan.get("genre", g if g != "auto" else ""),
+        "genre": built_sheet["genre"],
         "logline": plan.get("logline", ""),
+        "promise": plan.get("promise", ""),
         "cast": [c.get("name") for c in plan.get("cast", [])] or chars,
         "hook": plan.get("hook", ""),
-        "hooks": plan.get("hooks", []),
-        "beats": plan.get("beats", []),
+        "hooks": hook_result["hooks"] or plan.get("hooks", []),
+        "hookRanking": hook_result["ranking"],
+        "beats": [b["id"] for b in built_sheet["beats"]],
+        "beatSheet": built_sheet["beats"],
+        "emotionArc": built_sheet["emotionArc"],
         "cta": plan.get("cta", ""),
         "character_performance": [
             {key: profile.get(key) for key in (
