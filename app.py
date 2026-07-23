@@ -901,7 +901,9 @@ def api_metadata():
     if len(script) < 20:
         return jsonify({"error": "Pehle script banayein (bohat chhota hai)"}), 400
     return jsonify(metadata.generate(script, language=d.get("language", "roman_urdu"),
-                                     platform=d.get("platform", "youtube")))
+                                     platform=d.get("platform", "youtube"),
+                                     promise=d.get("promise", ""),
+                                     title_hint=d.get("title", "")))
 
 
 @app.route("/api/longform", methods=["POST"])

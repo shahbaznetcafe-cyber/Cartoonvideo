@@ -28,8 +28,13 @@ def _speakers(script):
     return names
 
 
-def generate(script, language="roman_urdu", platform="youtube"):
-    """Script -> YouTube package (titles/description/tags/thumbnail/pinned/chapters)."""
+def generate(script, language="roman_urdu", platform="youtube", promise="", title_hint=""):
+    """Script -> YouTube package (titles/description/tags/thumbnail/pinned/chapters).
+
+    ``promise`` and ``title_hint`` (from the script engine) tie the packaging to
+    the story's intended click-promise so the title/thumbnail and the payoff are
+    one coherent contract — no clickbait the script cannot deliver.
+    """
     import providers
     lang_name = LANG_NAME.get(language, "Roman Urdu")
     plat = (platform or "youtube").lower()
@@ -37,9 +42,16 @@ def generate(script, language="roman_urdu", platform="youtube"):
     kind = ("YouTube Shorts / TikTok / Reels (vertical, <60s)" if short
             else "YouTube (long-form / standard)")
 
+    contract = ""
+    if promise:
+        contract += (f"\nSTORY PROMISE (the payoff delivers this — titles/thumbnail must "
+                     f"tease exactly this, no clickbait beyond it): {promise}")
+    if title_hint:
+        contract += f"\nPREFERRED TITLE DIRECTION (align with, refine, keep the promise): {title_hint}"
+
     sysp = (
         "You are a YouTube growth strategist + copywriter for an animated cartoon channel. "
-        f"From the script, produce publish-ready packaging for {kind}.\n"
+        f"From the script, produce publish-ready packaging for {kind}.{contract}\n"
         "Rules:\n"
         "- TITLES: 5 options. Click-worthy + SEO. Mix curiosity, emotion, and a clear keyword. "
         "Keep under ~70 chars. No clickbait lies.\n"

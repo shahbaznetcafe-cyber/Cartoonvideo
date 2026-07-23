@@ -207,5 +207,76 @@ class RetentionCriticTests(unittest.TestCase):
         self.assertIn("-", fixes)   # bulleted directives
 
 
+class PayoffAndTitleContractTests(unittest.TestCase):
+    def _rc(self):
+        import retention_critic
+        return retention_critic
+
+    def test_unresolved_ending_flags_weak_payoff(self):
+        rc = self._rc()
+        # Ends on 'worried' — no resolution.
+        script = ("A: (excited; point; x) Ruko! Kuch ajeeb hone wala hai abhi.\n"
+                  "B: (surprised; walk; x) Kya matlab, dikhao mujhe zara.\n"
+                  "A: (worried; reach; x) Pata nahi ye kaise hoga aage.")
+        report = rc.analyze(script, hook="Ruko! Kuch ajeeb hone wala hai abhi.")
+        self.assertIn("weak_payoff", report["flags"])
+
+    def test_resolved_ending_passes_payoff(self):
+        rc = self._rc()
+        script = ("A: (excited; point; x) Ruko! Kuch ajeeb hone wala hai abhi.\n"
+                  "B: (surprised; walk; x) Kya matlab, dikhao mujhe zara.\n"
+                  "A: (relief; celebrate; x) Sab theek ho gaya, shukar hai.")
+        report = rc.analyze(script, hook="Ruko! Kuch ajeeb hone wala hai abhi.")
+        self.assertNotIn("weak_payoff", report["flags"])
+
+    def test_payoff_check_ignores_cta_line(self):
+        rc = self._rc()
+        cta = "Comment karo doston abhi!"
+        # Real ending is 'proud' (resolved); the CTA after it is 'excited'.
+        script = ("A: (excited; point; x) Ruko! Kuch ajeeb hone wala hai abhi.\n"
+                  "B: (surprised; walk; x) Kya matlab, dikhao mujhe zara.\n"
+                  "A: (proud; celebrate; x) Humne mil kar ye kar dikhaya.\n"
+                  f"B: (excited; wave; x) {cta}")
+        report = rc.analyze(script, cta=cta,
+                            hook="Ruko! Kuch ajeeb hone wala hai abhi.")
+        self.assertNotIn("weak_payoff", report["flags"])
+
+
+class MetadataContractTests(unittest.TestCase):
+    def test_promise_and_title_are_injected_into_prompt(self):
+        import metadata, providers
+        captured = {}
+        def fake(system, user, **kw):
+            captured["system"] = system
+            return ('{"titles":["T1"],"description":"d","tags":["a"],'
+                    '"thumbnail_text":"WOW","pinned_comment":"?","chapters":[]}')
+        orig = providers.llm_generate
+        providers.llm_generate = fake
+        try:
+            out = metadata.generate("A: (happy; wave; x) Hello dosto kaise ho.",
+                                    language="roman_urdu", promise="why kindness wins",
+                                    title_hint="The Kind Rabbit")
+        finally:
+            providers.llm_generate = orig
+        self.assertIn("why kindness wins", captured["system"])
+        self.assertIn("The Kind Rabbit", captured["system"])
+        self.assertEqual(out["titles"], ["T1"])
+
+    def test_metadata_still_works_without_contract(self):
+        import metadata, providers
+        captured = {}
+        def fake(system, user, **kw):
+            captured["system"] = system
+            return '{"titles":["T"],"description":"d","tags":[],"thumbnail_text":"","pinned_comment":"","chapters":[]}'
+        orig = providers.llm_generate
+        providers.llm_generate = fake
+        try:
+            out = metadata.generate("A: (happy; wave; x) Hi.", language="roman_urdu")
+        finally:
+            providers.llm_generate = orig
+        self.assertNotIn("STORY PROMISE", captured["system"])
+        self.assertEqual(out["titles"], ["T"])
+
+
 if __name__ == "__main__":
     unittest.main()

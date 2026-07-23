@@ -24,6 +24,16 @@ FLAT_ARC_RUN = 3          # same emotion this many lines in a row = flat
 MONOLOGUE_RUN = 3         # same speaker this many lines in a row = stall
 CTA_ZONE = 0.6            # CTA should fall in the last 40% of the script
 
+# A satisfying ending resolves the tension.  We check the ending *emotion*
+# (language-safe) rather than promise word-overlap, which would false-positive
+# across languages (an English promise vs a Roman-Urdu script share no tokens
+# even when the payoff genuinely delivers it).
+RESOLUTION_EMOTIONS = {
+    "relief", "relieved", "happy", "joyful", "joy", "proud", "warm", "tender",
+    "triumphant", "content", "satisfied", "encouraging", "hopeful", "grateful",
+    "cheerful", "delighted", "peaceful",
+}
+
 
 def _tokens(text):
     return [t for t in re.findall(r"[^\W\d_]+", str(text or "").lower()) if len(t) > 1]
@@ -85,8 +95,13 @@ def _overlap(a, b):
     return len(ta & tb) / len(ta | tb)
 
 
-def analyze(script, *, hook="", cta="", beat_sheet=None):
-    """Deterministic retention analysis. Returns a report dict."""
+def analyze(script, *, hook="", cta="", promise="", beat_sheet=None):
+    """Deterministic retention analysis. Returns a report dict.
+
+    ``promise`` is accepted for the title↔script contract, but the delivery check
+    is intentionally structural (the ending must *resolve*), not a word-overlap
+    against the promise — see RESOLUTION_EMOTIONS for why.
+    """
     parsed = parse_script(script)
     lines = parsed["lines"]
     n = len(lines)
@@ -170,6 +185,18 @@ def analyze(script, *, hook="", cta="", beat_sheet=None):
             add(pos, "CTA appears too early (should land after the payoff)", "med")
             flags.append("cta_too_early")
 
+    # 8) Weak payoff: the story must END on a resolution, not on unresolved
+    #    tension.  The payoff may sit on its own line or share a line with the
+    #    CTA, so the ending resolves if EITHER of the last two lines carries a
+    #    resolution emotion.  Only flag when neither does (and they have emotions).
+    if n >= 3:
+        tail = lines[-2:]
+        emotions = [ln["emotion"] for ln in tail if ln["emotion"]]
+        resolves = any(e in RESOLUTION_EMOTIONS for e in emotions)
+        if emotions and not resolves:
+            add(lines[-1]["index"], "ends on unresolved emotion — land a satisfying payoff", "med")
+            flags.append("weak_payoff")
+
     high = sum(1 for j in judgements if j["retentionRisk"] == "high")
     med = sum(1 for j in judgements if j["retentionRisk"] == "med")
     return {
@@ -196,6 +223,8 @@ _FIX_TEXT = {
     "cta_too_early": "Move the engagement/CTA line to after the payoff, at the emotional peak.",
     "cta_missing": "End with one short engagement line (a question or call to comment) after "
         "the payoff.",
+    "weak_payoff": "The ending doesn't resolve — deliver the title's promise with a clear, "
+        "satisfying payoff (relief/joy/pride), not unresolved tension.",
 }
 
 

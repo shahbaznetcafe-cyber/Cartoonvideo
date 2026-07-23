@@ -79,6 +79,7 @@ def _plan(providers, idea, language, lang_name, n, duration_brief, genre, cast_r
         "Reply with ONLY JSON (no markdown):\n"
         "{\"title\":\"catchy title in the story's language\",\"genre\":\"one word\","
         "\"logline\":\"one sentence\",\"promise\":\"the click promise the ending delivers\","
+        "\"audience\":\"who this is for, 2-4 words\",\"coreMessage\":\"the takeaway in one short phrase\","
         "\"cast\":[{\"name\":\"..\",\"voice\":\"how they speak, 3-4 words\"}],"
         "\"hooks\":[\"h1\",\"h2\",\"h3\"],\"hook\":\"the chosen best hook line\","
         "\"cta\":\"a comment-bait / engagement line for the end in the story's language\"}")
@@ -197,8 +198,10 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
     # Phase 2 — deterministic retention critic drives a targeted polish. If the
     # draft already passes every structural check, the rewrite is skipped.
     chosen_cta = plan.get("cta", "")
+    chosen_promise = plan.get("promise", "")
     if polish:
-        report = retention_critic.analyze(draft, hook=plan.get("hook", ""), cta=chosen_cta)
+        report = retention_critic.analyze(draft, hook=plan.get("hook", ""),
+                                          cta=chosen_cta, promise=chosen_promise)
         fixes = retention_critic.fix_instructions(report)
         script = _polish(providers, draft, language, lang_name, duration_brief,
                          performance_rule, max_tokens=token_budget, targeted_fixes=fixes) \
@@ -207,7 +210,7 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
         script = draft
     # Re-analyze the final script so the review UI shows the shipped state.
     retention_report = retention_critic.analyze(
-        script, hook=plan.get("hook", ""), cta=chosen_cta)
+        script, hook=plan.get("hook", ""), cta=chosen_cta, promise=chosen_promise)
 
     return {
         "script": script,
@@ -215,6 +218,8 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
         "genre": built_sheet["genre"],
         "logline": plan.get("logline", ""),
         "promise": plan.get("promise", ""),
+        "audience": plan.get("audience", ""),
+        "coreMessage": plan.get("coreMessage", ""),
         "cast": [c.get("name") for c in plan.get("cast", [])] or chars,
         "hook": plan.get("hook", ""),
         "hooks": hook_result["hooks"] or plan.get("hooks", []),
