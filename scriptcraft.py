@@ -255,6 +255,7 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
         script = draft
     # Re-analyze the final script so the review UI shows the shipped state.
     retention_report = retention_critic.analyze(script, **critic_args)
+    retention_report["notes"] = retention_critic.flag_notes(retention_report)
 
     return {
         "script": script,

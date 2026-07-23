@@ -600,6 +600,7 @@ async function genFromTemplate(){
     if(j.error){ msg.innerHTML='<span class="err">'+j.error+'</span>'; }
     else{
       replaceScriptWithGenerated(j.script,TPL_SEL?.name_en||'Template story','Template');
+      renderRetentionPanel(j);
       msg.innerHTML=feedbackMarkup('success','Script ready hai. Editor mein review karke Generate Video karein.');
     }
   }catch(e){ msg.innerHTML='<span class="err">Fail: '+e+'</span>'; }
@@ -624,6 +625,7 @@ async function genFreeform(){
     if(j.error){ msg.innerHTML='<span class="err">'+j.error+'</span>'; }
     else{
       replaceScriptWithGenerated(j.script||'',j.title||'AI story','Quick Idea');
+      renderRetentionPanel(j);
       const cast=(j.cast||[]).join(', ');
       msg.innerHTML=feedbackMarkup('success',`${j.title?`“${j.title}” · `:''}${j.genre?`${j.genre} · `:''}${cast?`${cast} · `:''}Script editor mein ready hai.`);
     }
@@ -650,6 +652,7 @@ async function genLongform(){
     if(j.error){ msg.innerHTML='<span class="err">'+j.error+'</span>'; }
     else{
       replaceScriptWithGenerated(j.script||'',j.title||'Long-form story','Long-form');
+      renderRetentionPanel(j);
       const cast=(j.cast||[]).join(', ');
       msg.innerHTML=feedbackMarkup('success',`${j.title?`“${j.title}” · `:''}${j.genre?`${j.genre} · `:''}${cast||'Long-form story ready'}`);
       if(j.logline) msg.innerHTML+=`<div class="feedback-detail">${escHtml(j.logline)}</div>`;
@@ -817,6 +820,7 @@ async function genEpisode(){
     if(j.error){ msg.innerHTML='<span class="err">'+j.error+'</span>'; }
     else{
       replaceScriptWithGenerated(j.script||'',j.title||CUR_SERIES.name,'Series episode');
+      renderRetentionPanel(j);
       msg.innerHTML=feedbackMarkup('success',`Episode ${j.episode_num}: “${j.title}”`)
         +`<div class="feedback-detail">${escHtml(j.summary||'')}</div>`;
       document.getElementById('epIdea').value='';
@@ -2126,3 +2130,68 @@ async function testRunware(){
 
 loadLib();
 load();
+
+// ---------------- Phase 6 — Retention review panel ----------------
+// Surfaces the deterministic critic's findings and the scored hook alternatives
+// next to the editable script, so the human edit gate is informed rather than blind.
+let LAST_HOOK_RANKING=[];
+
+function renderRetentionPanel(data){
+  const panel=document.getElementById('retentionPanel');
+  if(!panel) return;
+  const report=(data&&data.retentionReport)||null;
+  const ranking=(data&&data.hookRanking)||[];
+  LAST_HOOK_RANKING=ranking;
+  if(!report&&!ranking.length){ panel.classList.add('hidden'); panel.innerHTML=''; return; }
+
+  const counts=(report&&report.riskCounts)||{high:0,med:0,low:0};
+  const notes=(report&&report.notes)||[];
+  const clean=notes.length===0&&!counts.high&&!counts.med;
+  const chips=[
+    clean?'<span class="rt-chip ok">No retention issues found</span>':'',
+    counts.high?`<span class="rt-chip bad">${counts.high} high risk</span>`:'',
+    counts.med?`<span class="rt-chip warn">${counts.med} to tighten</span>`:'',
+    (report&&report.lineCount)?`<span class="rt-chip ok">${report.lineCount} lines</span>`:'',
+  ].filter(Boolean).join('');
+
+  let html=`<div class="retention-head"><h4>Retention review</h4>
+    <div class="retention-score">${chips}</div></div>`;
+  if(notes.length){
+    html+='<ul class="retention-notes">'+notes.map(n=>
+      `<li>${escHtml(n.note||n.flag||'')}</li>`).join('')+'</ul>';
+  }
+  if(ranking.length>1){
+    html+='<div class="retention-sub">Hook alternatives — click to use</div><div class="hook-list">';
+    html+=ranking.slice(0,8).map((h,i)=>
+      `<button type="button" class="hook-option${i===0?' is-current':''}" data-hook-index="${i}">
+        <span class="hk-score">${Math.round((h.total||0)*100)}</span>
+        <span class="hk-angle">${escHtml(h.angle||'')}</span>
+        <span class="hk-text">${escHtml(h.text||'')}</span>
+      </button>`).join('');
+    html+='</div>';
+  }
+  html+='<p class="retention-notes" style="padding-left:0;margin-top:10px;opacity:.75">'
+      +'Structure checks only — real retention is confirmed from YouTube Analytics after upload.</p>';
+  panel.innerHTML=html;
+  panel.classList.remove('hidden');
+  panel.querySelectorAll('[data-hook-index]').forEach(btn=>{
+    btn.addEventListener('click',()=>applyHookChoice(parseInt(btn.dataset.hookIndex,10)));
+  });
+}
+
+/** Swap the opening hook into line 1 of the script editor (keeps the line format). */
+function applyHookChoice(index){
+  const hook=LAST_HOOK_RANKING[index];
+  const editor=document.getElementById('script');
+  if(!hook||!editor) return;
+  const lines=editor.value.split('\n');
+  const target=lines.findIndex(l=>/^\s*[^:\[\n]+:/.test(l)&&!/^\s*\[/.test(l));
+  if(target<0) return;
+  // Preserve "Name: (emotion; action; location) " and replace only the spoken text.
+  lines[target]=lines[target].replace(/^(\s*[^:\n]+:\s*(?:\([^)]*\)\s*)?)(.*)$/,
+    (m,prefix)=>prefix+hook.text);
+  editor.value=lines.join('\n');
+  document.querySelectorAll('#retentionPanel [data-hook-index]').forEach(b=>
+    b.classList.toggle('is-current',parseInt(b.dataset.hookIndex,10)===index));
+  showStudioToast('Hook updated in the script editor.','success','Hook applied',false);
+}

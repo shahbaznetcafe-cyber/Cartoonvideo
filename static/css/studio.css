@@ -260,3 +260,33 @@ summary:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}.dial
 /* Phase 7: focused Runware script-stage workspace */
 .script-engine-panel{margin-top:14px;border:1px solid var(--border);border-radius:12px;background:rgba(79,140,255,.025);overflow:hidden}.script-engine-panel>summary{min-height:54px;padding:10px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;list-style:none}.script-engine-panel>summary::-webkit-details-marker{display:none}.script-engine-panel>summary>.icon{width:18px;height:18px;color:#8FB5FF}.script-engine-panel>summary div{display:flex;flex-direction:column;gap:2px}.script-engine-panel>summary strong{font-size:13px}.script-engine-panel>summary small{font-size:12px;color:var(--text-muted)}.script-engine-body{padding:14px;border-top:1px solid var(--border)}.script-engine-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.script-engine-grid label,.script-engine-body>label,#scriptEngineComparisonGroup label{display:block;margin:0 0 5px;color:var(--text-muted);font-size:12px}.compact-switch{margin:12px 0}.script-engine-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.script-engine-output{min-height:210px;font-family:Consolas,'Courier New',monospace;font-size:12px;line-height:1.5;resize:vertical}.script-engine-metadata{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;color:var(--text-muted);font-size:12px}.script-engine-metadata span{padding:5px 8px;border:1px solid var(--border);border-radius:999px;background:var(--surface-raised)}
 @media (max-width:720px){.script-engine-grid{grid-template-columns:1fr}.script-engine-actions .btn{width:100%}}
+
+/* Phase 6 — retention review panel (hook ranking + critic report) */
+.retention-panel{margin-top:14px;padding:14px 16px;border:1px solid var(--border,#2a2a3a);
+  border-radius:12px;background:var(--panel,#16161f)}
+.retention-panel.hidden{display:none}
+.retention-head{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;margin-bottom:10px}
+.retention-head h4{margin:0;font-size:14px;letter-spacing:.02em}
+.retention-score{display:flex;gap:8px;flex-wrap:wrap}
+.rt-chip{font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid transparent;
+  white-space:nowrap}
+.rt-chip.ok{background:rgba(34,197,94,.14);color:#4ade80;border-color:rgba(34,197,94,.35)}
+.rt-chip.warn{background:rgba(251,191,36,.14);color:#fbbf24;border-color:rgba(251,191,36,.35)}
+.rt-chip.bad{background:rgba(248,113,113,.14);color:#f87171;border-color:rgba(248,113,113,.35)}
+.retention-notes{margin:8px 0 0;padding-left:18px;font-size:12px;line-height:1.65;
+  color:var(--muted,#9aa0b5)}
+.retention-notes li{margin:2px 0}
+.retention-sub{margin:14px 0 6px;font-size:12px;font-weight:600;
+  color:var(--muted,#9aa0b5);letter-spacing:.03em;text-transform:uppercase}
+.hook-list{display:flex;flex-direction:column;gap:6px}
+.hook-option{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;
+  border:1px solid var(--border,#2a2a3a);background:rgba(255,255,255,.02);cursor:pointer;
+  text-align:left;width:100%;color:inherit;font:inherit;transition:border-color .15s,background .15s}
+.hook-option:hover{border-color:var(--accent,#6366f1);background:rgba(99,102,241,.08)}
+.hook-option .hk-score{font-size:11px;font-variant-numeric:tabular-nums;color:var(--muted,#9aa0b5);
+  min-width:34px}
+.hook-option .hk-angle{font-size:10px;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--muted,#9aa0b5);opacity:.8;min-width:96px}
+.hook-option .hk-text{flex:1;font-size:13px}
+.hook-option.is-current{border-color:var(--accent,#6366f1);background:rgba(99,102,241,.12)}

@@ -287,6 +287,12 @@ _FIX_TEXT = {
 }
 
 
+def flag_notes(report):
+    """Flags as {flag, note} pairs for the review UI (same wording as the fixes)."""
+    return [{"flag": f, "note": _FIX_TEXT[f]}
+            for f in report.get("flags", []) if f in _FIX_TEXT]
+
+
 def fix_instructions(report):
     """Turn flags into targeted rewrite directives for the polish pass.
 

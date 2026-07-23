@@ -316,6 +316,9 @@ def generate_episode(sid, idea="", length="medium", save_episode=True, on_progre
         "script": script, "title": title, "episode_num": ep_num,
         "summary": summary, "genre": res.get("genre", genre),
         "cast": cast_names,
+        # Phase 6: carry the review data so the UI can show it for episodes too.
+        "retentionReport": res.get("retentionReport"),
+        "hookRanking": res.get("hookRanking", []),
     }
     if is_long:
         out["logline"] = res.get("logline", "")

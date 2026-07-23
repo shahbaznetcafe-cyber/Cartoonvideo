@@ -423,5 +423,38 @@ class SeriesMemoryTests(unittest.TestCase):
         self.assertNotIn("cast_unused", report["flags"])
 
 
+class ReviewPanelContractTests(unittest.TestCase):
+    """Phase 6 — the review UI must be wired end to end (markup, styles, JS)."""
+
+    def _read(self, rel):
+        from pathlib import Path
+        return (Path(__file__).parents[1] / rel).read_text(encoding="utf-8")
+
+    def test_flag_notes_pair_flags_with_human_wording(self):
+        import retention_critic as rc
+        report = {"flags": ["hook_not_first", "cta_missing", "unknown_flag"]}
+        notes = rc.flag_notes(report)
+        self.assertEqual([n["flag"] for n in notes], ["hook_not_first", "cta_missing"])
+        self.assertTrue(all(n["note"] for n in notes))
+
+    def test_template_has_retention_panel(self):
+        html = self._read("templates/index.html")
+        self.assertIn('id="retentionPanel"', html)
+
+    def test_styles_define_panel_and_hook_option(self):
+        css = self._read("static/css/studio.css")
+        self.assertIn(".retention-panel", css)
+        self.assertIn(".hook-option", css)
+
+    def test_js_renders_panel_and_applies_hook(self):
+        js = self._read("static/js/studio.js")
+        self.assertIn("function renderRetentionPanel", js)
+        self.assertIn("function applyHookChoice", js)
+        # every generator surfaces the review data
+        self.assertGreaterEqual(js.count("renderRetentionPanel(j)"), 4)
+        # honesty note shown to the creator
+        self.assertIn("YouTube Analytics", js)
+
+
 if __name__ == "__main__":
     unittest.main()
