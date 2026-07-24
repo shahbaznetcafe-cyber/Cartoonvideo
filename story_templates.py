@@ -513,6 +513,8 @@ def generate_longform(idea, language="roman_urdu", characters=None,
         "{\"title\": \"<catchy title in the story's language>\", "
         "\"genre\": \"<one word>\", "
         "\"logline\": \"<one-sentence summary of the whole story>\", "
+        "\"promise\": \"<the click promise the ending must deliver>\", "
+        "\"cta\": \"<a short engagement line for the very end, in the story's language>\", "
         "\"cast\": [{\"name\":\"..\",\"trait\":\"one-line personality\"}], "
         "\"scenes\": [{\"location\":\"<short place>\", "
         "\"goal\":\"<what happens / what this scene must accomplish, 1-2 sentences>\"}]}")
@@ -537,6 +539,15 @@ def generate_longform(idea, language="roman_urdu", characters=None,
     scenes = outline.get("scenes", [])[:n_scenes]
     if not scenes:
         raise RuntimeError("Outline mein koi scene nahi mila")
+
+    # -------- Retention engine: beat sheet across scenes + scored hook --------
+    import beatsheets, hooklab, retention_critic
+    promise = outline.get("promise", "") or logline
+    cta_line = outline.get("cta", "")
+    built_sheet = beatsheets.build(det_genre or g, duration_brief)
+    scene_beats = beatsheets.assign_to_scenes(built_sheet, len(scenes))
+    hook_result = hooklab.generate_and_score(providers, idea, promise, lang_name)
+    chosen_hook = hook_result["hook"]
 
     # -------- STAGE 2: har scene ka dialogue (continuity ke sath) --------
     scene_sys = (
@@ -570,8 +581,21 @@ def generate_longform(idea, language="roman_urdu", characters=None,
                ("OPENING scene — hook the viewer hard in the first 2 lines."
                 if i == 1 else "MIDDLE scene — raise the stakes."))
         prog(i, f"Scene {i}/{len(scenes)} likh raha: {loc}")
+        beat_plan = scene_beats[i - 1] if i - 1 < len(scene_beats) else {}
+        roles = ", ".join(beat_plan.get("roles") or []) or "story beat"
+        moods = " -> ".join(beat_plan.get("emotions") or []) or "natural"
+        purposes = " ".join(beat_plan.get("purposes") or [])
+        retention_note = (f"RETENTION ROLE of this scene: {roles}. {purposes}\n"
+                          f"EMOTION for this scene: {moods}.\n")
+        if i == 1 and chosen_hook:
+            retention_note += ("OPEN the very first spoken line with this exact hook: "
+                               f'"{chosen_hook}"\n')
+        if i == len(scenes) and cta_line:
+            retention_note += ("END the scene with the payoff, then this engagement line: "
+                               f'"{cta_line}"\n')
         user = (f"Scene {i} of {len(scenes)}. {pos}\n"
                 f"Location: {loc}\nThis scene's goal: {goal}\n"
+                f"{retention_note}"
                 f"Story so far (recap): {recap or 'story start'}\n"
                 "Write this scene now.")
         txt = _clean_script(providers.llm_generate(
@@ -607,8 +631,25 @@ def generate_longform(idea, language="roman_urdu", characters=None,
         line.split(":", 1)[-1] for line in script.splitlines()
         if ":" in line and not line.lstrip().lower().startswith("[scene")
     )))
+    # Long-form is written beat-aware up front, so we report rather than rewrite:
+    # a full multi-scene rewrite would risk the duration contract and continuity.
+    retention_report = retention_critic.analyze(
+        script, hook=chosen_hook, cta=cta_line, promise=promise,
+        planned_arc=built_sheet["emotionArc"],
+        cta_anchor=built_sheet.get("ctaAnchor", "after_payoff"))
+    retention_report["notes"] = retention_critic.flag_notes(retention_report)
+
     return {
         "script": script,
+        "promise": promise,
+        "cta": cta_line,
+        "hook": chosen_hook,
+        "hooks": hook_result["hooks"],
+        "hookRanking": hook_result["ranking"],
+        "beatSheet": built_sheet["beats"],
+        "emotionArc": built_sheet["emotionArc"],
+        "ctaAnchor": built_sheet.get("ctaAnchor", "after_payoff"),
+        "retentionReport": retention_report,
         "duration_contract": {
             "selected": duration_brief["target_label"],
             "minimum_words": duration_brief["minimum_words"],

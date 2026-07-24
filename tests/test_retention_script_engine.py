@@ -507,5 +507,64 @@ class LongformSmokeTests(unittest.TestCase):
             self.assertFalse(missing, f"{name} uses {sorted(missing)} without importing it")
 
 
+class LongformRetentionTests(unittest.TestCase):
+    def test_beats_spread_across_scenes_with_ends_anchored(self):
+        brief = duration_planner.writing_brief("5min")
+        built = beatsheets.build("adventure", brief)
+        for scene_count in (2, 3, 5, 9, 12):
+            groups = beatsheets.assign_to_scenes(built, scene_count)
+            self.assertEqual(len(groups), scene_count)
+            # no scene left without a role
+            self.assertTrue(all(g["roles"] for g in groups), f"empty role at {scene_count}")
+            # opening owns the cold_open, ending owns the closing beat
+            self.assertIn("cold_open", groups[0]["roles"])
+            self.assertTrue({"payoff", "cta"} & set(groups[-1]["roles"]),
+                            f"no closing beat at {scene_count}")
+
+    def test_assign_to_scenes_handles_empty_sheet(self):
+        groups = beatsheets.assign_to_scenes({"beats": []}, 3)
+        self.assertEqual(len(groups), 3)
+        self.assertTrue(all(g["roles"] == [] for g in groups))
+
+    def test_longform_returns_review_fields_and_injects_hook(self):
+        import providers, story_templates
+        prompts = []
+        def fake(system, user, **kw):
+            s = (system or "").lower()
+            if "hook writer" in s:
+                return ('{"hooks":[{"text":"Ruko! Ye kaun hai?","angle":"question",'
+                        '"scores":{"curiosity":9,"clarity":9,"emotion":9,'
+                        '"promiseMatch":9,"sayable":9,"childSafe":10}}]}')
+            if "long-form animated-story planner" in s:
+                return ('{"title":"T","genre":"adventure","logline":"L",'
+                        '"promise":"P","cta":"Comment karo doston!",'
+                        '"cast":[{"name":"Ali","trait":"brave"}],'
+                        '"scenes":[{"location":"Street","goal":"g1"},'
+                        '{"location":"Park","goal":"g2"}]}')
+            prompts.append(user)
+            return ("[Scene: Street]\n"
+                    "Ali: (excited; walk; street) Ruko! Ye kaun hai yahan par.\n"
+                    "Ali: (relief; celebrate; street) Sab theek ho gaya yaar.")
+        original = providers.llm_generate
+        providers.llm_generate = fake
+        try:
+            result = story_templates.generate_longform(
+                "a hero story", language="urdu", minutes="2min", genre="auto")
+        finally:
+            providers.llm_generate = original
+        for key in ("promise", "hook", "hookRanking", "beatSheet",
+                    "emotionArc", "ctaAnchor", "retentionReport"):
+            self.assertIn(key, result, f"missing {key}")
+        self.assertEqual(result["hook"], "Ruko! Ye kaun hai?")
+        self.assertIn("notes", result["retentionReport"])
+        # scene 1 is told to open on the scored hook; the last scene gets the CTA
+        self.assertIn("RETENTION ROLE", prompts[0])
+        self.assertIn("Ruko! Ye kaun hai?", prompts[0])
+        # The CTA goes to the final scene's prompt; a short draft can trigger an
+        # extra expand pass afterwards, so search all captured prompts.
+        self.assertTrue(any("Comment karo doston!" in p for p in prompts),
+                        "CTA was not injected into the final scene prompt")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -295,6 +295,39 @@ def build(genre, brief):
     }
 
 
+def assign_to_scenes(built, scene_count):
+    """Spread a built beat sheet across N long-form scenes.
+
+    Long-form writes scene by scene, so each scene needs its own slice of the
+    retention structure.  Beats are distributed in order and every scene gets at
+    least one beat; the opening scene always owns the cold_open and the final
+    scene always owns the payoff/cta beats.
+    """
+    beats = list(built.get("beats") or [])
+    n = max(1, int(scene_count or 1))
+    if not beats:
+        return [{"roles": [], "emotions": [], "words": 0} for _ in range(n)]
+    if n >= len(beats):
+        # More scenes than beats: one beat each, trailing scenes reuse the last.
+        groups = [[b] for b in beats] + [[beats[-1]]] * (n - len(beats))
+        groups = groups[:n]
+    else:
+        groups = [[] for _ in range(n)]
+        for index, beat in enumerate(beats):
+            # Proportional placement keeps the opening/closing beats at the ends.
+            slot = min(n - 1, index * n // len(beats))
+            groups[slot].append(beat)
+        for slot in range(n):          # never leave a scene without a role
+            if not groups[slot]:
+                groups[slot].append(beats[min(slot, len(beats) - 1)])
+    return [{
+        "roles": [b["type"] for b in group],
+        "purposes": [b["purpose"] for b in group],
+        "emotions": [b["emotion"] for b in group],
+        "words": sum(int(b.get("words") or 0) for b in group),
+    } for group in groups]
+
+
 def as_prompt_lines(built):
     """Render a built beat sheet as newline text for the draft prompt."""
     lines = []
