@@ -151,6 +151,22 @@ def load_job(name):
         return _read_job_path(p)
 
 
+def script_from_parsed(parsed):
+    """Rebuild editable script text from a saved plan (projects with no job.json).
+
+    Single source of truth for the reconstruction used by project-load and
+    resume, so the two paths cannot drift.
+    """
+    lines = []
+    for scene in (parsed or {}).get("scenes", []) or []:
+        lines.append(f"[Scene: {scene.get('location', '')}]")
+        for ln in scene.get("lines", []) or []:
+            emotion = ln.get("emotion")
+            prefix = f"({emotion}) " if emotion and emotion != "neutral" else ""
+            lines.append(f"{ln.get('speaker')}: {prefix}{ln.get('text', '')}")
+    return "\n".join(lines)
+
+
 def find_job(job_id):
     """Find durable job state when a UI request reaches a restarted backend."""
     if not job_id:

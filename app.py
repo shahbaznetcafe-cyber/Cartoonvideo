@@ -32,6 +32,27 @@ _INSTANCE_LOCK_HANDLE = None
 STAGE_LABEL = {"story": "Story analyze", "voice": "Voices",
                "asset": "Backgrounds + Characters", "render": "Compositing + Render"}
 
+
+def _active_render(exclude_project=None):
+    """A render currently running in THIS instance (fresh heartbeat), else None.
+
+    3D rendering is GPU-bound: two concurrent jobs on one machine thrash each
+    other and leave a trail of half-finished projects.  Both new-video and
+    resume refuse to start a second render while one is live.
+    """
+    import projects_mgr
+    now = time.time()
+    for job in JOBS.values():
+        if job.get("state") != "running":
+            continue
+        if exclude_project and job.get("project") == exclude_project:
+            continue
+        updated = job.get("progress_updated_at") or job.get("started_at") or 0
+        if now - float(updated or 0) <= projects_mgr.STALE_JOB_SECONDS:
+            return {"project": job.get("project"), "stage": job.get("stage"),
+                    "message": job.get("message", "")}
+    return None
+
 URDU_VOICES = ["ur-IN-SalmanNeural", "ur-IN-GulNeural",   # Indian Urdu
                "ur-PK-AsadNeural", "ur-PK-UzmaNeural"]     # Pakistani Urdu
 ENG_VOICES = ["en-US-GuyNeural", "en-US-AriaNeural", "en-US-JennyNeural"]
@@ -428,6 +449,11 @@ def api_generate():
     script = (data.get("script") or "").strip()
     if len(script) < 10:
         return jsonify({"error": "Script bohat chhota hai"}), 400
+    busy = _active_render()
+    if busy:
+        return jsonify({"error": f"Ek video pehle se ban rahi hai "
+                        f"({busy['project']}). Pehle woh complete/stop karein, phir nayi shuru karein.",
+                        "busy_project": busy["project"]}), 409
     settings = data.get("settings") or {}
     parsed = data.get("parsed")   # preview se edit hua plan (optional)
     job_id = str(uuid.uuid4())
@@ -471,14 +497,7 @@ def api_project_detail(name):
             pass
     script = job.get("script", "")
     if not script and parsed:                    # purane projects: plan se script wapas banao
-        lines = []
-        for sc in parsed.get("scenes", []):
-            lines.append(f"[Scene: {sc.get('location', '')}]")
-            for ln in sc.get("lines", []):
-                em = ln.get("emotion")
-                pre = f"({em}) " if em and em != "neutral" else ""
-                lines.append(f"{ln.get('speaker')}: {pre}{ln.get('text', '')}")
-        script = "\n".join(lines)
+        script = projects_mgr.script_from_parsed(parsed)
     has_video = _os.path.exists(_os.path.join(pdir, "final.mp4"))
     title = (parsed or {}).get("title") or job.get("title") or name
     return jsonify({"name": name, "title": title, "script": script,
@@ -550,19 +569,18 @@ def api_resume(name):
             pass
     # purane project (job.json nahi): plan se script wapas banao
     if not script and parsed:
-        _lines = []
-        for _sc in parsed.get("scenes", []):
-            _lines.append(f"[Scene: {_sc.get('location', '')}]")
-            for _ln in _sc.get("lines", []):
-                _em = _ln.get("emotion")
-                _pre = f"({_em}) " if _em and _em != "neutral" else ""
-                _lines.append(f"{_ln.get('speaker')}: {_pre}{_ln.get('text', '')}")
-        script = "\n".join(_lines)
+        script = projects_mgr.script_from_parsed(parsed)
     if not parsed and len(script) < 10:
         return jsonify({"error": "Resume ke liye data nahi (na plan na script)"}), 400
     existing_age = projects_mgr.job_age_seconds(job)
     if job.get("state") == "running" and existing_age <= projects_mgr.STALE_JOB_SECONDS:
         return jsonify({"error": "This project is already running in the active app instance."}), 409
+    # Refuse to resume while a DIFFERENT project is actively rendering.
+    busy = _active_render(exclude_project=name)
+    if busy:
+        return jsonify({"error": f"Ek aur video ban rahi hai ({busy['project']}). "
+                        f"Pehle woh complete/stop karein, phir yeh resume karein.",
+                        "busy_project": busy["project"]}), 409
     job_id = str(uuid.uuid4())
     started_at = round(_t.time(), 3)
     JOBS[job_id] = {"state": "running", "stage": "story", "stage_label": "Resume...",

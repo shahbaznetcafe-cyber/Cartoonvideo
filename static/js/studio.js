@@ -1904,8 +1904,19 @@ async function resumeProject(name){
   setGenerationExperience('progress'); startGenerationClock();
   document.getElementById('resumeCard').classList.add('hidden');
   setStages('story',0,1,'Resume ho raha...');
-  const r=await (await fetch('/api/resume/'+name,{method:'POST'})).json();
-  if(r.error){ showErr(r.error); return; }
+  let response, r;
+  try{
+    response=await fetch('/api/resume/'+name,{method:'POST'});
+    r=await response.json();
+  }catch(e){ r={error:String(e)}; }
+  if(!response||!response.ok||r.error){
+    if(btn) btn.disabled=false;
+    setGenerationExperience('idle'); stopGenerationClock&&stopGenerationClock();
+    // A busy/conflict must not hide the resume list — surface it and step back.
+    notifyValidation(r.error||'Resume start nahi hua.','','scriptFeedback');
+    checkResumable&&checkResumable();
+    return;
+  }
   CUR_JOB=r.job_id; _resetStop();
   beginJobPolling(r.job_id);
 }
@@ -1969,9 +1980,21 @@ async function startJob(parsed){
   setStages('story',0,1,'');
   const body={script,settings:collectSettings()};
   if(parsed) body.parsed=parsed;
-  const r=await (await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(body)})).json();
-  if(r.error){showErr(r.error);return;}
+  let response, r;
+  try{
+    response=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)});
+    r=await response.json();
+  }catch(e){ r={error:String(e)}; }
+  // Busy / error: never leave the UI stuck in the render view — go back to the
+  // script step, reset the buttons, and show a clear message.
+  if(!response||!response.ok||r.error){
+    setButtonLoading(btn,false); setButtonLoading(document.getElementById('pvGenBtn'),false);
+    setGenerationExperience('idle'); stopGenerationClock&&stopGenerationClock();
+    setCreateStep(1,false);
+    notifyValidation(r.error||'Generation start nahi hua.','script','scriptFeedback');
+    return;
+  }
   setCurrentProject(r.project||STUDIO_UI.projectName);
   CUR_JOB=r.job_id; _resetStop();
   beginJobPolling(r.job_id);
