@@ -7,6 +7,8 @@ Har template: id, name (roman), name_en, emoji, desc, mood, structure (beat shee
 chars (library characters), lines (approx dialogue count), sample_topic.
 """
 
+import re
+
 import actions
 import dialogue_style
 import duration_planner

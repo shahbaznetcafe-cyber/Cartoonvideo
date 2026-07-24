@@ -456,5 +456,56 @@ class ReviewPanelContractTests(unittest.TestCase):
         self.assertIn("YouTube Analytics", js)
 
 
+class LongformSmokeTests(unittest.TestCase):
+    """Regression: the long-form path must not blow up on a missing import."""
+
+    def test_generate_longform_runs_with_stub_provider(self):
+        import providers, story_templates
+        def fake(system, user, **kw):
+            s = (system or "").lower()
+            if "outline" in s or "plan" in s or "scenes" in s:
+                return ('{"title":"T","logline":"L","genre":"adventure",'
+                        '"cast":[{"name":"Ali","voice":"brave"}],'
+                        '"scenes":[{"location":"Street","goal":"g1"},'
+                        '{"location":"Market","goal":"g2"}]}')
+            return ("[Scene: Street]\n"
+                    "Ali: (excited; walk; street) Aaj main sab ki madad karunga zaroor.\n"
+                    "Ali: (proud; run; street) Chalo jaldi chalte hain unko bachane.")
+        original = providers.llm_generate
+        providers.llm_generate = fake
+        try:
+            result = story_templates.generate_longform(
+                "a hero helps the city", language="urdu", minutes="2min", genre="auto")
+        finally:
+            providers.llm_generate = original
+        self.assertTrue(result.get("script"))
+        self.assertIn("title", result)
+
+    def test_key_modules_import_every_stdlib_name_they_use(self):
+        import ast, importlib
+        watched = {"re", "json", "os", "sys", "time", "hashlib", "subprocess"}
+        for name in ("story_templates", "scriptcraft", "beatsheets", "hooklab",
+                     "retention_critic", "series", "metadata"):
+            module = importlib.import_module(name)
+            tree = ast.parse(open(module.__file__, encoding="utf-8").read())
+            imported = set()
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        imported.add((alias.asname or alias.name).split(".")[0])
+                elif isinstance(node, ast.ImportFrom):
+                    for alias in node.names:
+                        imported.add(alias.asname or alias.name)
+            local = {n.name for n in tree.body
+                     if isinstance(n, (ast.FunctionDef, ast.ClassDef))}
+            missing = set()
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
+                    used = node.value.id
+                    if used in watched and used not in imported and used not in local:
+                        missing.add(used)
+            self.assertFalse(missing, f"{name} uses {sorted(missing)} without importing it")
+
+
 if __name__ == "__main__":
     unittest.main()
