@@ -192,7 +192,7 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
     performance_rule = character_performance.script_guidance(chars)
     length = duration_planner.normalize_duration(length)
     n = int(lines) if lines else LENGTH_LINES.get(length, 12)
-    duration_brief = duration_planner.writing_brief(length)
+    duration_brief = duration_planner.writing_brief(length, language)
     lang_name = LANG_NAME.get(language, "Roman Urdu")
     g = (genre or "auto").lower()
 

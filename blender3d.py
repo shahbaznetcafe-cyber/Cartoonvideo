@@ -577,6 +577,11 @@ def _stream_duration(path, selector):
         return 0.0
 
 
+# Largest tail gap we will absorb by holding the last frame. Anything bigger is
+# a story-length problem and must not be hidden behind a still image.
+MAX_TAIL_PAD_SECONDS = 2.0
+
+
 def _enforce_target_duration(video_path, target_seconds, fps):
     """Meet the selected duration without silently removing spoken dialogue."""
     target = float(target_seconds or 0)
@@ -589,6 +594,14 @@ def _enforce_target_duration(video_path, target_seconds, fps):
     output = video_path + ".target.mp4"
     if actual < target:
         padding = target - actual
+        # A frozen last frame is dead air: a 2-minute selection that only had
+        # 83s of story used to ship 37s of still image. Only absorb a rounding
+        # gap; a real shortfall keeps the natural duration and is reported so
+        # the script (not the renderer) gets fixed.
+        if padding > MAX_TAIL_PAD_SECONDS:
+            return video_path, 1.0, (
+                f"kept natural {actual:.1f}s (preset {target:.1f}s; "
+                f"{padding:.1f}s short — script too brief, freeze-frame padding refused)")
         graph = (f"[0:v]tpad=stop_mode=clone:stop_duration={padding:.6f}[v];" f"[0:a]apad=pad_dur={padding:.6f}[a]")
         action, scale = f"held ending +{padding:.2f}s", 1.0
     else:

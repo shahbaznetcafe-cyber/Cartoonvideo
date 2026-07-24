@@ -27,6 +27,28 @@ def _p(stage):
     return cb
 
 
+def _target_seconds(target_dur):
+    """Resolve a duration preset/string to seconds (0 when unknown/freeform)."""
+    if not target_dur:
+        return 0
+    try:
+        return float(target_dur)
+    except (TypeError, ValueError):
+        import duration_planner
+        try:
+            return float(duration_planner.preset(target_dur)["seconds"])
+        except Exception:
+            return 0
+
+
+def _lang_name(language):
+    try:
+        import dialogue_style
+        return dialogue_style.language_name(language)
+    except Exception:
+        return "Roman Urdu"
+
+
 def apply_settings(s):
     """UI/dict se settings config par apply karo (per-run override). P8."""
     if not s:
@@ -120,6 +142,42 @@ def build(script_text, proj_name=None, on_progress=None, settings=None, parsed=N
     print("[2/4] 🎙️  Voices...")
     timeline = voice_engine.generate_voices(
         parsed, proj_dir, on_progress=stage("voice"), should_cancel=should_cancel)
+
+    # Close the duration loop with REAL measurement: if the synthesized speech is
+    # well under the selected length, extend the script by the measured shortfall
+    # and re-voice (cached lines are reused) instead of padding a frozen frame.
+    target_seconds = _target_seconds(target_dur)
+    if target_seconds and config.AUTO_FIT_DURATION and not (should_cancel and should_cancel()):
+        import duration_fitter as _fit
+        import providers as _prov
+        language = parsed.get("language")
+        lang_name = _lang_name(language)
+        for _round in range(_fit.MAX_ROUNDS):
+            if not _fit.needs_extension(timeline, target_seconds):
+                break
+            gap = _fit.shortfall(timeline, target_seconds)
+            extra = _fit.words_needed(timeline, target_seconds, language)
+            stage("voice")(0, 1, f"Script {gap:.0f}s chhoti — {extra} words extend ho rahe...")
+            extended = _fit.extend_script(
+                _prov, _fit.script_from_parsed(parsed), extra,
+                (settings or {}).get("target_duration") or (settings or {}).get("length") or "video",
+                language, lang_name)
+            reparsed = story_parser.parse_script(extended, target_duration=target_dur)
+            if not reparsed.get("scenes"):
+                break
+            reparsed["language"] = language
+            story_parser.normalize_parsed_directions(reparsed)
+            character_performance.annotate_story_requirements(reparsed)
+            parsed = reparsed
+            new_timeline = voice_engine.generate_voices(
+                parsed, proj_dir, on_progress=stage("voice"), should_cancel=should_cancel)
+            if _fit.timeline_duration(new_timeline) <= _fit.timeline_duration(timeline) + 0.5:
+                timeline = new_timeline
+                break               # writer could not add usable length; stop
+            timeline = new_timeline
+        json.dump(parsed, open(os.path.join(proj_dir, "story.json"), "w", encoding="utf-8"),
+                  ensure_ascii=False, indent=2)
+
     json.dump(timeline, open(os.path.join(proj_dir, "timeline.json"), "w", encoding="utf-8"),
               ensure_ascii=False, indent=2)
     if should_cancel and should_cancel():

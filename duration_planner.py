@@ -32,6 +32,27 @@ _ALIASES = {
 
 _SCENE_HEADER_RE = re.compile(r"^\s*\[\s*scene\s*:", re.IGNORECASE | re.MULTILINE)
 
+# Spoken words per second, MEASURED from this project's own rendered timelines
+# (words in timeline.json vs the synthesized line durations, which include the
+# configured inter-line pauses).  A single global 2.05 under-counted Urdu and
+# Roman Urdu by roughly 17%, so every video came out short and then got padded.
+# Re-measure with tools/measure_speech_rate.py after changing voices or pauses.
+WORDS_PER_SECOND = {
+    "hinglish": 2.07,
+    "roman_hindi": 2.07,
+    "hindi": 2.07,
+    "roman_urdu": 2.39,
+    "urdu": 2.42,
+    "english": 2.30,
+}
+DEFAULT_WORDS_PER_SECOND = 2.20
+
+
+def words_per_second(language=None):
+    """Measured speaking rate for a language (falls back to the global mean)."""
+    return WORDS_PER_SECOND.get(
+        str(language or "").strip().lower(), DEFAULT_WORDS_PER_SECOND)
+
 _LOCATION_RULES = (
     ("forest path", ("forest", "jungle", "jangal", "park", "garden", "bagh", "jنگل", "جنگل", "जंगल", "बगीचा")),
     ("market", ("market", "bazaar", "bazar", "shop", "dukan", "stall", "بازار", "दुकान", "बाज़ार")),
@@ -59,16 +80,17 @@ def target_lines(value):
     return int(preset(value)["lines"])
 
 
-def writing_brief(value):
+def writing_brief(value, language=None):
     """Return an honest spoken-word budget for AI writers.
 
     Line count alone is not a duration contract: short dialogue lines can make a
-    two-minute script render as one minute.  This budget is intentionally based
-    on natural TTS pace and is used before any voices are generated.
+    two-minute script render as one minute.  The budget uses the MEASURED
+    speaking rate for the language (see WORDS_PER_SECOND) so the script is long
+    enough before any voices are generated.
     """
     info = preset(value)
     target = int(info["seconds"])
-    words = max(36, round(target * 2.05))
+    words = max(36, round(target * words_per_second(language)))
     minimum = max(30, round(words * 0.92))
     maximum = round(words * 1.08)
     return {

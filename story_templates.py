@@ -262,7 +262,7 @@ def generate_from_template(template_id, topic="", language="roman_urdu",
         )
         return result["script"]
     n = int(lines) if lines else LENGTH_LINES.get(length, 12)
-    duration_brief = duration_planner.writing_brief(length)
+    duration_brief = duration_planner.writing_brief(length, language)
     approx_sec = duration_brief["target_seconds"]
     topic = (topic or t["sample_topic"]).strip()
 
@@ -353,7 +353,7 @@ def generate_freeform(idea, language="roman_urdu", characters=None,
     import character_performance
     performance_rule = character_performance.script_guidance(chars)
     n = int(lines) if lines else LENGTH_LINES.get(length, 12)
-    duration_brief = duration_planner.writing_brief(length)
+    duration_brief = duration_planner.writing_brief(length, language)
     approx_sec = duration_brief["target_seconds"]
     lang_name = dialogue_style.language_name(language)
     g = (genre or "auto").lower()
@@ -461,7 +461,7 @@ def generate_longform(idea, language="roman_urdu", characters=None,
     performance_rule = character_performance.script_guidance(chars)
     minutes = duration_planner.normalize_duration(minutes, default="5min")
     n_scenes, lines_per = LONGFORM_PLANS[minutes]
-    duration_brief = duration_planner.writing_brief(minutes)
+    duration_brief = duration_planner.writing_brief(minutes, language)
     # Divide the spoken-word contract across scenes.  The old ~5 sec/line
     # assumption allowed very short dialogue to turn a 15-minute selection
     # into a 3-4 minute video.

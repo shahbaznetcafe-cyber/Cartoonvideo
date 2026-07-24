@@ -78,6 +78,11 @@ INTRO_ON = os.getenv("INTRO_ON", "0") == "1"       # hook-first by default
 OUTRO_ON = os.getenv("OUTRO_ON", "1") == "1"
 BRAND_NAME = os.getenv("BRAND_NAME", "SBZ Cartoons")     # channel naam (intro/outro par)
 
+# Duration fit: voices banne ke baad agar speech target se bohat chhoti ho to
+# script ko measured shortfall ke hisab se extend kar ke dobara voice karo
+# (frozen-frame padding ki jagah asal content). Off karne ke liye 0.
+AUTO_FIT_DURATION = os.getenv("AUTO_FIT_DURATION", "1") == "1"
+
 # Kids pacing — har dialogue line ke baad chhota breather; scene ke aakhir lamba.
 # Silence audio mein pad hoti hai, is liye 3D runtime us doran idle motion render karta hai.
 LINE_PAUSE = float(os.getenv("LINE_PAUSE", "0.55"))
