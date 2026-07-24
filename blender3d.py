@@ -420,6 +420,36 @@ def _clear_frames(frames_dir):
             pass
 
 
+def _has_frames(frames_dir):
+    """True when the renderer actually produced frame PNGs to encode."""
+    import glob as _g
+    return bool(_g.glob(os.path.join(frames_dir, "frame_*.png")))
+
+
+def _static_line_clip(line_mp4, audio_path, bg_path, width, height, fps, duration):
+    """Last-resort clip: a held background (or solid colour) over the line audio.
+
+    Used only when both the 3D render and its single-speaker retry fail, so one
+    unrenderable line cannot abort an otherwise-finished video.
+    """
+    dur = max(0.2, float(duration or 0) or _probe_duration(audio_path) or 1.0)
+    if bg_path and os.path.exists(bg_path):
+        source = ["-loop", "1", "-t", f"{dur:.3f}", "-i", bg_path]
+        vfilter = (f"scale={width}:{height}:force_original_aspect_ratio=increase,"
+                   f"crop={width}:{height},setsar=1,fps={fps}")
+    else:
+        source = ["-f", "lavfi", "-t", f"{dur:.3f}",
+                  "-i", f"color=c=0x1a1a24:s={width}x{height}:r={fps}"]
+        vfilter = "setsar=1"
+    subprocess.run(
+        ["ffmpeg", "-y", *source, "-i", audio_path,
+         "-vf", vfilter, "-map", "0:v", "-map", "1:a",
+         *_vcodec(height, fps), "-pix_fmt", "yuv420p",
+         "-c:a", "aac", "-b:a", getattr(config, "AUDIO_BITRATE", "384k"),
+         "-shortest", "-movflags", "+faststart", line_mp4, "-loglevel", "error"],
+        check=True)
+
+
 def _pre_render_character_validation(assignment, proj_dir):
     """Write warning-only GLB capability data without changing render selection."""
     try:
@@ -523,8 +553,14 @@ def _clip_probe(path):
 
 
 def _clip_is_valid(video_path, audio_path, fps, ratio=0.90, expected_size=None):
-    """Reject truncated/one-frame shots before they can enter final assembly."""
-    if not os.path.exists(video_path) or os.path.getsize(video_path) < 10000:
+    """Reject truncated/one-frame shots before they can enter final assembly.
+
+    The frame-count and duration probe below is the authoritative check; the byte
+    floor only rejects empty/header-only files, so it must stay low enough to
+    accept a legitimately tiny static clip (a solid-colour fallback compresses to
+    a few KB) while still catching a broken write.
+    """
+    if not os.path.exists(video_path) or os.path.getsize(video_path) < 1500:
         return False
     video_dur, frames, width, height = _clip_probe(video_path)
     if expected_size and (width, height) != tuple(expected_size):
@@ -795,7 +831,17 @@ def render_3d_video(parsed, timeline, scene_bg, proj_dir, out_path, on_progress=
                 } for si, cid in enumerate(cast)],
             }
             if engine == "threejs":
-                _render_scene_line_threejs(spec, frames_dir, should_cancel)
+                # A single crashing line must not kill an otherwise-complete
+                # render (e.g. line 20 of 20 at 98%). A hard node failure here
+                # falls through to the single-speaker retry below instead of
+                # propagating; Cancelled still stops the whole job.
+                try:
+                    _render_scene_line_threejs(spec, frames_dir, should_cancel)
+                except Cancelled:
+                    raise
+                except Exception as exc:
+                    print(f"  [render soft-fail] line {i}: {str(exc)[:160]}", flush=True)
+                    _clear_frames(frames_dir)
             else:
                 _render_scene_line(spec, frames_dir, should_cancel)
         else:
@@ -803,7 +849,8 @@ def render_3d_video(parsed, timeline, scene_bg, proj_dir, out_path, on_progress=
                          e.get("emotion", "neutral"), bg, res, env,
                          costume_map.get(spk, ""), acc_map.get(spk, ""), held_map.get(spk, ""))
 
-        _encode_line_frames(frames_dir, audio, grade, line_mp4, VH, fps)
+        if _has_frames(frames_dir):
+            _encode_line_frames(frames_dir, audio, grade, line_mp4, VH, fps)
 
         # Fail-safe: retry bad ensemble as single-speaker shot
         if not _clip_is_valid(line_mp4, audio, fps, expected_size=(VW, VH)) and engine == "threejs":
@@ -842,8 +889,22 @@ def render_3d_video(parsed, timeline, scene_bg, proj_dir, out_path, on_progress=
                     "acting": acting_line.get("characters", {}).get(spk, {}),
                 }],
             }
-            _render_scene_line_threejs(fallback_spec, frames_dir, should_cancel)
-            _encode_line_frames(frames_dir, audio, grade, line_mp4, VH, fps)
+            try:
+                _render_scene_line_threejs(fallback_spec, frames_dir, should_cancel)
+                if _has_frames(frames_dir):
+                    _encode_line_frames(frames_dir, audio, grade, line_mp4, VH, fps)
+            except Cancelled:
+                raise
+            except Exception as exc:
+                print(f"  [render retry fail] line {i}: {str(exc)[:160]}", flush=True)
+
+        # Last resort: a line that cannot be 3D-rendered still ships as a held
+        # background/solid frame over its audio, so one bad line never aborts an
+        # otherwise-finished video.  Better a plain shot than a lost 8-min render.
+        if not _clip_is_valid(line_mp4, audio, fps, expected_size=(VW, VH)):
+            print(f"  [render fallback] line {i}: static background clip", flush=True)
+            _static_line_clip(line_mp4, audio, bg, VW, VH, fps,
+                              float(e.get("duration") or _probe_duration(audio)))
 
         if not _clip_is_valid(line_mp4, audio, fps, expected_size=(VW, VH)):
             raise RuntimeError(f"line {i} failed duration/frame validation")
