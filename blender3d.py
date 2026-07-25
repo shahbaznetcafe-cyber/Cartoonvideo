@@ -1004,6 +1004,60 @@ def _build_srt(timeline, srt_path, offset=0.0, starts=None, durations=None):
     return t
 
 
+def _ass_time(seconds):
+    seconds = max(0.0, float(seconds or 0))
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = seconds % 60
+    return f"{h}:{m:02d}:{s:05.2f}"
+
+
+def _build_ass(timeline, ass_path, video_w, video_h, font, font_size,
+               offset=0.0, starts=None, durations=None):
+    """Burn-ready ASS with an EXPLICIT script resolution.
+
+    ffmpeg's ``subtitles`` filter converts SRT with a default script resolution
+    (PlayResY 288) and libass then scales every size by video_height/PlayResY.
+    A force_style FontSize of 49 therefore rendered at ~184px on 1080p — the
+    captions covered most of the frame.  Declaring PlayResX/Y as the real video
+    size makes FontSize mean actual pixels.
+    """
+    margin_h = int(video_w * 0.06)
+    margin_v = int(video_h * 0.07)
+    outline = max(2, round(font_size * 0.09))
+    shadow = max(1, round(font_size * 0.04))
+    header = (
+        "[Script Info]\n"
+        "ScriptType: v4.00+\n"
+        f"PlayResX: {int(video_w)}\n"
+        f"PlayResY: {int(video_h)}\n"
+        "WrapStyle: 0\n"
+        "ScaledBorderAndShadow: yes\n\n"
+        "[V4+ Styles]\n"
+        "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, "
+        "BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, "
+        "BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n"
+        f"Style: Default,{font},{int(font_size)},&H00FFFFFF,&H000000FF,&H00202020,&H64000000,"
+        f"-1,0,0,0,100,100,0,0,1,{outline},{shadow},2,{margin_h},{margin_h},{margin_v},1\n\n"
+        "[Events]\n"
+        "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+    )
+    events, t = [], float(offset)
+    for i, entry in enumerate(timeline, 1):
+        dur = (float(durations[i - 1]) if durations is not None
+               else float(entry.get("duration") or 3.0))
+        if starts is not None:
+            t = float(starts[i - 1])
+        text = _wrap_subtitle((entry.get("text") or "").strip())
+        if text:
+            text = text.replace("\\", "").replace("\n", "\\N").replace("{", "(").replace("}", ")")
+            events.append(f"Dialogue: 0,{_ass_time(t)},{_ass_time(t + dur)},Default,,0,0,0,,{text}")
+        t += dur
+    with open(ass_path, "w", encoding="utf-8") as handle:
+        handle.write(header + "\n".join(events) + "\n")
+    return ass_path
+
+
 def _probe_audio(path):
     """Line clip ke audio params (sample-rate, channel-layout) — intro/outro match karne ko."""
     try:
@@ -1270,12 +1324,12 @@ def _assemble(mp4s, proj_dir, timeline, parsed, out_path, VW, VH, fps, target_se
                        starts=line_starts, durations=line_durs)
             lang = (parsed or {}).get("language", "roman_urdu")
             fontname = "Segoe UI" if lang == "urdu" else "Arial"
-            fsz = max(24, int(VH / 22))
-            style = (f"FontName={fontname},FontSize={fsz},PrimaryColour=&H00FFFFFF,"
-                     f"OutlineColour=&H00202020,BorderStyle=1,Outline=3,Shadow=1,"
-                     f"Alignment=2,MarginV={int(VH*0.07)},Bold=1,WrapStyle=0")
-            subprocess.run(["ffmpeg", "-y", "-i", tmp2, "-vf",
-                            f"subtitles=subs.srt:force_style='{style}'",
+            # Real pixels, because _build_ass declares the true PlayRes.
+            fsz = max(20, int(VH / 26))
+            _build_ass(timeline, os.path.join(cdir, "subs.ass"), VW, VH,
+                       fontname, fsz, offset=intro_sec,
+                       starts=line_starts, durations=line_durs)
+            subprocess.run(["ffmpeg", "-y", "-i", tmp2, "-vf", "subtitles=subs.ass",
                             *_vcodec(VH, fps), "-pix_fmt", "yuv420p", "-c:a", "copy",
                             "-movflags", "+faststart",
                             os.path.basename(out_path), "-loglevel", "error"],

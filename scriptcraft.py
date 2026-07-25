@@ -38,6 +38,28 @@ Aloo: (to camera) Aap batao — namak wali chai piyoge? Comment karo!
 --- END EXAMPLE ---"""
 
 
+_LIBRARY_PREFIXES = ("quaternius ", "sbz originals ", "sbz ")
+
+
+def story_name(catalog_name):
+    """Turn a 3D asset name into a name a story can actually use.
+
+    Catalog entries are asset labels ("Quaternius Chicken", "Quaternius Casual2
+    Female").  Handed to the writer verbatim they become the character's spoken
+    name, so scripts ended up with a character literally called "Quaternius
+    Chicken".  Strip the library prefix and asset-numbering noise.
+    """
+    name = str(catalog_name or "").strip()
+    low = name.lower()
+    for prefix in _LIBRARY_PREFIXES:
+        if low.startswith(prefix):
+            name = name[len(prefix):]
+            break
+    name = re.sub(r"\d+", "", name).strip()            # "Casual2 Female" -> "Casual Female"
+    name = re.sub(r"\s{2,}", " ", name)
+    return name or str(catalog_name or "").strip()
+
+
 def series_memory_block(memory):
     """Phase 5 — render structured series memory as prompt text.
 
@@ -209,8 +231,12 @@ def craft(idea, language="roman_urdu", characters=None, length="medium", lines=N
                      "har ek kam az kam ek baar:\n" + "\n".join(f"- {b}" for b in cast_bios)
                      + "\nDo NOT invent others.")
     elif chars:
+        # The writer sees story-usable names, never raw asset labels; the 3D
+        # asset itself is bound later by the cast selection (in order).
         cast_rule = ("CAST: use ONLY these characters, use EVERY one: "
-                     f"{', '.join(c.title() for c in chars)}. Do NOT invent others.")
+                     f"{', '.join(story_name(c).title() for c in chars)}. "
+                     "Do NOT invent others. Use these exact names as the speaker "
+                     "names; do not add any library or asset prefix to them.")
     else:
         cast_rule = ("CAST: choose 2-3 characters that fit the idea (animals, food, people, "
                      "mascots, objects). Short memorable names. Keep cast small.")
