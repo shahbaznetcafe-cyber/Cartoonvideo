@@ -624,7 +624,18 @@ def api_preview():
     chars = parsed.get("characters", [])
     # 3D library se assign (jo asal render mein use hota) -> preview = output
     import char3d_lib
-    blend3d = char3d_lib.assign(chars, library=selected_library)  # {id: blend_path}
+    # The cards picked in the Script step are an explicit casting choice: map
+    # them onto the script's characters in order so the plan shows exactly what
+    # the user selected, instead of keyword/round-robin guesses.
+    picked = [str(name).strip() for name in (data.get("selected_cast") or [])
+              if str(name or "").strip()]
+    cast_overrides = dict(parsed.get("char_overrides") or {})
+    for character, name in zip(chars, picked):
+        cast_overrides.setdefault(character["id"], name)
+    if cast_overrides:
+        parsed["char_overrides"] = cast_overrides
+    blend3d = char3d_lib.assign(chars, cast_overrides or None,
+                                library=selected_library)  # {id: blend_path}
     manifest_by_slug = {
         _os.path.splitext(_os.path.basename(str(entry.get("blend") or "")))[0].lower(): entry
         for entry in char3d_lib.load()

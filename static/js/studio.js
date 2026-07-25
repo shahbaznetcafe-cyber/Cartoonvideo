@@ -554,12 +554,18 @@ function renderTemplateCharacters(){
   const label=TEMPLATE_CHARACTER_LIBRARY==='quaternius'?'Quaternius ready characters':'SBZ Originals';
   const summary=document.getElementById('tplCharacterSummary');if(summary)summary.textContent=`${label} · ${visible.length}`;
 }
+/** Names of the cards the user explicitly picked, in click order. Empty when
+ *  nothing is selected — callers decide whether a default cast is appropriate. */
+function explicitStoryCast(){
+  const library=CAST_CHARACTER_LIBRARY==='quaternius'?'quaternius':'sbz';
+  return [...CHAR_SEL].map(id=>CHARS.find(character=>character.id===id))
+    .filter(character=>character&&(character.library||'sbz')===library)
+    .map(character=>character.name);
+}
 function activeLibraryStoryCast(){
   const library=CAST_CHARACTER_LIBRARY==='quaternius'?'quaternius':'sbz';
   const allowed=CHARS.filter(character=>(character.library||'sbz')===library);
-  const selected=[...CHAR_SEL].map(id=>CHARS.find(character=>character.id===id))
-    .filter(character=>character&&(character.library||'sbz')===library)
-    .map(character=>character.name);
+  const selected=explicitStoryCast();
   // Selected cards always win. When nothing is explicitly selected, provide a
   // small default cast from the active library only.
   return selected.length?selected:allowed.slice(0,3).map(character=>character.name);
@@ -1509,7 +1515,11 @@ async function preview(options={}){
     if(!ACCESSORIES.length){ try{ ACCESSORIES=await (await fetch('/api/accessories')).json(); }catch(e){} }
     if(!HELD.length){ try{ HELD=await (await fetch('/api/held')).json(); }catch(e){} }
     const j=await (await fetch('/api/preview',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({script,target_duration:selectedVideoDuration(),character_library:CAST_CHARACTER_LIBRARY})})).json();
+      body:JSON.stringify({script,target_duration:selectedVideoDuration(),
+        character_library:CAST_CHARACTER_LIBRARY,
+        // Cards picked in the Script step ARE the cast for this video; without
+        // this a pasted script fell back to keyword/round-robin matching.
+        selected_cast:explicitStoryCast()})})).json();
     if(j.error){
       showPreviewError(j.error);
       if(automatic){
