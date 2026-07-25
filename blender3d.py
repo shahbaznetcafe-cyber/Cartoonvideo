@@ -201,6 +201,10 @@ def _scene_look(scene):
     text = (str(scene.get("location", "")) + " " +
             str(scene.get("background_prompt", "")) + " " +
             str(scene.get("mood", ""))).lower()
+    if any(word in text for word in ("green screen", "greenscreen", "chroma green")):
+        return "chroma_green"
+    if any(word in text for word in ("blue screen", "bluescreen", "chroma blue")):
+        return "chroma_blue"
     if any(word in text for word in ("wash", "soap", "hygiene", "cleaning station")):
         return "wash"
     if any(word in text for word in ("mud", "puddle", "slippery", "after rain")):

@@ -213,6 +213,22 @@ def _scene_preset(scene):
     text = " ".join(str(scene.get(key) or "") for key in
                     ("location", "background_prompt", "mood", "time")).lower()
     words = _tokens(text)
+    # Chroma key: a flat solid backdrop for background removal in an external
+    # editor (CapCut/Premiere/DaVinci). Checked first -- these words otherwise
+    # mean nothing else, so there is no ambiguity to resolve against.
+    # "chroma" plus a colour is unambiguous on its own ("chroma green");
+    # a bare colour needs "screen"/"key" alongside it so "green apple" or
+    # "blue sky" locations are never misdetected.
+    chroma_word = {"chroma", "کروما"} & words
+    green_word = {"green", "سبز", "ہرا", "گرین"} & words
+    blue_word = {"blue", "نیلا", "نیلی", "بلیو"} & words
+    screen_word = {"screen", "key", "اسکرین", "پردہ"} & words
+    if words & {"greenscreen", "green_screen", "chromagreen", "سبزاسکرین", "ہراپردہ", "گریناسکرین"} \
+            or (green_word and (chroma_word or screen_word)):
+        return "chroma_green"
+    if words & {"bluescreen", "blue_screen", "chromablue", "نیلااسکرین", "نیلاپردہ", "بلیواسکرین"} \
+            or (blue_word and (chroma_word or screen_word)):
+        return "chroma_blue"
     if words & {"night", "raat", "midnight", "moon", "رات", "چاند", "اندھیرا"}:
         return "night"
     if words & {"storm", "rain", "barish", "baarish", "thunder", "windy", "بارش", "طوفان"}:

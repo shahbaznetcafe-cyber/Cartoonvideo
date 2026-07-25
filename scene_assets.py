@@ -63,6 +63,16 @@ COMPOSED_BACKGROUNDS = (
     {"id": "rocky_desert", "name": "Rocky Desert", "preset": "desert",
      "variant": "rocky_desert", "pack": "Stylized Nature MegaKit",
      "description": "Boulders, bare trees and pebbles for dry, hot journey scenes."},
+    {"id": "chroma_green", "name": "Green Screen", "preset": "chroma_green",
+     "variant": "chroma_green", "pack": "Procedural (no assets)",
+     "description": "Flat, unlit green backdrop for background removal in an "
+                    "external editor. Type \"green screen\" in a scene's "
+                    "background to use it."},
+    {"id": "chroma_blue", "name": "Blue Screen", "preset": "chroma_blue",
+     "variant": "chroma_blue", "pack": "Procedural (no assets)",
+     "description": "Flat, unlit blue backdrop for background removal in an "
+                    "external editor. Type \"blue screen\" in a scene's "
+                    "background to use it."},
 )
 
 

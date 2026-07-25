@@ -76,13 +76,18 @@ def reusable_background(prompt, style=None):
 def build_scene_backgrounds(parsed, proj_dir=None, on_progress=None):
     """Return reusable AI scene plates for the Three.js pipeline only."""
     del proj_dir
+    import production_director
     result = {}
     scenes = list(parsed.get("scenes") or [])
     total = max(1, len(scenes))
     for index, scene in enumerate(scenes, 1):
-        prompt = scene.get("background_prompt") or scene.get("location") or "stylized story environment"
         if on_progress:
             on_progress(index, total, f"Reusable AI background: scene {scene.get('id')}")
+        # A chroma-key scene is a flat colour by design; an AI plate would
+        # both waste the API call and defeat the point of the key.
+        if production_director._scene_preset(scene) in {"chroma_green", "chroma_blue"}:
+            continue
+        prompt = scene.get("background_prompt") or scene.get("location") or "stylized story environment"
         try:
             result[scene.get("id")] = reusable_background(prompt, style=scene.get("style"))
         except Exception as exc:

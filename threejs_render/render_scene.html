@@ -47,7 +47,14 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
   const sceneLook = spec.sceneLook || 'sunny';
   const sceneVariant = environmentMotion.variant || sceneLook;
   const backgroundImage = spec.backgroundImage || '';
+  // A chroma-key scene renders the cast alone on one flat, unlit colour so the
+  // clip can be background-removed (keyed) in external editors afterwards.
+  // No environment GLB, AI plate, ground texture, dressing or decoration may
+  // appear -- any of those would corrupt the key.
+  const isChroma = sceneLook === 'chroma_green' || sceneLook === 'chroma_blue';
   const BASE_LOOK = {
+    chroma_green: { sky: 0x00ff00, ground: 0x00ff00, key: 2.2, fill: 0.85 },
+    chroma_blue:  { sky: 0x0000ff, ground: 0x0000ff, key: 2.2, fill: 0.85 },
     sunny: { sky: 0x9fd8ff, ground: 0x7dcc55, key: 2.4, fill: 0.85 },
     storm: { sky: 0x66798d, ground: 0x547051, key: 1.45, fill: 0.55 },
     mud:   { sky: 0x91abc0, ground: 0x765536, key: 1.8, fill: 0.65 },
@@ -98,7 +105,7 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
   // A generated scene plate provides distant depth while the GLB environment
   // remains the physical foreground set. It is cached by the Python asset
   // library and never contains people, so it cannot fight the 3D cast.
-  if (backgroundImage) {
+  if (backgroundImage && !isChroma) {
     const texture = await new THREE.TextureLoader().loadAsync(backgroundImage).catch(() => null);
     if (texture) {
       texture.colorSpace = THREE.SRGBColorSpace;
@@ -111,7 +118,7 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
 
   // ---- environment (ORIGIN par shift: floor y=0, horizontal center 0) ----
   let environmentRoot = null;
-  if (spec.env) {
+  if (spec.env && !isChroma) {
     const env = (await load(spec.env)).scene; environmentRoot = env;
     let box = new THREE.Box3().setFromObject(env);
     const sz = new THREE.Vector3(); box.getSize(sz);
@@ -133,71 +140,83 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
     scene.add(env);
   }
 
-  // Layered ground replaces the old single flat "stage" plane.  The shared GLB
-  // can now read as a village farm, magical field, or blooming farm depending
-  // on the script-directed scene variant.
-  const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(sceneLook === 'pirate' ? 20 : 16, sceneLook === 'pirate' ? 14 : 11),
-    new THREE.MeshStandardMaterial({ color: LOOK.ground, roughness: 0.9, metalness: 0 })
-  );
-  ground.rotation.x = -Math.PI / 2; ground.position.set(0, -0.02, -0.2); scene.add(ground);
-  const path = new THREE.Mesh(new THREE.PlaneGeometry(sceneLook === 'apocalypse' ? 3.5 : 2.15, sceneLook === 'pirate' ? 14 : 11),
-    new THREE.MeshStandardMaterial({ color:LOOK.path, roughness:.96, metalness:0 }));
-  path.rotation.x = -Math.PI/2; path.rotation.z = -.08;
-  path.position.set(.25,-.006,-.2); scene.add(path);
-  for (let i=0; i<(sceneLook === 'space' ? 8 : 14); i++) {
-    const patch = new THREE.Mesh(new THREE.CircleGeometry(.18 + envRandom()*.32, 14),
-      new THREE.MeshStandardMaterial({ color:i%2 ? LOOK.ground : 0x527c3c, roughness:1 }));
-    patch.rotation.x=-Math.PI/2; patch.scale.y=.45;
-    patch.position.set((envRandom()-.5)*7.8,.002,-3.2+envRandom()*6.4); scene.add(patch);
-  }
-  const foregroundDressing = new THREE.Group();
-  for (const side of [-1,1]) {
-    const bush = new THREE.Mesh(new THREE.DodecahedronGeometry(.42,0),
-      new THREE.MeshStandardMaterial({ color:side < 0 ? 0x315f38 : 0x3f7840, roughness:.95 }));
-    bush.scale.set(1.35,.78,.82); bush.position.set(side*3.45,.28,2.0+side*.18);
-    foregroundDressing.add(bush);
-  }
-  scene.add(foregroundDressing);
-  if (sceneVariant === 'village_farm') {
-    for (let i=0;i<7;i++) {
-      const post = new THREE.Mesh(new THREE.BoxGeometry(.08,.55,.08),
-        new THREE.MeshStandardMaterial({ color:0x765033, roughness:.92 }));
-      post.position.set(-3+i, .275, -1.7+(i%2)*.08); scene.add(post);
+  if (!isChroma) {
+    // Layered ground replaces the old single flat "stage" plane.  The shared GLB
+    // can now read as a village farm, magical field, or blooming farm depending
+    // on the script-directed scene variant.
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(sceneLook === 'pirate' ? 20 : 16, sceneLook === 'pirate' ? 14 : 11),
+      new THREE.MeshStandardMaterial({ color: LOOK.ground, roughness: 0.9, metalness: 0 })
+    );
+    ground.rotation.x = -Math.PI / 2; ground.position.set(0, -0.02, -0.2); scene.add(ground);
+    const path = new THREE.Mesh(new THREE.PlaneGeometry(sceneLook === 'apocalypse' ? 3.5 : 2.15, sceneLook === 'pirate' ? 14 : 11),
+      new THREE.MeshStandardMaterial({ color:LOOK.path, roughness:.96, metalness:0 }));
+    path.rotation.x = -Math.PI/2; path.rotation.z = -.08;
+    path.position.set(.25,-.006,-.2); scene.add(path);
+    for (let i=0; i<(sceneLook === 'space' ? 8 : 14); i++) {
+      const patch = new THREE.Mesh(new THREE.CircleGeometry(.18 + envRandom()*.32, 14),
+        new THREE.MeshStandardMaterial({ color:i%2 ? LOOK.ground : 0x527c3c, roughness:1 }));
+      patch.rotation.x=-Math.PI/2; patch.scale.y=.45;
+      patch.position.set((envRandom()-.5)*7.8,.002,-3.2+envRandom()*6.4); scene.add(patch);
     }
-  } else if (sceneVariant === 'glowing_field') {
-    for (let i=0;i<9;i++) {
-      const orb = new THREE.Mesh(new THREE.SphereGeometry(.035+(i%3)*.012,10,8),
-        new THREE.MeshBasicMaterial({ color:LOOK.accent, transparent:true, opacity:.72 }));
-      orb.position.set(-2.8+i*.7,.18+(i%4)*.16,-.8+(i%2)*.7); scene.add(orb);
+    const foregroundDressing = new THREE.Group();
+    for (const side of [-1,1]) {
+      const bush = new THREE.Mesh(new THREE.DodecahedronGeometry(.42,0),
+        new THREE.MeshStandardMaterial({ color:side < 0 ? 0x315f38 : 0x3f7840, roughness:.95 }));
+      bush.scale.set(1.35,.78,.82); bush.position.set(side*3.45,.28,2.0+side*.18);
+      foregroundDressing.add(bush);
     }
-  } else if (sceneVariant === 'blooming_farm') {
-    for (let i=0;i<18;i++) {
-      const flower = new THREE.Mesh(new THREE.SphereGeometry(.045,8,6),
-        new THREE.MeshStandardMaterial({ color:i%3 ? LOOK.accent : 0xffd166, roughness:.65 }));
-      flower.position.set(-3.6+(i%9)*.9,.08,-1.3+Math.floor(i/9)*2.2); scene.add(flower);
+    scene.add(foregroundDressing);
+    if (sceneVariant === 'village_farm') {
+      for (let i=0;i<7;i++) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(.08,.55,.08),
+          new THREE.MeshStandardMaterial({ color:0x765033, roughness:.92 }));
+        post.position.set(-3+i, .275, -1.7+(i%2)*.08); scene.add(post);
+      }
+    } else if (sceneVariant === 'glowing_field') {
+      for (let i=0;i<9;i++) {
+        const orb = new THREE.Mesh(new THREE.SphereGeometry(.035+(i%3)*.012,10,8),
+          new THREE.MeshBasicMaterial({ color:LOOK.accent, transparent:true, opacity:.72 }));
+        orb.position.set(-2.8+i*.7,.18+(i%4)*.16,-.8+(i%2)*.7); scene.add(orb);
+      }
+    } else if (sceneVariant === 'blooming_farm') {
+      for (let i=0;i<18;i++) {
+        const flower = new THREE.Mesh(new THREE.SphereGeometry(.045,8,6),
+          new THREE.MeshStandardMaterial({ color:i%3 ? LOOK.accent : 0xffd166, roughness:.65 }));
+        flower.position.set(-3.6+(i%9)*.9,.08,-1.3+Math.floor(i/9)*2.2); scene.add(flower);
+      }
+    } else if (sceneVariant === 'forest_clearing') {
+      const clearingRing = new THREE.Group();
+      for (let i=0;i<10;i++) {
+        const stone = new THREE.Mesh(new THREE.DodecahedronGeometry(.12+(i%3)*.035,0),
+          new THREE.MeshStandardMaterial({ color:i%2 ? 0x7a806f : 0x89917b, roughness:1 }));
+        const angle=(i/10)*Math.PI*2;
+        stone.position.set(Math.cos(angle)*2.4,.11,Math.sin(angle)*1.55-.5);
+        clearingRing.add(stone);
+      }
+      scene.add(clearingRing);
+    } else if (sceneVariant === 'forest_grove') {
+      for (let i=0;i<8;i++) {
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.11,.17,1.5,8),
+          new THREE.MeshStandardMaterial({ color:0x5a3d2a, roughness:.95 }));
+        const crown = new THREE.Mesh(new THREE.DodecahedronGeometry(.48,0),
+          new THREE.MeshStandardMaterial({ color:i%2 ? 0x2d643c : 0x3d7844, roughness:.9 }));
+        const side=i%2 ? 1 : -1;
+        trunk.position.set(side*(2.45+(i%3)*.46),.75,-2.1+Math.floor(i/2)*1.18);
+        crown.position.set(trunk.position.x,1.72,trunk.position.z);
+        scene.add(trunk,crown);
+      }
     }
-  } else if (sceneVariant === 'forest_clearing') {
-    const clearingRing = new THREE.Group();
-    for (let i=0;i<10;i++) {
-      const stone = new THREE.Mesh(new THREE.DodecahedronGeometry(.12+(i%3)*.035,0),
-        new THREE.MeshStandardMaterial({ color:i%2 ? 0x7a806f : 0x89917b, roughness:1 }));
-      const angle=(i/10)*Math.PI*2;
-      stone.position.set(Math.cos(angle)*2.4,.11,Math.sin(angle)*1.55-.5);
-      clearingRing.add(stone);
-    }
-    scene.add(clearingRing);
-  } else if (sceneVariant === 'forest_grove') {
-    for (let i=0;i<8;i++) {
-      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.11,.17,1.5,8),
-        new THREE.MeshStandardMaterial({ color:0x5a3d2a, roughness:.95 }));
-      const crown = new THREE.Mesh(new THREE.DodecahedronGeometry(.48,0),
-        new THREE.MeshStandardMaterial({ color:i%2 ? 0x2d643c : 0x3d7844, roughness:.9 }));
-      const side=i%2 ? 1 : -1;
-      trunk.position.set(side*(2.45+(i%3)*.46),.75,-2.1+Math.floor(i/2)*1.18);
-      crown.position.set(trunk.position.x,1.72,trunk.position.z);
-      scene.add(trunk,crown);
-    }
+  } else {
+    // Chroma key: ONE large, fully unlit (MeshBasicMaterial ignores scene
+    // lighting) flat plane in the exact clear-colour -- no gradient, shading,
+    // shadow or texture that a keyer could misread as part of the subject.
+    const backdrop = new THREE.Mesh(
+      new THREE.PlaneGeometry(40, 30),
+      new THREE.MeshBasicMaterial({ color: LOOK.ground, fog: false })
+    );
+    backdrop.rotation.x = -Math.PI / 2; backdrop.position.set(0, -0.02, -0.2);
+    scene.add(backdrop);
   }
 
   if (sceneLook === 'mud') {
