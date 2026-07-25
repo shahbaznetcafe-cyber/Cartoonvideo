@@ -75,5 +75,28 @@ class RendererLookTests(unittest.TestCase):
             self.assertIn(variant, html, f"VARIANT_LOOK missing {variant}")
 
 
+class UrduScriptRoutingTests(unittest.TestCase):
+    """Urdu-script locations must reach the same presets as their roman forms."""
+
+    def _preset(self, location):
+        return production_director._environment({"location": location})["preset"]
+
+    def test_urdu_script_words_are_tokenised(self):
+        tokens = production_director._tokens("گاؤں کا چوک")
+        self.assertTrue(tokens, "Urdu text produced no tokens")
+
+    def test_urdu_locations_route_to_the_right_worlds(self):
+        self.assertEqual(self._preset("گاؤں کا چوک"), "village")
+        self.assertEqual(self._preset("ساحل کے کنارے"), "beach")
+        self.assertEqual(self._preset("رات کا جنگل"), "night")
+        self.assertEqual(self._preset("کھلا میدان"), "meadow")
+        self.assertEqual(self._preset("صحرا"), "desert")
+        self.assertEqual(self._preset("شہر کی سڑک"), "town")
+
+    def test_roman_routing_still_works(self):
+        self.assertEqual(self._preset("Gaon ka chowk"), "village")
+        self.assertEqual(self._preset("Sahil"), "beach")
+
+
 if __name__ == "__main__":
     unittest.main()

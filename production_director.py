@@ -79,7 +79,13 @@ CONTINUITY_PURPOSES = {"relationship", "dialogue"}
 
 
 def _tokens(value):
-    return set(re.findall(r"[a-z0-9]+", str(value or "").lower()))
+    """Words from any script, not just Latin.
+
+    ``[a-z0-9]+`` silently dropped every Urdu/Hindi word, so a scene written as
+    "گاؤں کا چوک" produced no tokens at all and every location fell back to the
+    default preset.  ``\\w`` minus digits/underscore keeps Unicode letters.
+    """
+    return set(re.findall(r"[^\W_]+", str(value or "").lower(), re.UNICODE))
 
 
 def _stable_seed(*values):
@@ -207,9 +213,9 @@ def _scene_preset(scene):
     text = " ".join(str(scene.get(key) or "") for key in
                     ("location", "background_prompt", "mood", "time")).lower()
     words = _tokens(text)
-    if words & {"night", "raat", "midnight", "moon"}:
+    if words & {"night", "raat", "midnight", "moon", "رات", "چاند", "اندھیرا"}:
         return "night"
-    if words & {"storm", "rain", "barish", "baarish", "thunder", "windy"}:
+    if words & {"storm", "rain", "barish", "baarish", "thunder", "windy", "بارش", "طوفان"}:
         return "storm"
     if words & {"mud", "puddle", "slip", "phisal"}:
         return "mud"
@@ -229,26 +235,26 @@ def _scene_preset(scene):
         return "stage"
     if words & {"snow", "winter", "baraf", "ice"}:
         return "snow"
-    if words & {"desert", "sehra", "sand", "dunes"}:
+    if words & {"desert", "sehra", "sand", "dunes", "صحرا", "ریگستان"}:
         return "desert"
-    if words & {"beach", "sahil", "kinara", "island", "jazeera", "sand", "seaside"}:
+    if words & {"beach", "sahil", "kinara", "island", "jazeera", "sand", "seaside", "ساحل", "کنارے", "ریت", "جزیرہ"}:
         return "beach"
     # A "village farm" is still a farm scene: only treat a village as a built-up
     # square when no farm/field/garden word is present.
-    if (words & {"village", "gaon", "gaun", "mohalla", "basti", "chowk", "dehat"}
+    if (words & {"village", "gaon", "gaun", "mohalla", "basti", "chowk", "dehat", "گاؤں", "چوک", "محلہ", "بستی"}
             and not words & {"farm", "field", "khet", "garden", "bagh", "orchard"}):
         return "village"
-    if words & {"town", "city", "street", "road", "sarak", "shehar", "traffic", "crossing"}:
+    if words & {"town", "city", "street", "road", "sarak", "shehar", "traffic", "crossing", "سڑک", "شہر", "گلی"}:
         return "town"
-    if words & {"market", "bazaar", "shop", "store", "stall", "dukan", "mandi"}:
+    if words & {"market", "bazaar", "shop", "store", "stall", "dukan", "mandi", "بازار", "دکان", "منڈی"}:
         return "market"
     if words & {"kitchen", "room", "house", "home", "school", "classroom", "office",
                 "ghar", "kamra", "rasoi", "madrasa"}:
         return "indoor"
-    if words & {"meadow", "maidan", "grassland", "lawn", "clearing", "pasture"}:
+    if words & {"meadow", "maidan", "grassland", "lawn", "clearing", "pasture", "میدان", "چراگاہ"}:
         return "meadow"
     if words & {"forest", "jungle", "garden", "park", "farm", "field", "path",
-                "bagh", "khet", "raasta"}:
+                "bagh", "khet", "raasta", "جنگل", "باغ", "کھیت", "راستہ"}:
         return "forest"
     return "sunny"
 
@@ -296,7 +302,7 @@ def _environment(scene, scene_index=0):
     elif preset == "desert":
         variant = "rocky_desert"
     if preset == "forest" and words & {"mushroom", "magic", "magical", "fairy",
-                                       "jadoo", "jadui", "khayali"}:
+                                       "jadoo", "jadui", "khayali", "جادو", "جادوئی", "کھمبی"}:
         variant = "magic_grove"
     outdoors = preset in {"sunny", "forest", "market", "storm", "mud", "night", "snow",
                           "desert", "pirate", "space", "apocalypse", "village", "town",
