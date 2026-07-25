@@ -320,6 +320,12 @@ def parse_structured_script(script_text):
 
 
 def parse_script(script_text, target_duration=None):
+    if target_duration:
+        import duration_planner
+        # Defensive: resolve "auto" here too, in case a caller passes it
+        # straight through without going via build()/api_preview's resolution.
+        target_duration, _ = duration_planner.resolve_duration(
+            target_duration, script_text=script_text)
     structured = parse_structured_script(script_text)
     if structured:
         if target_duration:

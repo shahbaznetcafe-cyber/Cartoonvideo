@@ -112,6 +112,27 @@ def closest_preset(seconds):
     return min(DURATION_PRESETS, key=lambda key: abs(DURATION_PRESETS[key]["seconds"] - seconds))
 
 
+_AUTO_ALIASES = {"auto", "automatic", "auto-detect", "autodetect"}
+
+
+def is_auto(value):
+    return str(value or "").strip().lower().replace(" ", "") in _AUTO_ALIASES
+
+
+def resolve_duration(value, script_text="", parsed=None):
+    """Resolve a duration selection to a concrete preset key.
+
+    "auto" estimates the script's own natural spoken length (from script_text
+    or an already-parsed story) and returns the closest preset, instead of
+    forcing a fixed choice that may not match what was actually written.
+    Any other value normalizes exactly as before.  Returns (preset_key, was_auto).
+    """
+    if is_auto(value):
+        estimated, _, _ = estimate_text_seconds(script_text, parsed)
+        return closest_preset(estimated), True
+    return normalize_duration(value), False
+
+
 def estimate_text_seconds(script_text, parsed=None):
     """Estimate natural speech time without pretending it is the final TTS duration."""
     if parsed:

@@ -875,7 +875,7 @@ function setSegVal(id,value){
   });
   return matched;
 }
-function selectedVideoDuration(){ return segVal('ffLenSeg')||'1min'; }
+function selectedVideoDuration(){ return segVal('ffLenSeg')||'auto'; }
 
 function schedulePastedScriptPlan(){
   clearTimeout(MANUAL_SCENE_TIMER);
@@ -1546,16 +1546,22 @@ async function preview(options={}){
       const duration=j.duration_analysis||{};
       const hint=document.getElementById('scriptDurationHint');
       if(hint&&duration.estimated_seconds){
-        hint.textContent=`Target: ${duration.selected_label||selectedVideoDuration()} ? current script: ${formatRenderDuration(duration.estimated_seconds)} / ${duration.word_count||0} words ? recommended: ${duration.minimum_words||'?'}?${duration.maximum_words||'?'} words. Final duration actual voice audio se frame-accurate hogi.`;
+        const targetLabel=duration.auto_selected
+          ?`Auto (${duration.selected_label||selectedVideoDuration()} detected)`
+          :(duration.selected_label||selectedVideoDuration());
+        hint.textContent=`Target: ${targetLabel} ? current script: ${formatRenderDuration(duration.estimated_seconds)} / ${duration.word_count||0} words ? recommended: ${duration.minimum_words||'?'}?${duration.maximum_words||'?'} words. Final duration actual voice audio se frame-accurate hogi.`;
       }
+      // Auto always matches by definition (it picked the preset FROM the
+      // script), so the mismatch warning below only makes sense for a fixed,
+      // user-chosen target.
       if(automatic){
         setCreateStep(2,false);
         const sceneCount=(j.scenes||[]).length;
         showStudioToast(`${sceneCount} scene${sceneCount===1?'':'s'} automatically ready · target ${duration.selected_label||selectedVideoDuration()}.`,'success','Storyboard ready');
-        if(duration.estimated_seconds&&!duration.within_target_tolerance){
+        if(!duration.auto_selected&&duration.estimated_seconds&&!duration.within_target_tolerance){
           showStudioToast(`Current script ${formatRenderDuration(duration.estimated_seconds)} ka hai; ${duration.selected_label} target ke liye ${duration.minimum_words}?${duration.maximum_words} spoken words recommend hain. AI generation ab isi budget ko follow karegi.`,'warning','Duration needs content');
         }
-      } else if(duration.estimated_seconds&&!duration.within_target_tolerance){
+      } else if(!duration.auto_selected&&duration.estimated_seconds&&!duration.within_target_tolerance){
         showStudioToast(`Current script ${formatRenderDuration(duration.estimated_seconds)} ka hai. ${duration.selected_label} target ke liye recommended script budget ${duration.minimum_words}?${duration.maximum_words} words hai; final video hamesha actual voice audio duration par banti hai.`,'warning','Duration needs content');
       }      if((j.performance_warnings||[]).length){
         const alternatives=(j.dialogue_cast_recommendations||[]).map(item=>item.name).filter(Boolean).slice(0,3);

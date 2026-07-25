@@ -607,10 +607,15 @@ def api_preview():
         return jsonify({"error": "Script bohat chhota hai"}), 400
     try:
         parsed = story_parser.parse_script(script)
+        # "Auto" resolves to whatever preset best matches the script actually
+        # written, instead of forcing a fixed choice that then mismatches.
+        resolved_duration, duration_was_auto = duration_planner.resolve_duration(
+            data.get("target_duration", "1min"), script_text=script)
         parsed, scenes_auto_generated = duration_planner.auto_segment_scenes(
-            parsed, script, selected=data.get("target_duration", "1min"))
+            parsed, script, selected=resolved_duration)
         duration_info = duration_planner.duration_analysis(
-            script, parsed, selected=data.get("target_duration", "1min"))
+            script, parsed, selected=resolved_duration)
+        duration_info["auto_selected"] = duration_was_auto
     except Exception as e:
         return jsonify({"error": str(e)[:400]}), 500
 

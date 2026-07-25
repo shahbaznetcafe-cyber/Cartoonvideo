@@ -10,6 +10,7 @@ import sys
 import time
 
 import config
+import duration_planner
 import story_parser
 import voice_engine
 import assets as assets_mod
@@ -113,6 +114,10 @@ def build(script_text, proj_name=None, on_progress=None, settings=None, parsed=N
     """
     apply_settings(settings)
     target_dur = (settings or {}).get("target_duration") or (settings or {}).get("length")
+    if target_dur and duration_planner.is_auto(target_dur):
+        # "Auto" matches whatever the script actually is; script_text is
+        # always sent alongside an edited plan too, so this stays accurate.
+        target_dur, _ = duration_planner.resolve_duration(target_dur, script_text=script_text)
     def stage(name):
         def cb(i, t, m):
             if on_progress:
@@ -129,7 +134,6 @@ def build(script_text, proj_name=None, on_progress=None, settings=None, parsed=N
     if parsed:
         parsed = story_parser._assign_voices(parsed)   # edited plan — voices ensure karo
     else:
-        target_dur = (settings or {}).get("target_duration") or (settings or {}).get("length")
         parsed = story_parser.parse_script(script_text, target_duration=target_dur)
     story_parser.normalize_parsed_directions(parsed)
     import character_performance
