@@ -251,14 +251,25 @@ def parse_structured_script(script_text):
             # Older one-token cues remain fully backward compatible.
             cue_parts = [part.strip() for part in re.split(r"[;|]", cue) if part.strip()]
             action_parts, location_parts = [], []
-            for part in cue_parts:
+            # Only the FINAL part of a full "(emotion; action; location)" cue is
+            # ever a location.  Earlier parts that match neither a recognised
+            # emotion nor a supported action are unrecognised synonyms (e.g. a
+            # hand-written "nervous" or "hop" outside the small built-in
+            # vocabularies) -- drop them instead of grafting them onto the
+            # location.  Grafting used to compare that noisy per-line string
+            # against the scene's location every line, so almost every line
+            # started a brand-new scene (one script fragmented 8 intended
+            # scenes into 48).  A 1- or 2-part cue never carries a location,
+            # matching the historical "older one-token cues" behaviour.
+            location_index = len(cue_parts) - 1 if len(cue_parts) >= 3 else -1
+            for index, part in enumerate(cue_parts):
                 normalized_emotion = _normalize_emotion(part)
                 normalized_action = part.casefold()
                 if normalized_emotion and emotion == "neutral" and normalized_action not in actions.SUPPORTED_ACTIONS:
                     emotion = normalized_emotion
                 elif normalized_action in actions.SUPPORTED_ACTIONS:
                     action_parts.append(normalized_action)
-                else:
+                elif index == location_index:
                     # Production templates use (emotion; action; location).
                     # Keep that final location cue instead of treating it as a
                     # broken action.  It can create a real scene boundary.

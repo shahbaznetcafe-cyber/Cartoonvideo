@@ -30,7 +30,7 @@ REQUIRED_IDS = {
     "resultCard", "resumeCard", "resumeList", "rTitle", "rVideo", "script",
     "scriptCard", "scriptFeedback", "scriptTabs", "serCast", "serGenre",
     "serInfo", "serLang", "serName", "serPremise", "serSel", "steps",
-    "stopBtn", "style", "test_img", "testBtn", "testResult",
+    "stopBtn", "style", "test_img", "testBtn", "testResult", "writeCastLibrarySeg",
     # tplLang/tplLenSeg intentionally removed: templates share the Story basics
     # controls (ffLang + selectedVideoDuration) instead of duplicating them.
     "tplChars", "tplGenBtn", "tplGrid", "tplMsg",

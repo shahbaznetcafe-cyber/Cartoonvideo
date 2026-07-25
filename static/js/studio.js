@@ -359,6 +359,7 @@ function selectScriptMode(mode,persist=true){
     panel.hidden=!active;
   });
   if(mode==='ai') selectAIGenerator(STUDIO_UI.aiTab||'quick',false);
+  else syncWriteCastLibrarySeg();
   if(persist) scheduleWorkspaceAutosave();
 }
 
@@ -853,6 +854,18 @@ document.querySelectorAll('.seg').forEach(seg=>{
     scheduleWorkspaceAutosave();
   });
 });
+// Write Script (manual paste) has no character-card grid, so the only way to
+// pick Quaternius vs SBZ for a pasted/typed script is this compact toolbar
+// toggle. It shares the same CAST_CHARACTER_LIBRARY global the AI-generator
+// grid uses, so preview()/generate() need no extra wiring once this is set.
+document.querySelectorAll('#writeCastLibrarySeg button').forEach(b=>b.addEventListener('click',()=>{
+  CAST_CHARACTER_LIBRARY=b.dataset.v==='quaternius'?'quaternius':'sbz';
+}));
+function syncWriteCastLibrarySeg(){
+  document.querySelectorAll('#writeCastLibrarySeg button').forEach(b=>{
+    b.classList.toggle('on',(b.dataset.v==='quaternius')===(CAST_CHARACTER_LIBRARY==='quaternius'));
+  });
+}
 function segVal(id){const e=document.querySelector('#'+id+' button.on');return e?e.dataset.v:null;}
 function setSegVal(id,value){
   const seg=document.getElementById(id); if(!seg) return false;
