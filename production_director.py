@@ -215,9 +215,13 @@ def _scene_preset(scene):
         return "mud"
     if words & {"wash", "soap", "clean", "hygiene"}:
         return "wash"
-    if words & {"pirate", "ship", "island", "dock", "harbor", "harbour", "treasure", "sea", "beach"}:
+    # "beach" alone is an ordinary seaside, not a pirate story; it routes to the
+    # friendlier beach preset below.
+    if words & {"pirate", "ship", "island", "dock", "harbor", "harbour", "treasure", "sea"}:
         return "pirate"
-    if words & {"zombie", "apocalypse", "ruins", "abandoned", "city", "street", "traffic", "survival"}:
+    # Generic city/street words belong to the ordinary town preset; keep this
+    # branch for genuinely post-apocalyptic scenes.
+    if words & {"zombie", "apocalypse", "ruins", "abandoned", "survival", "wasteland"}:
         return "apocalypse"
     if words & {"space", "planet", "rocket", "astronaut", "alien", "galaxy", "moon", "mars"}:
         return "space"
@@ -227,11 +231,24 @@ def _scene_preset(scene):
         return "snow"
     if words & {"desert", "sehra", "sand", "dunes"}:
         return "desert"
-    if words & {"market", "bazaar", "shop", "store", "stall"}:
+    if words & {"beach", "sahil", "kinara", "island", "jazeera", "sand", "seaside"}:
+        return "beach"
+    # A "village farm" is still a farm scene: only treat a village as a built-up
+    # square when no farm/field/garden word is present.
+    if (words & {"village", "gaon", "gaun", "mohalla", "basti", "chowk", "dehat"}
+            and not words & {"farm", "field", "khet", "garden", "bagh", "orchard"}):
+        return "village"
+    if words & {"town", "city", "street", "road", "sarak", "shehar", "traffic", "crossing"}:
+        return "town"
+    if words & {"market", "bazaar", "shop", "store", "stall", "dukan", "mandi"}:
         return "market"
-    if words & {"kitchen", "room", "house", "home", "school", "classroom", "office"}:
+    if words & {"kitchen", "room", "house", "home", "school", "classroom", "office",
+                "ghar", "kamra", "rasoi", "madrasa"}:
         return "indoor"
-    if words & {"forest", "jungle", "garden", "park", "farm", "field", "path"}:
+    if words & {"meadow", "maidan", "grassland", "lawn", "clearing", "pasture"}:
+        return "meadow"
+    if words & {"forest", "jungle", "garden", "park", "farm", "field", "path",
+                "bagh", "khet", "raasta"}:
         return "forest"
     return "sunny"
 
@@ -266,7 +283,24 @@ def _environment(scene, scene_index=0):
         variant = "space_outpost"
     elif preset == "apocalypse":
         variant = "apocalypse_street"
-    outdoors = preset in {"sunny", "forest", "market", "storm", "mud", "night", "snow", "desert", "pirate", "space", "apocalypse"}
+    elif preset == "village":
+        variant = "village_square"
+    elif preset in {"town", "market"}:
+        variant = "town_street"
+    elif preset == "night":
+        variant = "night_forest"
+    elif preset == "meadow":
+        variant = "open_meadow"
+    elif preset == "beach":
+        variant = "island_beach"
+    elif preset == "desert":
+        variant = "rocky_desert"
+    if preset == "forest" and words & {"mushroom", "magic", "magical", "fairy",
+                                       "jadoo", "jadui", "khayali"}:
+        variant = "magic_grove"
+    outdoors = preset in {"sunny", "forest", "market", "storm", "mud", "night", "snow",
+                          "desert", "pirate", "space", "apocalypse", "village", "town",
+                          "meadow", "beach"}
     mood = str(scene.get("mood") or "neutral").lower()
     wind = 0.18 if outdoors else 0.04
     if preset == "storm":

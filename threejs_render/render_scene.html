@@ -62,6 +62,10 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
     pirate:{ sky: 0x78cbe5, ground: 0xd6b66d, key: 2.25, fill: 0.76 },
     space: { sky: 0x111a35, ground: 0x515968, key: 1.55, fill: 0.58 },
     apocalypse:{ sky: 0x798184, ground: 0x58574e, key: 1.2, fill: 0.48 },
+    village:{ sky: 0xa8dded, ground: 0x6ba549, key: 2.3, fill: 0.84 },
+    town:  { sky: 0xb6d4e8, ground: 0x7f8a80, key: 2.1, fill: 0.8 },
+    meadow:{ sky: 0xa9e0f5, ground: 0x74be4f, key: 2.45, fill: 0.9 },
+    beach: { sky: 0x8fd9ee, ground: 0xe4cf94, key: 2.5, fill: 0.88 },
   }[sceneLook] || { sky: 0x9fd8ff, ground: 0x7dcc55, key: 2.4, fill: 0.85 };
   const VARIANT_LOOK = {
     village_farm: { sky:0xa8dded, ground:0x659b45, path:0xc7a06a, accent:0xe2c079 },
@@ -74,6 +78,13 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
     treasure_cove: { sky:0x82d1df, ground:0xe1c87d, path:0x8c6747, accent:0xf6d45b },
     space_outpost: { sky:0x111a35, ground:0x5a5f6b, path:0x3c465e, accent:0x79d9ff },
     apocalypse_street: { sky:0x788080, ground:0x57564d, path:0x32343a, accent:0xd48e48 },
+    village_square:{ sky:0xa8dded, ground:0x6ba549, path:0xc7a06a, accent:0xe2c079 },
+    town_street:   { sky:0xb6d4e8, ground:0x7f8a80, path:0x4a4d52, accent:0xd9a24c },
+    night_forest:  { sky:0x17283f, ground:0x24382f, path:0x3a3226, accent:0x6f8fb5 },
+    magic_grove:   { sky:0xb8e6f4, ground:0x3f8450, path:0x7d6a48, accent:0xff9ad5 },
+    open_meadow:   { sky:0xa9e0f5, ground:0x74be4f, path:0xbfa172, accent:0xf3d867 },
+    island_beach:  { sky:0x8fd9ee, ground:0xe4cf94, path:0xcfae72, accent:0x62c9c3 },
+    rocky_desert:  { sky:0xd7bd91, ground:0xb98b51, path:0x9d7343, accent:0xdcae6a },
   }[sceneVariant] || {};
   const LOOK = { ...BASE_LOOK, path:0xaa895f, accent:0xe0b95e, ...VARIANT_LOOK };
 
