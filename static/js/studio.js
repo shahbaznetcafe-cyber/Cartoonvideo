@@ -866,6 +866,28 @@ function syncWriteCastLibrarySeg(){
     b.classList.toggle('on',(b.dataset.v==='quaternius')===(CAST_CHARACTER_LIBRARY==='quaternius'));
   });
 }
+// Green/blue screen (chroma-key) is just typed text in a scene's Background
+// field (see production_director._scene_preset) -- these controls are a
+// quick way to write/restore that text instead of typing it by hand.
+const BG_SCREEN_TEXT={green:'Green Screen',blue:'Blue Screen'};
+function detectBgScreenMode(text){
+  const t=String(text||'').toLowerCase();
+  if(t.includes('blue screen')||t.includes('chroma blue')) return 'blue';
+  if(t.includes('green screen')||t.includes('chroma green')) return 'green';
+  return 'originals';
+}
+function applySceneBgScreenMode(box,mode){
+  const bgInput=box.querySelector('.pvBg'); if(!bgInput) return;
+  bgInput.value=mode==='originals'?(box.dataset.origBg||''):BG_SCREEN_TEXT[mode];
+  box.querySelectorAll('.scene-bg-mode button').forEach(btn=>btn.classList.toggle('on',btn.dataset.v===mode));
+  validatePreviewPlan(false);
+  scheduleWorkspaceAutosave();
+}
+// Full-video control: applies the same screen mode to every scene at once.
+// Per-scene buttons still work afterwards to override a single scene.
+document.querySelectorAll('#bgModeGlobalSeg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#pvScenes .pvScene').forEach(box=>applySceneBgScreenMode(box,b.dataset.v));
+}));
 function segVal(id){const e=document.querySelector('#'+id+' button.on');return e?e.dataset.v:null;}
 function setSegVal(id,value){
   const seg=document.getElementById(id); if(!seg) return false;
@@ -1654,7 +1676,7 @@ function renderPreview(p){
     let html=`<header class="scene-card-header"><div class="scene-order"><span>Scene</span><strong data-scene-order>${sceneIndex+1}</strong></div>`
       +`<div class="scene-title"><h4>${escHtml(scene.location||`Scene ${scene.id||sceneIndex+1}`)}</h4><div><span class="scene-badge pvMoodBadge">${escHtml(mood)}</span><span class="scene-badge">${uiIcon('clock')} ${escHtml(box.dataset.duration)}</span><span class="scene-badge">${lines.length} lines</span></div></div>`
       +`<div class="scene-reorder"><button type="button" class="icon-button scene-move" data-move-scene="-1" aria-label="Move scene up">${uiIcon('arrow-up')}</button><button type="button" class="icon-button scene-move" data-move-scene="1" aria-label="Move scene down">${uiIcon('arrow-down')}</button></div></header>`
-      +`<div class="scene-settings"><label><span>Background</span><input class="pvBg" value="${escHtml(scene.background_prompt||'')}" placeholder="Describe the scene background"></label><label><span>Mood</span><input class="pvMood" value="${escHtml(mood)}" placeholder="neutral"></label></div><div class="scene-validation hidden"></div>`
+      +`<div class="scene-settings"><label><span>Background</span><input class="pvBg" value="${escHtml(scene.background_prompt||'')}" placeholder="Describe the scene background"></label><label><span>Mood</span><input class="pvMood" value="${escHtml(mood)}" placeholder="neutral"></label><div class="scene-bg-mode-field"><span>Screen</span><div class="seg toolbar-seg scene-bg-mode"><button type="button" data-v="originals">Originals</button><button type="button" data-v="green">Green</button><button type="button" data-v="blue">Blue</button></div></div></div><div class="scene-validation hidden"></div>`
       +`<div class="dialogue-heading"><span>Dialogue</span><small>${lines.length} ${lines.length===1?'line':'lines'}</small></div><div class="dialogue-list">`;
     lines.forEach((line,lineIndex)=>{
       const emotionOptions=EMOTIONS.map(emotion=>`<option ${emotion===(line.emotion||'neutral')?'selected':''}>${emotion}</option>`).join('');
@@ -1667,6 +1689,18 @@ function renderPreview(p){
     });
     html+='</div>';
     box.innerHTML=html; sc.appendChild(box);
+    // The typed Background text is the single source of truth for chroma
+    // detection downstream (production_director._scene_preset). These
+    // buttons are just a convenience that write/restore that same text.
+    box.dataset.origBg=scene.background_prompt||'';
+    const syncBgModeButtons=mode=>box.querySelectorAll('.scene-bg-mode button').forEach(btn=>btn.classList.toggle('on',btn.dataset.v===mode));
+    syncBgModeButtons(detectBgScreenMode(scene.background_prompt));
+    box.querySelectorAll('.scene-bg-mode button').forEach(btn=>btn.addEventListener('click',()=>applySceneBgScreenMode(box,btn.dataset.v)));
+    box.querySelector('.pvBg').addEventListener('input',event=>{
+      const mode=detectBgScreenMode(event.target.value);
+      if(mode==='originals') box.dataset.origBg=event.target.value;
+      syncBgModeButtons(mode);
+    });
   });
   if(!scenes.length) sc.innerHTML='<div class="empty-state compact"><span>'+uiIcon('warning')+'</span><div><strong>No scenes found</strong><p>Script format check karke plan dobara build karein.</p></div></div>';
   updateSceneOrderLabels();
