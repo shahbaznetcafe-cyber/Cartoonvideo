@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "reviewed": true,
+  "reviewedAt": "2026-07-16T01:20:00+05:00",
+  "reviewer": "Codex visual inspection",
+  "sourceVideo": "outputs/adventurer_directed_production_scene.mp4",
+  "sourceVideoSha256": "43fe97e4cf7402d7764d527f21936d846ef4d6707c03c24af63efde2f74e23ea",
+  "evidenceDirectory": "outputs/adventurer_directed_production_encoded_milestones",
+  "evidenceOrigin": "Frames extracted from the final encoded MP4, not pre-encoding screenshots.",
+  "reviewedFrames": [27, 108, 186, 258, 339, 342, 390, 441, 513, 606, 690],
+  "checks": {
+    "noBlackFrames": true,
+    "noMajorRigDeformation": true,
+    "interactionConsequenceReadable": true,
+    "storyBlockingReadable": true,
+    "characterEntryAndExitReadable": true,
+    "pointingBeatReadable": true,
+    "facialAnimationClaimed": false
+  },
+  "frameNotes": [
+    { "frame": 27, "beat": "establish_forest", "note": "Layered forest and path establish the prop location; no character or black frame." },
+    { "frame": 108, "beat": "enter_path", "note": "Character enters from frame-left in a motivated tracking composition." },
+    { "frame": 186, "beat": "notice_box", "note": "Prop-detail shot makes the suspicious box visually explicit." },
+    { "frame": 258, "beat": "cautious_approach", "note": "Character advances toward the box in an off-center two-subject composition." },
+    { "frame": 339, "beat": "reach_and_contact", "note": "Oblique contact composition places the right hand close to the named target." },
+    { "frame": 342, "beat": "reach_and_contact", "note": "Opened lid, glow and particles clearly show the triggered consequence." },
+    { "frame": 390, "beat": "surprised_reaction", "note": "Body/head reaction shot is readable without claiming facial controls." },
+    { "frame": 441, "beat": "step_backward", "note": "Backward locomotion increases separation from the box; limbs remain coherent." },
+    { "frame": 513, "beat": "point_warning", "note": "Arm direction toward the prop reads as warning; real source clip remains disclosed as Idle_Gun_Pointing." },
+    { "frame": 606, "beat": "quick_exit", "note": "Character is visibly leaving frame-left rather than remaining on a stage mark." },
+    { "frame": 690, "beat": "box_aftermath", "note": "Prop aftermath closes the story after the character exits." }
+  ],
+  "reviewLimits": [
+    "Milestone stills confirm encoded-frame composition and visible deformation state, not every in-between frame.",
+    "Foot-slide control is supported by cycle/displacement validation and planted-root sampling; final human playback remains the approval gate.",
+    "The character has no validated facial, jaw, blink, gaze or lip-sync controls and is not classified FACIAL_READY.",
+    "Hand IK is not implemented; the validated contact distance and camera angle mask the remaining hand-to-target gap."
+  ]
+}

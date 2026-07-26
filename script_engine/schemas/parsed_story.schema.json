@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sbz://schemas/parsed-story-v1",
+  "title": "SBZ Parsed Story",
+  "type": "object",
+  "required": ["schemaVersion", "title", "language", "characters", "scenes"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "title": {"type": "string", "minLength": 1},
+    "language": {"enum": ["urdu", "roman_urdu", "hindi", "roman_hindi", "hinglish", "english"]},
+    "characters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "role"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "name": {"type": "string", "minLength": 1},
+          "role": {"type": "string"},
+          "voiceNotes": {"type": "string"},
+          "capabilityId": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "location", "timeOfDay", "characters", "elements", "estimatedDuration"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "location": {"type": "string", "minLength": 1},
+          "timeOfDay": {"type": "string", "minLength": 1},
+          "characters": {"type": "array", "items": {"type": "string"}},
+          "estimatedDuration": {"type": "number", "minimum": 0.1},
+          "continuityReferences": {"type": "array", "items": {"type": "string"}},
+          "elements": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["type", "estimatedDuration"],
+              "properties": {
+                "type": {"enum": ["dialogue", "narration", "action", "camera", "sound", "location", "environment"]},
+                "speaker": {"type": ["string", "null"]},
+                "text": {"type": ["string", "null"]},
+                "language": {"type": ["string", "null"]},
+                "emotion": {"type": ["string", "null"]},
+                "physicalAction": {"type": ["string", "null"]},
+                "actionTarget": {"type": ["string", "null"]},
+                "prop": {"type": ["string", "null"]},
+                "entranceExit": {"enum": ["enter", "exit", "none", null]},
+                "cameraIntent": {"type": ["string", "null"]},
+                "soundCue": {"type": ["string", "null"]},
+                "environmentalEvent": {"type": ["string", "null"]},
+                "estimatedDuration": {"type": "number", "minimum": 0.05},
+                "continuityReferences": {"type": "array", "items": {"type": "string"}}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

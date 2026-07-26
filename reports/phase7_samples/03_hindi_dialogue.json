@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "hi",
+    "scenes": [
+      {
+        "id": "scene_1",
+        "lines": [
+          {
+            "speaker": "मीरा",
+            "text": "कबीर! जल्दी आओ! देखो, यह चिड़िया कैसे रो रही है?",
+            "emotion": "घबराकर",
+            "action": "ज़मीन पर बैठी एक चिड़िया को देख रही है"
+          },
+          {
+            "speaker": "कबीर",
+            "text": "क्या हुआ इसे? उड़ क्यों नहीं रही?",
+            "emotion": "झटके से",
+            "action": "आते हुए"
+          },
+          {
+            "speaker": "मीरा",
+            "text": "देखो, इसके पंख में चोट लगी है। शायद नीचे गिर गई हो।",
+            "emotion": "चिंतित"
+          },
+          {
+            "speaker": "कबीर",
+            "text": "हाँ, इसका पंख खून से लथपथ है। डरो मत चिड़िया, हम तुम्हें दर्द नहीं देंगे।",
+            "emotion": "धीरे से",
+            "action": "चिड़िया को देखते हुए"
+          },
+          {
+            "speaker": "मीरा",
+            "text": "अब हम इसकी मदद कैसे करें?",
+            "emotion": "घबराहट"
+          },
+          {
+            "speaker": "कबीर",
+            "text": "तुम ज़रा ठहरो, मैं अभी कक्षा से अपनी दवा का बॉक्स लाता हूँ।",
+            "emotion": "तत्पर"
+          },
+          {
+            "speaker": "कबीर",
+            "text": "लो, यह लो रुई और दवा। तुम धीरे-धीरे इसके पंख पर लगाओ, मैं इसे पकड़े रहता हूँ।",
+            "emotion": "सक्रिय",
+            "action": "दौड़कर अपनी बैग से प्राथमिक चिकित्सा (first-aid) का बॉक्स लाता है"
+          },
+          {
+            "speaker": "मीरा",
+            "text": "ऐसे ठीक होगा? बहुत दर्द हो रहा होगा इसे।",
+            "emotion": "धीरे से",
+            "action": "रुई से धीरे से साफ करते हुए"
+          },
+          {
+            "speaker": "कबीर",
+            "text": "हाँ, बस थोड़ा सा लगाओ। देखो, अब खून बंद हो गया है। अब इसे मेरी रूमाल में लपेट देते हैं।",
+            "emotion": "आश्वस्त"
+          },
+          {
+            "speaker": "मीरा",
+            "text": "बहुत अच्छा! अब इसे छाया में रख देते हैं।",
+            "emotion": "मुस्कुराकर"
+          },
+          {
+            "speaker": "कबीर",
+            "text": "हाँ, इसे पानी की बूँदें भी पिला देते हैं। जब तक यह ठीक हो, हम इसकी देखभाल करेंगे।",
+            "emotion": "दयालु"
+          },
+          {
+            "speaker": "मीरा",
+            "text": "जल्दी ठीक हो जाओ चिड़िया, फिर तुम बादलों में उड़ोगे!",
+            "emotion": "आशावादी"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "2f19d99e-2257-4fd7-b97d-4f6d70b2ac1c",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.zai.glm.5.1",
+    "modelAir": "zai:glm@5.1",
+    "modelDisplayName": "GLM 5.1",
+    "transport": "openai_compatible",
+    "latencyMs": 43380,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 1171,
+      "completion_tokens": 1207,
+      "total_tokens": 2378,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "retryCount": 1,
+    "repairCount": 1,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "3932d8ccfb4bf21a3b5919137f0d94f0722fe017fc02fefe0c28ffd12ee2fb6a",
+    "promptVersion": "phase7.1",
+    "contentSha256": "e02a31fca012b6f853d4dc1f2e6b7f3057d3ff99a8ebab8f5aa315cb4c9e09cb",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-proof/script_pipeline/05_character_dialogue.json"
+}

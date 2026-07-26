@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "roman_urdu",
+    "scenes": [
+      {
+        "id": "scene1",
+        "lines": [
+          {
+            "speaker": "Bilal",
+            "text": "Behen, room mein itna andhera kyun hai? Mujhe kuch dikhayi nahi de raha.",
+            "emotion": "scared",
+            "action": "shivering"
+          },
+          {
+            "speaker": "Sana",
+            "text": "Bhai, dar mat. Mein hoon na. Bas light on kar deti hoon.",
+            "emotion": "comforting",
+            "action": "reaching for switch"
+          },
+          {
+            "speaker": "Bilal",
+            "text": "Par andhera bohot bara lagta hai. Jaise koi cheez ho.",
+            "emotion": "anxious",
+            "action": "clutching blanket"
+          },
+          {
+            "speaker": "Sana",
+            "text": "Nahi bhai, kuch nahi hai. Dekh, light on hai ab. Sab theek hai.",
+            "emotion": "reassuring",
+            "action": "sitting beside him"
+          },
+          {
+            "speaker": "Bilal",
+            "text": "Shukriya. Tum ho na, toh mujhe ajeeb sa sukoon milta hai.",
+            "emotion": "relieved",
+            "action": "smiling weakly"
+          },
+          {
+            "speaker": "Sana",
+            "text": "Hamesha rahungi. Ab so ja, subah school bhi jana hai.",
+            "emotion": "loving",
+            "action": "patting his head"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "59771853-967b-4168-a77a-8144a9961991",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.deepseek.v4.flash",
+    "modelAir": "deepseek:v4@flash",
+    "modelDisplayName": "DeepSeek V4 Flash",
+    "transport": "openai_compatible",
+    "latencyMs": 20832,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 285,
+      "completion_tokens": 395,
+      "total_tokens": 680,
+      "prompt_tokens_details": {
+        "cached_tokens": 256
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "6baa231629af3cf40b45139a8068dcc73caa59082ba37d81dac0ca39516621a9",
+    "promptVersion": "phase7.1",
+    "contentSha256": "dd42fa7aea2dc06a03b5416352e91d2c2763edfb46f9e1ddf30deb2c743d903d",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

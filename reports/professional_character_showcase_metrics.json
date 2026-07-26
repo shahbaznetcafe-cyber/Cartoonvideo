@@ -1,0 +1,64 @@
+﻿{
+    "schemaVersion":  1,
+    "status":  "ASSEMBLED_PENDING_VISUAL_VALIDATION",
+    "output":  "D:\\flayer\\sbz-studio\\outputs\\sbz_professional_character_showcase.mp4",
+    "expectedDurationSeconds":  37.45,
+    "storyInput":  "D:\\flayer\\sbz-studio\\outputs\\adventurer_directed_production_scene.mp4",
+    "multiCharacterInput":  "D:\\flayer\\sbz-studio\\outputs\\phase4_multi_character_proof.mp4",
+    "transitions":  [
+                        {
+                            "durationSeconds":  0.35,
+                            "atSeconds":  2.15,
+                            "type":  "short_dissolve",
+                            "purpose":  "title_to_story"
+                        },
+                        {
+                            "durationSeconds":  0.35,
+                            "atSeconds":  31.8,
+                            "type":  "short_dissolve",
+                            "purpose":  "story_to_cast"
+                        }
+                    ],
+    "audio":  {
+                  "music":  "D:\\flayer\\sbz-studio\\assets\\music\\calm\\calm_ambient.mp3",
+                  "surpriseCueSeconds":  15.9,
+                  "whooshCueSeconds":  [
+                                           1.95,
+                                           31.6
+                                       ]
+              },
+    "probe":  {
+                  "programs":  [
+
+                               ],
+                  "stream_groups":  [
+
+                                    ],
+                  "streams":  [
+                                  {
+                                      "index":  0,
+                                      "codec_name":  "h264",
+                                      "codec_type":  "video",
+                                      "width":  1920,
+                                      "height":  1080,
+                                      "pix_fmt":  "yuv420p",
+                                      "r_frame_rate":  "24/1",
+                                      "duration":  "37.458333",
+                                      "nb_frames":  "899"
+                                  },
+                                  {
+                                      "index":  1,
+                                      "codec_name":  "aac",
+                                      "codec_type":  "audio",
+                                      "r_frame_rate":  "0/0",
+                                      "duration":  "37.450000",
+                                      "nb_frames":  "1755"
+                                  }
+                              ],
+                  "format":  {
+                                 "duration":  "37.458333",
+                                 "size":  "22597546",
+                                 "bit_rate":  "4826172"
+                             }
+              }
+}

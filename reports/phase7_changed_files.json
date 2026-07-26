@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "phase": "Phase 7 Runware Script and Text-Parser Engine",
+  "modified": [
+    "app.py",
+    "providers.py",
+    "runware_client.py",
+    "templates/index.html",
+    "static/css/studio.css",
+    "static/js/studio.js"
+  ],
+  "created": [
+    "script_engine/__init__.py",
+    "script_engine/cache.py",
+    "script_engine/engine.py",
+    "script_engine/model_registry.json",
+    "script_engine/pipeline.py",
+    "script_engine/prompts.py",
+    "script_engine/providers.py",
+    "script_engine/registry.py",
+    "script_engine/routing.json",
+    "script_engine/validation.py",
+    "script_engine/schemas/parsed_story.schema.json",
+    "script_engine/schemas/storyboard.schema.json",
+    "benchmarks/phase7_dataset.json",
+    "tools/run_phase7_proof.py",
+    "tools/benchmark_phase7_models.py",
+    "tests/test_phase7_script_engine.py",
+    "reports/phase7_provider_architecture.md",
+    "reports/phase7_model_discovery.json",
+    "reports/phase7_live_proof.json",
+    "reports/phase7_model_benchmark.json",
+    "reports/phase7_model_benchmark.md",
+    "reports/phase7_security_validation.json",
+    "reports/phase7_reliability_proof.json",
+    "reports/phase7_regression_results.json",
+    "reports/phase7_remaining_limitations.md"
+  ],
+  "fullEpisodeGenerated": false
+}

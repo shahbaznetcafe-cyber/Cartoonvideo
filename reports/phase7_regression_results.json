@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-07-15T18:47:00+05:00",
+  "status": "PASS",
+  "focusedPhase7Tests": {"runner": "unittest", "passed": 19, "failed": 0},
+  "fullAvailableSuite": {"runner": "unittest discover", "passed": 90, "failed": 0, "durationSeconds": 4.136},
+  "pythonCompileall": "PASS",
+  "javascriptSyntax": "PASS",
+  "pytest": {"status": "NOT_AVAILABLE", "reason": "pytest is not installed in the project virtual environment"},
+  "nonFailingWarnings": [
+    "Existing ResourceWarning in styles.py:105 for an unclosed styles_custom.json reader.",
+    "Expected legacy jaw and viseme fallback messages are emitted by regression fixtures."
+  ]
+}

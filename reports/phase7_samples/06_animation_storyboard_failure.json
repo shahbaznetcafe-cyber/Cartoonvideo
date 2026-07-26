@@ -1,0 +1,21 @@
+{
+  "name": "06_animation_storyboard",
+  "stage": "animation_plan",
+  "status": "FAIL",
+  "errorType": "OutputValidationError",
+  "error": "All configured script models failed",
+  "diagnostics": [
+    {
+      "model": "runware.google.gemini.3.5.flash",
+      "reason": "http_error",
+      "message": "Runware HTTP 400: {\n    \"data\": [],\n    \"errors\": [\n        {\n            \"code\": \"invalidValue\",\n            \"message\": \"Invalid value for 'jsonSchema' parameter. The parameter must be of type 'object with a \\\"schema\\\" key, e.g. {name, schema, strict}'.\",\n            \"parameter\": \"jsonSchema\",\n    ",
+      "validation": []
+    },
+    {
+      "model": "runware.openai.gpt.5.4.mini",
+      "reason": "http_error",
+      "message": "Runware HTTP 400: {\n    \"data\": [],\n    \"errors\": [\n        {\n            \"code\": \"invalidValue\",\n            \"message\": \"Invalid value for 'jsonSchema' parameter. The parameter must be of type 'object with a \\\"schema\\\" key, e.g. {name, schema, strict}'.\",\n            \"parameter\": \"jsonSchema\",\n    ",
+      "validation": []
+    }
+  ]
+}

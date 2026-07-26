@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "sourceVideo": "outputs/adventurer_directed_production_scene.mp4",
+  "sourceVideoSha256": "43fe97e4cf7402d7764d527f21936d846ef4d6707c03c24af63efde2f74e23ea",
+  "extractedFromEncodedOutput": true,
+  "entries": [
+    {
+      "frame": 27,
+      "beatId": "establish_forest",
+      "file": "01_establish_forest_encoded_f027.jpg",
+      "sha256": "5fd95b4ce2f9a5e756bea920987240175107ff9d44c719248a8de00a2e7be02e"
+    },
+    {
+      "frame": 108,
+      "beatId": "enter_path",
+      "file": "02_enter_path_encoded_f108.jpg",
+      "sha256": "884cde982049bc50ae81acc63f79d27c20e262aa7c368737c6af1c09c517a246"
+    },
+    {
+      "frame": 186,
+      "beatId": "notice_box",
+      "file": "03_notice_box_encoded_f186.jpg",
+      "sha256": "832e75384fcedf7ee9ed122a7532126aaee0973cfce8f1d58c2b99e897fc7a26"
+    },
+    {
+      "frame": 258,
+      "beatId": "cautious_approach",
+      "file": "04_cautious_approach_encoded_f258.jpg",
+      "sha256": "a352f5ceb7df0bfa1fedeced3da3684e9e539d37ab258cdc11a96627c0621294"
+    },
+    {
+      "frame": 339,
+      "beatId": "reach_and_contact",
+      "file": "05_reach_and_contact_encoded_f339.jpg",
+      "sha256": "f051e1606fbd8b86ee4a7f0b78f759b3f6c09327de65c1622b1ed18d6aeb506a"
+    },
+    {
+      "frame": 342,
+      "beatId": "reach_and_contact",
+      "file": "06_reach_and_contact_encoded_f342.jpg",
+      "sha256": "5414d8b2a46f5128b06fc10c60f776e5c6364f6cb6cb96029a205d20bc34c703"
+    },
+    {
+      "frame": 390,
+      "beatId": "surprised_reaction",
+      "file": "07_surprised_reaction_encoded_f390.jpg",
+      "sha256": "2ce4814fb4a49d714be9bc642f86251dd319648766efb133b2914c2f7d4b495e"
+    },
+    {
+      "frame": 441,
+      "beatId": "step_backward",
+      "file": "08_step_backward_encoded_f441.jpg",
+      "sha256": "4b7c5d0c28ad876e08a033d6bc9dce4f7a84a057819acf73a8911bd3b3142673"
+    },
+    {
+      "frame": 513,
+      "beatId": "point_warning",
+      "file": "09_point_warning_encoded_f513.jpg",
+      "sha256": "c91a207e106a0db8f0cd05dab8e72162750bec45e42086a45946ad0a890f23ae"
+    },
+    {
+      "frame": 606,
+      "beatId": "quick_exit",
+      "file": "10_quick_exit_encoded_f606.jpg",
+      "sha256": "22d9a571d8eb668bbb72986178e08c80aa9a9d223778e3a363d5f662f3ebd60d"
+    },
+    {
+      "frame": 690,
+      "beatId": "box_aftermath",
+      "file": "11_box_aftermath_encoded_f690.jpg",
+      "sha256": "a1218b95efdb69598b72ce1783372befc04d46f7214f286e1ffb9b09b2bc2c91"
+    }
+  ]
+}

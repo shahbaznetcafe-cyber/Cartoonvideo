@@ -4,6 +4,8 @@ aur chahein to script khud behtar (improve) kar deta hai.
 """
 import json
 
+import dialogue_style
+
 
 def _parse_json(raw):
     raw = raw.strip().strip("`")
@@ -22,6 +24,7 @@ def analyze(script, language="urdu"):
         "\"improvements\": [3-5 short actionable tips], "
         "\"strong_points\": [2 things done well]}. "
         "Keep tips in the script's language.")
+    sysp += " " + dialogue_style.YOUTUBE_STORY_RULES
     user = f"Language: {language}\nScript:\n{script[:1200]}"
     try:
         return _parse_json(providers.llm_generate(sysp, user, max_tokens=600, temperature=0.6))
@@ -35,7 +38,9 @@ def improve_script(script, language="urdu"):
     sysp = (
         "You improve short-video scripts: stronger opening hook, better pacing, "
         "punchier dialogue, clear emotional beats. Keep the SAME characters, language, "
-        "and speaker-name format (Name: line). Reply with ONLY the improved script text.")
+        "and speaker-name format (Name: line). "
+        + dialogue_style.full_prompt_policy(language)
+        + " Reply with ONLY the improved script text.")
     user = f"Language: {language}\nScript:\n{script}"
     try:
         return providers.llm_generate(sysp, user, max_tokens=1500, temperature=0.8).strip()

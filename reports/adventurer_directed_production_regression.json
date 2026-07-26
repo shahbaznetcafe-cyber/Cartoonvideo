@@ -1,0 +1,363 @@
+{
+  "schemaVersion": 1,
+  "title": "Adventurer Directed Production Scene — Regression Results",
+  "generatedAt": "2026-07-15T20:35:57.265Z",
+  "verdict": "PASS_FOR_SINGLE_SCENE_REVIEW",
+  "productionReadyClaim": false,
+  "bulkConversionPerformed": false,
+  "facialImplementationPerformed": false,
+  "checks": {
+    "exactMediaContract": true,
+    "noBlackFramesAtCuts": true,
+    "registryProvenanceComplete": true,
+    "registryRigAndClipEvidenceComplete": true,
+    "capabilityTierIsInteractive": true,
+    "notFacialReady": true,
+    "directorPlanExecuted": true,
+    "genericRegistryDrivenExecution": true,
+    "animationMixerOwnsBones": true,
+    "onlyRegisteredRealClipsUsed": true,
+    "locomotionCyclesMatchDisplacement": true,
+    "noForbiddenCloseups": true,
+    "bodyReactionShotUsed": true,
+    "namedInteractionTargetUsed": true,
+    "contactWithinRegisteredTolerance": true,
+    "interactionTimingAndFacingValidated": true,
+    "propConsequenceVisible": true,
+    "plantedRootStableAndGrounded": true,
+    "characterEntersAndExitsFrame": true,
+    "deterministicEnvironmentMovesEveryBeat": true,
+    "repeatedVegetationUsesInstancing": true,
+    "noRuntimeErrors": true,
+    "blenderNotUsedAtRuntime": true,
+    "encodedMilestonesAreFromFinalMp4": true,
+    "encodedMilestonesVisuallyReviewed": true,
+    "existingAndNewRegressionsPass": true,
+    "pythonRepositoryRegressionsPass": true,
+    "legacyAndFacialPathsPreservedByRegression": true
+  },
+  "media": {
+    "codec": "h264",
+    "width": 1920,
+    "height": 1080,
+    "pixelFormat": "yuv420p",
+    "fps": "24/1",
+    "frames": 720,
+    "durationSeconds": 30,
+    "bytes": 19751422,
+    "blackSegments": []
+  },
+  "performance": {
+    "renderSeconds": 190.9298444,
+    "peakMemory": {
+      "nodeRssBytes": 96329728,
+      "browserMainWorkingSetBytes": 128270336,
+      "ffmpegWorkingSetBytes": 555237376,
+      "browserJsHeapUsedBytes": 14013000,
+      "trackedPeakBytes": 769627472,
+      "trackedPeakMiB": 733.97,
+      "scope": "Node RSS + Chrome main-process working set + page JS heap + FFmpeg working set; Chrome child-process native allocations are not included."
+    }
+  },
+  "capability": {
+    "characterId": "quaternius_adventurer",
+    "tier": "SKELETAL_INTERACTIVE",
+    "facialReady": false,
+    "realClipsObserved": [
+      "Idle",
+      "Walk",
+      "Idle_Neutral",
+      "Interact",
+      "HitRecieve_2",
+      "Run_Back",
+      "Idle_Gun_Pointing",
+      "Run"
+    ]
+  },
+  "direction": {
+    "shotPlan": [
+      {
+        "id": "establish_forest",
+        "type": "establishing_wide",
+        "purpose": "establish"
+      },
+      {
+        "id": "enter_path",
+        "type": "tracking_medium",
+        "purpose": "locomotion"
+      },
+      {
+        "id": "notice_box",
+        "type": "prop_detail_close",
+        "purpose": "prop_reveal"
+      },
+      {
+        "id": "cautious_approach",
+        "type": "motivated_two_shot",
+        "purpose": "relationship"
+      },
+      {
+        "id": "reach_and_contact",
+        "type": "contact_oblique_close",
+        "purpose": "contact"
+      },
+      {
+        "id": "surprised_reaction",
+        "type": "body_reaction_medium_close",
+        "purpose": "body_reaction"
+      },
+      {
+        "id": "step_backward",
+        "type": "reverse_medium",
+        "purpose": "retreat"
+      },
+      {
+        "id": "point_warning",
+        "type": "over_shoulder_prop",
+        "purpose": "warning"
+      },
+      {
+        "id": "quick_exit",
+        "type": "tracking_exit_wide",
+        "purpose": "exit"
+      },
+      {
+        "id": "box_aftermath",
+        "type": "prop_aftermath_close",
+        "purpose": "aftermath"
+      }
+    ],
+    "mixerPolicy": "AnimationMixer owns animated bones; directors modify holder/world transforms only.",
+    "instancedMeshes": [
+      {
+        "name": "path_pebbles_instanced",
+        "count": 48
+      },
+      {
+        "name": "path_edge_grass_instanced",
+        "count": 52
+      }
+    ]
+  },
+  "interaction": {
+    "plan": [
+      {
+        "target": {
+          "propId": "suspicious_box",
+          "name": "reach_handle",
+          "position": [
+            0.77,
+            1.1,
+            0.4
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "forward": [
+            0,
+            0,
+            1
+          ],
+          "handPreference": "right"
+        },
+        "capability": "right_hand_reach",
+        "wristBone": "Wrist.R",
+        "realClip": "Interact",
+        "characterPosition": [
+          0.22,
+          0,
+          0.3
+        ],
+        "facingYaw": 1.3909428270024182,
+        "maximumContactDistance": 0.2,
+        "acceptableFacingErrorDegrees": 12,
+        "triggerTime": 13.75,
+        "triggerFrame": 330,
+        "consequenceEvent": "box_lid_pop",
+        "handIK": false,
+        "futureCapability": "optional_hand_ik",
+        "cameraGapMasking": true
+      }
+    ],
+    "minimumWristTargetDistance": 0.19014308169452182,
+    "maximumAllowedDistance": 0.2,
+    "closestContactFrame": 330,
+    "facingErrorDegreesAtClosestContact": 0,
+    "maximumPropMotion": 1.1118413723513312,
+    "maximumVisibleParticles": 28
+  },
+  "locomotionCycleMatching": [
+    {
+      "beatId": "enter_path",
+      "sourceClip": "Walk",
+      "from": [
+        -6.65,
+        0,
+        0.58
+      ],
+      "to": [
+        -2.45,
+        0,
+        0.34
+      ],
+      "distance": 4.206851554309945,
+      "expectedDistance": 4.11,
+      "mismatchRatio": 0.02356485506324687,
+      "maximumMismatchRatio": 0.08,
+      "worldUnitsPerSecond": 0.9348559009577655,
+      "worldUnitsPerCycle": 1.4022838514366482,
+      "registeredWorldUnitsPerCycle": 1.37,
+      "clipCycles": 3,
+      "clipTimeScale": 0.8888886666666668,
+      "cycleMatched": true,
+      "rootMotionTreatment": "in_place_clip_plus_grounded_holder"
+    },
+    {
+      "beatId": "cautious_approach",
+      "sourceClip": "Walk",
+      "from": [
+        -2.45,
+        0,
+        0.34
+      ],
+      "to": [
+        0.22,
+        0,
+        0.3
+      ],
+      "distance": 2.670299608658175,
+      "expectedDistance": 2.74,
+      "mismatchRatio": 0.025438099029863232,
+      "maximumMismatchRatio": 0.08,
+      "worldUnitsPerSecond": 0.6675749021645437,
+      "worldUnitsPerCycle": 1.3351498043290875,
+      "registeredWorldUnitsPerCycle": 1.37,
+      "clipCycles": 2,
+      "clipTimeScale": 0.6666665,
+      "cycleMatched": true,
+      "rootMotionTreatment": "in_place_clip_plus_grounded_holder"
+    },
+    {
+      "beatId": "step_backward",
+      "sourceClip": "Run_Back",
+      "from": [
+        0.22,
+        0,
+        0.3
+      ],
+      "to": [
+        -1.22,
+        0,
+        0.43
+      ],
+      "distance": 1.4458561477546787,
+      "expectedDistance": 1.4458,
+      "mismatchRatio": 0.000038835077243581624,
+      "maximumMismatchRatio": 0.08,
+      "worldUnitsPerSecond": 0.5257658719107923,
+      "worldUnitsPerCycle": 0.7229280738773394,
+      "registeredWorldUnitsPerCycle": 0.7229,
+      "clipCycles": 2,
+      "clipTimeScale": 0.6060603636363636,
+      "cycleMatched": true,
+      "rootMotionTreatment": "in_place_clip_plus_grounded_holder"
+    },
+    {
+      "beatId": "quick_exit",
+      "sourceClip": "Run",
+      "from": [
+        -1.22,
+        0,
+        0.43
+      ],
+      "to": [
+        -9,
+        0,
+        -0.22
+      ],
+      "distance": 7.807105737723807,
+      "expectedDistance": 7.8069999999999995,
+      "mismatchRatio": 0.000013543963597776565,
+      "maximumMismatchRatio": 0.08,
+      "worldUnitsPerSecond": 1.734912386160846,
+      "worldUnitsPerCycle": 1.5614211475447615,
+      "registeredWorldUnitsPerCycle": 1.5614,
+      "clipCycles": 5,
+      "clipTimeScale": 0.87963,
+      "cycleMatched": true,
+      "rootMotionTreatment": "in_place_clip_plus_grounded_holder"
+    }
+  ],
+  "continuity": {
+    "plantedRootDriftWorldUnits": {
+      "establish_forest": 0,
+      "notice_box": 0,
+      "reach_and_contact": 0,
+      "surprised_reaction": 0,
+      "point_warning": 0,
+      "box_aftermath": 0
+    },
+    "maximumGroundError": 0,
+    "environmentChecksumSpanByBeat": {
+      "establish_forest": 1.1912960802439603,
+      "enter_path": 7.393869564870739,
+      "notice_box": 2.6163804934114,
+      "cautious_approach": 3.2889665469981226,
+      "reach_and_contact": 3.705633071330835,
+      "surprised_reaction": 0.7980093196333682,
+      "step_backward": 8.973653932651379,
+      "point_warning": 12.688677675943463,
+      "quick_exit": 10.655819744171879,
+      "box_aftermath": 2.6677735909722635
+    },
+    "entryNdcX": [
+      -1.134675746630337,
+      -0.4531286348925111
+    ],
+    "exitNdcX": [
+      0.33575176879167007,
+      -1.4431155189862273
+    ]
+  },
+  "regressions": {
+    "threejs": {
+      "command": "npm test",
+      "passed": 26,
+      "failed": 0,
+      "exitCode": 0
+    },
+    "python": {
+      "schemaVersion": 1,
+      "command": "Blender Python 3.13 + project site-packages: -m unittest discover -s tests -v",
+      "runner": "Python unittest discovery",
+      "executedAt": "2026-07-16T00:55:00+05:00",
+      "passed": 96,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "durationSeconds": 1.831,
+      "exitCode": 0,
+      "result": "PASS",
+      "note": "The project venv launcher points to an unavailable system interpreter. The same project site-packages were loaded into Blender Python 3.13 and the complete unittest suite passed without network access."
+    },
+    "totalPassed": 122
+  },
+  "untouchedLegacyFilesReport": "reports/adventurer_production_untouched_legacy_files.json",
+  "encodedMilestoneManifest": "reports/adventurer_encoded_milestone_manifest.json",
+  "encodedVisualReview": "reports/adventurer_encoded_visual_review.json",
+  "deterministicInputs": {
+    "randomSeed": 20260715,
+    "storyboardSha256": "0f02601a01e8a8682ab17c0ae077b4b85afbbd7ce250ad15f2d1f1eba26473ec",
+    "storyRuntimeSha256": "60706d1f724f707b3f92b5577fc3af45df7ebfeedaf86d8196978181f4d77c19",
+    "capabilityRegistrySha256": "7d2f2cb67fefd3cdc466cba71de0c72a35f75195d761e42b3f0b538dff858798",
+    "animationDirectorSha256": "9cd366af70a61338e727a4cc086fb3b6c3a649e5595a5ce54d11fe010084cfb2",
+    "capabilityRuntimeSha256": "d6702926f016ee1f9e56bdcb3a52c678ed4befb89b9e413264b1f77586d2da05",
+    "shotDirectorSha256": "467888e608204d9d62d8af29f4da35c347a615b3a0ec49f6eaee98b67c0cf97a",
+    "interactionSystemSha256": "815ff552733e5e3bb2c4fef9f18d068011a48a1bb3ff0fcdd8a3ea7ef58b87da",
+    "environmentMotionSha256": "eff209224cccf877b7470c8ed8aead909efe591d3a4ee6cacbc49af2e66fec27",
+    "productionPageSha256": "d1d6b0596e9eb45734b9d5786590892d87481c469e4b26dc1b3aea955ad1b166",
+    "characterGlbSha256": "da7728ee425af38456ef0e97f28dfbafcdcd853b528638b07174c2b81235a958"
+  }
+}

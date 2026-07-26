@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "hindi",
+    "scenes": [
+      {
+        "id": "market_scene",
+        "lines": [
+          {
+            "speaker": "बड़ी बहन",
+            "text": "अरे, ये देखो! किसी का बटुआ गिरा है।",
+            "emotion": "आश्चर्य",
+            "action": "ज़मीन से बटुआ उठाती है"
+          },
+          {
+            "speaker": "छोटी बहन",
+            "text": "सच में? इसमें तो बहुत सारे पैसे हैं।",
+            "emotion": "उत्सुकता",
+            "action": "बटुए को ध्यान से देखती है"
+          },
+          {
+            "speaker": "बड़ी बहन",
+            "text": "हाँ, पर ये हमारा नहीं है। हमें इसका मालिक ढूँढना चाहिए।",
+            "emotion": "निश्चय"
+          },
+          {
+            "speaker": "छोटी बहन",
+            "text": "सही कह रही हो। चलो, पूछते हैं आस-पास।",
+            "emotion": "सहमति",
+            "action": "इधर-उधर देखती है"
+          },
+          {
+            "speaker": "बड़ी बहन",
+            "text": "वो देखो, वो अंकल परेशान लग रहे हैं। शायद इनका ही हो।",
+            "emotion": "आशा",
+            "action": "एक व्यक्ति की ओर इशारा करती है"
+          },
+          {
+            "speaker": "छोटी बहन",
+            "text": "एक्सक्यूज़ मी, अंकल! क्या ये बटुआ आपका है?",
+            "emotion": "विनम्रता",
+            "action": "बटुआ दिखाती है"
+          },
+          {
+            "speaker": "अंकल",
+            "text": "हाँ बेटा, ये तो मेरा ही है! मैं कब से ढूँढ रहा था। बहुत-बहुत शुक्रिया!",
+            "emotion": "राहत और खुशी"
+          },
+          {
+            "speaker": "बड़ी बहन",
+            "text": "कोई बात नहीं, अंकल। अगली बार ध्यान रखिएगा।",
+            "emotion": "विनम्रता"
+          },
+          {
+            "speaker": "छोटी बहन",
+            "text": "चलो, अच्छा लगा मदद करके।",
+            "emotion": "खुशी",
+            "action": "बहन की ओर मुस्कुराती है"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "9175541a-8e62-4443-b75c-34cfeee20071",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.deepseek.v4.pro",
+    "modelAir": "deepseek:v4@pro",
+    "modelDisplayName": "DeepSeek V4 Pro",
+    "transport": "openai_compatible",
+    "latencyMs": 26591,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 294,
+      "completion_tokens": 733,
+      "total_tokens": 1027,
+      "prompt_tokens_details": {
+        "cached_tokens": 256
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": true,
+    "fallbackReason": "OutputValidationError",
+    "cache": "hit",
+    "cacheKey": "0f54c8aa5acfe8d545a1f9541a075f0f0b952eee3a3a2b0402c776bd41e52ad9",
+    "promptVersion": "phase7.1",
+    "contentSha256": "8da9d8e89a0420d92155cf3afce5c923d52df1a8a1742954a0ebe6cf5fcda1aa",
+    "finishReason": "stop"
+  },
+  "diagnostics": [
+    {
+      "model": "runware.zai.glm.5.1",
+      "reason": "OutputValidationError",
+      "message": "Structured output failed schema validation",
+      "validation": [
+        "$.language: mandatory field is missing",
+        "$.scenes: mandatory field is missing"
+      ]
+    }
+  ],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

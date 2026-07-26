@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "Urdu",
+    "scenes": [
+      {
+        "id": "village-well-conservation",
+        "lines": [
+          {
+            "speaker": "Noor",
+            "text": "Yeh gaon ka aik hi kunwan hai, Daniyal. Agar hum pani ko is tarah barbaad hone se nahi bachayenge toh agle mahine yeh sookh jayega.",
+            "emotion": "concerned"
+          },
+          {
+            "speaker": "Daniyal",
+            "text": "Tum bilkul theek keh rahi ho Noor. Main bhi kal bachhon ko yahan nahaate dekh raha tha, unka ziada pani nikalta rehta hai aur band nahi hota.",
+            "emotion": "agreeing"
+          },
+          {
+            "speaker": "Noor",
+            "text": "Toh phir humein aik aisa tareeqa sochna hoga jisse pani ka istemala kam ho aur logon ko samajh bhi aaye. Mera khayal hai, hum kunwan ke paas do baltiyan aur ek lambi rassi rakh dein.",
+            "emotion": "thoughtful"
+          },
+          {
+            "speaker": "Daniyal",
+            "text": "Baltiyan aur rassi? Lekin isse kya hoga?",
+            "emotion": "curious"
+          },
+          {
+            "speaker": "Noor",
+            "text": "Suniye, plan yeh hai jo bhi pani bharega, woh apni balti se kunwan mein pani bharega. Rassi se balti bandhi hogi toh pani be-matlab nahi beh payega. Aur kunwan ke muh par hum ek bada sa bed bana dein, taake kapde dhone ya bartan dhulne ke wajah se pani wapas kunwan mein hi gir jaye aur barbaad na ho.",
+            "emotion": "persuasive"
+          },
+          {
+            "speaker": "Daniyal",
+            "text": "Wah! Yeh toh bohat acha idea hai. Pani dobara kunwan mein jayega toh zameen mein nahi samayega. Aur haan, main kal hi gaon ke lohar se kunwan ke liye ek dhakkan (cover) banwa deta hoon, taake garmi mein bhi bhaap ban kar pani na urray.",
+            "emotion": "enthusiastic"
+          },
+          {
+            "speaker": "Noor",
+            "text": "Bohat achha, dhakkan lagane se garmi se pani bach jayega. Aur humein gaon ke bade logon se bhi baat karni chahiye. Unhein samjhana hoga ke subah sirf ek ghanta pani bharne ke liye milega, taake log fuzool kharchi na karein.",
+            "emotion": "approving"
+          },
+          {
+            "speaker": "Daniyal",
+            "text": "Theek hai, main aaj hi sarpanch chacha se baat karunga. Aur kal subah hum dono mil kar yeh bed aur rassi ka intizam kar lenge.",
+            "emotion": "determined"
+          },
+          {
+            "speaker": "Noor",
+            "text": "Ji, humein jaldi karna hoga. Agar aaj humne pani bacha liya, toh kal yeh kunwan humein aur poore gaon ko bachayega.",
+            "emotion": "resolute"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "6fd7d84b-36f2-4aeb-8e7b-3c6beccac2d8",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.zai.glm.5.1",
+    "modelAir": "zai:glm@5.1",
+    "modelDisplayName": "GLM 5.1",
+    "transport": "openai_compatible",
+    "latencyMs": 40015,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 782,
+      "completion_tokens": 822,
+      "total_tokens": 1604,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "retryCount": 1,
+    "repairCount": 1,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "f57d1229296e4e578d3cd745a7c7859e49b57eec07425fbbf0fa8aeaab16c0c4",
+    "promptVersion": "phase7.1",
+    "contentSha256": "8db715b594075eac9407031bc3ebdc34b67caae736093e2a598c299cb78ea34a",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

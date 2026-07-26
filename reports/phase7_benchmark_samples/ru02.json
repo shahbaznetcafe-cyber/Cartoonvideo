@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "roman_urdu",
+    "scenes": [
+      {
+        "id": "school_yard_1",
+        "lines": [
+          {
+            "speaker": "Hamza",
+            "text": "Arre yaar, mera lunch box ghar reh gaya!",
+            "emotion": "frustrated",
+            "action": "apna bag khol kar dekhta hai"
+          },
+          {
+            "speaker": "Mehak",
+            "text": "Kya? Poora lunch bhool gaya?",
+            "emotion": "surprised",
+            "action": "uski taraf dekh kar thoda muskuraati hai"
+          },
+          {
+            "speaker": "Hamza",
+            "text": "Haan, aaj subah jaldi mein tha na.",
+            "emotion": "embarrassed",
+            "action": "kandhe uchkata hai"
+          },
+          {
+            "speaker": "Mehak",
+            "text": "Koi baat nahi, mere saath kha lo. Mera lunch zyada hai.",
+            "emotion": "kind",
+            "action": "apna tiffin aage badhaati hai"
+          },
+          {
+            "speaker": "Hamza",
+            "text": "Sach mein? Lekin tumhare liye toh...",
+            "emotion": "hesitant",
+            "action": "thoda jhijhakta hai"
+          },
+          {
+            "speaker": "Mehak",
+            "text": "Chal yaar, bhooka mat reh. Main bhi kha loongi, tu bhi.",
+            "emotion": "insistent",
+            "action": "tiffin khol kar roti nikaalti hai"
+          },
+          {
+            "speaker": "Hamza",
+            "text": "Shukriya Mehak, tu sach mein achi dost hai.",
+            "emotion": "grateful",
+            "action": "rot lete hue aankhon mein shukraguzari dikhaata hai"
+          },
+          {
+            "speaker": "Mehak",
+            "text": "Bas ab khaana shuru kar, warna time khatam ho jayega!",
+            "emotion": "playful",
+            "action": "haath se signal karti hai"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "512ec159-345f-45ab-8299-245796bb9d60",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.deepseek.v4.flash",
+    "modelAir": "deepseek:v4@flash",
+    "modelDisplayName": "DeepSeek V4 Flash",
+    "transport": "openai_compatible",
+    "latencyMs": 28020,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 282,
+      "completion_tokens": 528,
+      "total_tokens": 810
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "595b4606e9b4557b74b05279a59dd035645bfdbbaf6a509e2f7565df6d5567df",
+    "promptVersion": "phase7.1",
+    "contentSha256": "8cf32bd1ab0417d7bece14bdadac9189edccfaba4f036d1ad3cdae1e5976d782",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

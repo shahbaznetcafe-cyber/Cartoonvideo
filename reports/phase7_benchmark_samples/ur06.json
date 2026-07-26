@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "urdu",
+    "scenes": [
+      {
+        "id": "scene_1",
+        "lines": [
+          {
+            "speaker": "عائشہ",
+            "text": "اوہ! بلال، ذرا ادھر دیکھو۔ یہ کیا گِرا پڑا ہے نیچے؟",
+            "emotion": "حیرت",
+            "action": "جھک کر گھونسلے کے ٹکڑوں کو غور سے دیکھتی ہے"
+          },
+          {
+            "speaker": "بلال",
+            "text": "ہیں؟ یہ تو کوئی گھونسلا لگتا ہے، پر ٹوٹا پھوٹا ہے بالکل۔",
+            "emotion": "متجسس",
+            "action": "قریب آ کر عائشہ کے شانے پر ہاتھ رکھتا ہے"
+          },
+          {
+            "speaker": "عائشہ",
+            "text": "ہائے، بےچارے پرندوں کا گھر تھا۔ آندھی سے گِرا ہوگا شاید۔",
+            "emotion": "افسردہ",
+            "action": "تنکے اور پر ہاتھ میں اٹھائے ہوئے"
+          },
+          {
+            "speaker": "بلال",
+            "text": "شاید۔ دیکھو تو، ابھی بھی کچھ نرم گھاس اندر لگی ہوئی ہے۔ کتنی محنت سے بنایا ہوگا۔",
+            "emotion": "ہمدردی"
+          },
+          {
+            "speaker": "عائشہ",
+            "text": "سچ میں۔ چلو، ہم اسے ٹھیک کرنے کی کوشش کرتے ہیں؟ یا کوئی اور بہتر جگہ ڈھونڈتے ہیں رکھنے کے لیے۔",
+            "emotion": "پرجوش",
+            "action": "بلال کی طرف امید بھری نظروں سے دیکھتی ہے"
+          },
+          {
+            "speaker": "بلال",
+            "text": "ارے نہیں، چھونا مت۔ اگر انسانی خوشبو لگ گئی تو پرندے اسے دوبارہ قبول نہیں کریں گے۔",
+            "emotion": "فکر مند",
+            "action": "ہلکے سے عائشہ کا ہاتھ روکتا ہے"
+          },
+          {
+            "speaker": "عائشہ",
+            "text": "اوہ ہاں! میں بھول ہی گئی تھی۔ تو اب کیا کریں؟ ایسے ہی چھوڑ دیں؟",
+            "emotion": "مایوس"
+          },
+          {
+            "speaker": "بلال",
+            "text": "بس احتیاط سے نیچے رکھ دو۔ قدرت اپنا کام خود کر لے گی۔ شاید کوئی دوسرا پرندہ کام میں لے آئے ان تنکوں کو۔",
+            "emotion": "مطمئن",
+            "action": "گھونسلے کو ایک جھاڑی کے نیچے سرکاتا ہے"
+          },
+          {
+            "speaker": "عائشہ",
+            "text": "ٹھیک ہے، چلو۔ مگر دل بہت اداس ہو رہا ہے یہ دیکھ کر۔",
+            "emotion": "اداس",
+            "action": "آہستہ سے گھونسلے کو دیکھتی ہے اور مڑ جاتی ہے"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "b97abf64-46f6-443d-8dc8-7745edb4b089",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.deepseek.v4.pro",
+    "modelAir": "deepseek:v4@pro",
+    "modelDisplayName": "DeepSeek V4 Pro",
+    "transport": "openai_compatible",
+    "latencyMs": 18189,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 304,
+      "completion_tokens": 861,
+      "total_tokens": 1165
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "1b82225b22295f5c50db2086ae14520fdd69d350c635fe4e65e5cad0aabc7ef9",
+    "promptVersion": "phase7.1",
+    "contentSha256": "64e92168ef730ee8d9737eae39b50d385fc8dcbb616ecb994b56e19c413332c1",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

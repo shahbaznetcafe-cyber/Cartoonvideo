@@ -1,0 +1,225 @@
+{
+  "schemaVersion": 1,
+  "title": "Quaternius Animation POC Phase 2 Regression Results",
+  "generatedAt": "2026-07-15T09:30:11.125Z",
+  "verdict": "PASS_FOR_ISOLATED_VISUAL_REVIEW",
+  "productionReadyClaim": false,
+  "checks": {
+    "exactDuration30Seconds": true,
+    "exactFrameCount720": true,
+    "correctOutputFormat": true,
+    "noBlackFramesAtCuts": true,
+    "sourceClipsExist": true,
+    "allSamplesUseRealClipNames": true,
+    "clipChangesVerified": true,
+    "noPlantedRootDrift": true,
+    "characterRemainsGrounded": true,
+    "characterPropContactVerified": true,
+    "propConsequenceVisible": true,
+    "environmentMotionVisibleEveryBeat": true,
+    "characterEntersFromOutsideFrame": true,
+    "characterExitsFrame": true,
+    "motivatedShotCountAtLeastFour": true,
+    "everyBeatHasMilestone": true,
+    "noRuntimeErrors": true,
+    "noBlenderAtRuntime": true,
+    "facialAnimationNotClaimed": true,
+    "existingRegressionTestsPass": true
+  },
+  "media": {
+    "codec": "h264",
+    "width": 1920,
+    "height": 1080,
+    "pixelFormat": "yuv420p",
+    "fps": "24/1",
+    "frames": 720,
+    "durationSeconds": 30,
+    "bytes": 19154930,
+    "blackSegments": []
+  },
+  "storyEvidence": {
+    "shots": [
+      {
+        "id": "establish_forest",
+        "shot": "establishing wide",
+        "sourceClip": "Idle"
+      },
+      {
+        "id": "enter_path",
+        "shot": "tracking medium",
+        "sourceClip": "Walk"
+      },
+      {
+        "id": "notice_box",
+        "shot": "prop detail close-up",
+        "sourceClip": "Idle_Neutral"
+      },
+      {
+        "id": "cautious_approach",
+        "shot": "motivated two-shot",
+        "sourceClip": "Walk"
+      },
+      {
+        "id": "reach_and_contact",
+        "shot": "contact close-up",
+        "sourceClip": "Interact"
+      },
+      {
+        "id": "surprised_reaction",
+        "shot": "character reaction close-up",
+        "sourceClip": "HitRecieve_2"
+      },
+      {
+        "id": "step_backward",
+        "shot": "reverse medium",
+        "sourceClip": "Run_Back"
+      },
+      {
+        "id": "point_warning",
+        "shot": "over-shoulder warning shot",
+        "sourceClip": "Idle_Gun_Pointing"
+      },
+      {
+        "id": "quick_exit",
+        "shot": "tracking exit wide",
+        "sourceClip": "Run"
+      },
+      {
+        "id": "box_aftermath",
+        "shot": "prop aftermath close-up",
+        "sourceClip": "Idle"
+      }
+    ],
+    "clipSequence": [
+      {
+        "frame": 0,
+        "beatId": "establish_forest",
+        "sourceClip": "Idle"
+      },
+      {
+        "frame": 54,
+        "beatId": "enter_path",
+        "sourceClip": "Walk"
+      },
+      {
+        "frame": 162,
+        "beatId": "notice_box",
+        "sourceClip": "Idle_Neutral"
+      },
+      {
+        "frame": 210,
+        "beatId": "cautious_approach",
+        "sourceClip": "Walk"
+      },
+      {
+        "frame": 306,
+        "beatId": "reach_and_contact",
+        "sourceClip": "Interact"
+      },
+      {
+        "frame": 372,
+        "beatId": "surprised_reaction",
+        "sourceClip": "HitRecieve_2"
+      },
+      {
+        "frame": 408,
+        "beatId": "step_backward",
+        "sourceClip": "Run_Back"
+      },
+      {
+        "frame": 474,
+        "beatId": "point_warning",
+        "sourceClip": "Idle_Gun_Pointing"
+      },
+      {
+        "frame": 552,
+        "beatId": "quick_exit",
+        "sourceClip": "Run"
+      },
+      {
+        "frame": 660,
+        "beatId": "box_aftermath",
+        "sourceClip": "Idle"
+      }
+    ],
+    "plantedRootDriftWorldUnits": {
+      "establish_forest": 0,
+      "notice_box": 0,
+      "reach_and_contact": 0,
+      "surprised_reaction": 0,
+      "point_warning": 0,
+      "box_aftermath": 0
+    },
+    "maxGroundErrorWorldUnits": 0,
+    "minimumWristToPropContactWorldUnits": 0.1402723652180339,
+    "maximumPropMotionWorldUnits": 1.107064627484159,
+    "maximumVisibleBurstParticles": 28,
+    "environmentChecksumSpanByBeat": {
+      "establish_forest": 3.241419454038258,
+      "enter_path": 15.948528961439834,
+      "notice_box": 4.470599096040176,
+      "cautious_approach": 6.111944226049031,
+      "reach_and_contact": 6.332867807029592,
+      "surprised_reaction": 2.6015671412481023,
+      "step_backward": 12.207881281441717,
+      "point_warning": 23.481660697565104,
+      "quick_exit": 21.347933727654606,
+      "box_aftermath": 7.150563173165306
+    },
+    "entryNdcX": [
+      -1.134675746630337,
+      -0.4570628100139173
+    ],
+    "exitNdcX": [
+      0.33575176879167007,
+      -1.4431155189862273
+    ],
+    "milestoneFiles": [
+      "01_establish_forest_f024.jpg",
+      "02_enter_path_f108.jpg",
+      "03_notice_box_f180.jpg",
+      "04_cautious_approach_f258.jpg",
+      "05_reach_and_contact_consequence_f342.jpg",
+      "05_reach_and_contact_f330.jpg",
+      "06_surprised_reaction_f378.jpg",
+      "07_step_backward_f444.jpg",
+      "08_point_warning_f516.jpg",
+      "09_quick_exit_f588.jpg",
+      "10_box_aftermath_f690.jpg"
+    ]
+  },
+  "runtime": {
+    "renderer": "Three.js WebGLRenderer + GLTFLoader + AnimationMixer",
+    "renderSeconds": 184.539446,
+    "peakMemory": {
+      "nodeRssBytes": 86966272,
+      "browserMainWorkingSetBytes": 127029248,
+      "ffmpegWorkingSetBytes": 554962944,
+      "browserJsHeapUsedBytes": 11708972,
+      "trackedPeakBytes": 769189744,
+      "trackedPeakMiB": 733.56,
+      "scope": "Node RSS + Chrome main-process working set + page JS heap + FFmpeg working set; Chrome child-process native allocations are not included."
+    },
+    "deterministicInputs": {
+      "randomSeed": 20260715,
+      "storyboardSha256": "7e7c862ecec342d44763381ae35ae0d2fd7e5ebe1f930c400fc211258509148b",
+      "storyRuntimeSha256": "c0d859306b5a49398e7bd05d8290fbfb8605913647bbf89783c7fe44a17f5db2",
+      "characterGlbSha256": "da7728ee425af38456ef0e97f28dfbafcdcd853b528638b07174c2b81235a958"
+    },
+    "blenderUsed": false,
+    "facialAnimation": false,
+    "eyeTarget": false,
+    "headLookAdditive": true
+  },
+  "regressions": {
+    "command": "npm test",
+    "passed": 18,
+    "failed": 0,
+    "exitCode": 0
+  },
+  "validationNotes": [
+    "Planted-pose validation proves zero holder/root drift and zero sampled ground-plane penetration.",
+    "Hand/prop contact is supported by measured wrist proximity and the dedicated contact/consequence milestone frames.",
+    "No IK foot lock or facial system is claimed; remaining visual limitations are reported separately."
+  ]
+}

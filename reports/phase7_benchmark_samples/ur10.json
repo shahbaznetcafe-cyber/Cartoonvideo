@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "urdu",
+    "scenes": [
+      {
+        "id": "bazaar-scene",
+        "lines": [
+          {
+            "speaker": "بڑی بہن",
+            "text": "بھائی صاحب، رکیے! آپ کا بٹوا گر گیا تھا۔",
+            "emotion": "جلدی میں",
+            "action": "بھاڑ میں سے بٹوا اٹھا کر آگے بڑھتی ہے"
+          },
+          {
+            "speaker": "چھوٹی بہن",
+            "text": "جی، ہم نے دیکھا آپ کی جیب سے گرا۔ لیجیے، پورا سامان ہے۔",
+            "emotion": "خلوص سے",
+            "action": "بٹوا تھماتے ہوئے"
+          },
+          {
+            "speaker": "بٹوا مالک",
+            "text": "اللہ بھلا کرے! میں تو پریشان ہو رہا تھا۔ بہت شکریہ بیٹیوں!",
+            "emotion": "راحت اور شکرگزاری",
+            "action": "بٹوا لے کر ماتھے سے لگاتا ہے"
+          },
+          {
+            "speaker": "بڑی بہن",
+            "text": "کوئی بات نہیں، ہمارا فرض تھا۔ خوش رہیے!",
+            "emotion": "سادگی سے",
+            "action": "مسکراتے ہوئے"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "a6b687d0-f694-40cc-9428-d800e3ffc29a",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.deepseek.v4.pro",
+    "modelAir": "deepseek:v4@pro",
+    "modelDisplayName": "DeepSeek V4 Pro",
+    "transport": "openai_compatible",
+    "latencyMs": 9636,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 295,
+      "completion_tokens": 373,
+      "total_tokens": 668,
+      "prompt_tokens_details": {
+        "cached_tokens": 256
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "4ecc9bc46ee94857f19877913622a89f6ddbd57faf19cd6d26639d4e55524a85",
+    "promptVersion": "phase7.1",
+    "contentSha256": "e5add1faae52ea3e7b0c81a8025c177026e3a8b79b215aff557e5908e4150ff7",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

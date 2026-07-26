@@ -42,9 +42,68 @@ def _slug(name):
     return s or f"id-{int(time.time())}"
 
 
+def _unique_ids(values):
+    """Keep cast order while rejecting repeated/blank character IDs."""
+    result, seen = [], set()
+    for value in values or []:
+        key = str(value or "").strip()
+        if key and key not in seen:
+            result.append(key)
+            seen.add(key)
+    return result
+
+
+def _unique_names(values):
+    result, seen = [], set()
+    for value in values or []:
+        name = str(value or "").strip()
+        key = name.casefold()
+        if name and key not in seen:
+            result.append(name)
+            seen.add(key)
+    return result
+
+
 # ---------------- characters ----------------
+def _builtin_characters():
+    """Expose ready 3D catalog entries to Series without copying user assets.
+
+    The series record stores the stable catalog ID only.  A custom recurring
+    character remains editable; a built-in character keeps its validated asset
+    identity and performance profile.
+    """
+    try:
+        import story_templates
+        result = []
+        for item in story_templates.available_characters():
+            if str(item.get("status") or "ready") != "ready":
+                continue
+            result.append({
+                "id": str(item.get("id") or ""), "name": str(item.get("name") or ""),
+                "trait": str(item.get("performance_label") or item.get("tier") or "3D character"),
+                "gender": "male", "catchphrase": "",
+                "role": f"{item.get('library', 'sbz')} {item.get('category', 'character')}",
+                "source": "3d_library", "library": item.get("library", "sbz"),
+                "tier": item.get("tier", "SKELETAL_BASIC"),
+            })
+        return [item for item in result if item["id"] and item["name"]]
+    except Exception:
+        return []
+
+
+def _character_index(data=None):
+    custom = (data or load()).get("characters", {})
+    # Custom recurring profiles deliberately win if their ID overlaps a catalog ID.
+    indexed = {item["id"]: item for item in _builtin_characters()}
+    indexed.update(custom)
+    return indexed
+
+
 def list_characters():
-    return list(load()["characters"].values())
+    d = load()
+    return list(d["characters"].values()) + [
+        item for item in _builtin_characters() if item["id"] not in d["characters"]
+    ]
 
 
 def add_character(name, trait="", gender="male", catchphrase="", role="", cid=None):
@@ -107,7 +166,8 @@ def create_series(name, premise="", genre="auto", language="roman_urdu", cast=No
     if not name:
         raise ValueError("Series ka naam chahiye")
     sid = sid or _slug(name)
-    cast = [c for c in (cast or []) if c in d["characters"]]
+    character_index = _character_index(d)
+    cast = [c for c in _unique_ids(cast) if c in character_index]
     d["series"][sid] = {
         "id": sid, "name": name, "premise": (premise or "").strip(),
         "genre": (genre or "auto").lower(), "language": language,
@@ -126,7 +186,8 @@ def update_series(sid, **fields):
         if k in fields and fields[k] is not None:
             s[k] = fields[k]
     if "cast" in fields and fields["cast"] is not None:
-        s["cast"] = [c for c in fields["cast"] if c in d["characters"]]
+        character_index = _character_index(d)
+        s["cast"] = [c for c in _unique_ids(fields["cast"]) if c in character_index]
     save(d)
     return s
 
@@ -147,6 +208,46 @@ def _continuity_text(s):
     for e in eps[-6:]:  # aakhri 6 episodes
         lines.append(f"Episode {e['num']} — \"{e.get('title','')}\": {e.get('summary','')}")
     return "\n".join(lines)
+
+
+def series_memory(sid, data=None):
+    """Phase 5 — structured recall for the script engine.
+
+    Free text is easy for a model to drift from; a structured block makes the
+    recurring cast's persona, speech style and catchphrase explicit, plus the
+    events already established.  Returns ``None`` when the series is unknown.
+    """
+    d = data or load()
+    s = d.get("series", {}).get(sid)
+    if not s:
+        return None
+    index = _character_index(d)
+    characters = {}
+    for cid in _unique_ids(s.get("cast", [])):
+        ch = index.get(cid)
+        if not ch:
+            continue
+        characters[cid] = {
+            "name": ch.get("name", cid),
+            "persona": ch.get("trait", ""),
+            "role": ch.get("role", ""),
+            "catchphrase": ch.get("catchphrase", ""),
+            "speechStyle": ch.get("speech_style", ""),
+        }
+    episodes = s.get("episodes", []) or []
+    prior = [f"Episode {e.get('num')} — \"{e.get('title','')}\": {e.get('summary','')}"
+             for e in episodes[-6:]]
+    return {
+        "seriesId": sid,
+        "name": s.get("name", ""),
+        "premise": s.get("premise", ""),
+        "genre": s.get("genre", "auto"),
+        "language": s.get("language", "roman_urdu"),
+        "characters": characters,
+        "castNames": [c["name"] for c in characters.values()],
+        "priorEvents": prior,
+        "episodeCount": len(episodes),
+    }
 
 
 def _summarize(script, language):
@@ -173,12 +274,13 @@ def generate_episode(sid, idea="", length="medium", save_episode=True, on_progre
     s = d["series"].get(sid)
     if not s:
         raise ValueError("Series nahi mili")
-    cast_ids = s.get("cast", [])
-    cast_chars = [d["characters"][c] for c in cast_ids if c in d["characters"]]
+    cast_ids = _unique_ids(s.get("cast", []))
+    character_index = _character_index(d)
+    cast_chars = [character_index[c] for c in cast_ids if c in character_index]
     if len(cast_chars) < 1:
         raise ValueError("Series mein kam az kam 1 character add karein")
     cast_bios = [_bio(c) for c in cast_chars]
-    cast_names = [c["name"] for c in cast_chars]
+    cast_names = _unique_names(c["name"] for c in cast_chars)
     continuity = _continuity_text(s)
     ep_num = len(s.get("episodes", [])) + 1
     lang = s.get("language", "roman_urdu")
@@ -198,7 +300,8 @@ def generate_episode(sid, idea="", length="medium", save_episode=True, on_progre
     else:
         res = story_templates.generate_freeform(
             full_idea, language=lang, characters=cast_names, length=length,
-            genre=genre, cast_bios=cast_bios, continuity=continuity)
+            genre=genre, cast_bios=cast_bios, continuity=continuity,
+            series_memory=series_memory(sid, d))
 
     script = res.get("script", "")
     summary = _summarize(script, lang)
@@ -213,6 +316,9 @@ def generate_episode(sid, idea="", length="medium", save_episode=True, on_progre
         "script": script, "title": title, "episode_num": ep_num,
         "summary": summary, "genre": res.get("genre", genre),
         "cast": cast_names,
+        # Phase 6: carry the review data so the UI can show it for episodes too.
+        "retentionReport": res.get("retentionReport"),
+        "hookRanking": res.get("hookRanking", []),
     }
     if is_long:
         out["logline"] = res.get("logline", "")

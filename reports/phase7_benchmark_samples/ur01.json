@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "stage": "story_outline",
+  "approved": false,
+  "output": {
+    "title": "بارش میں بلی کی مدد",
+    "logline": "ایک بچہ بارش میں زخمی بلی کو بچاتا ہے اور اسے نئی زندگی دیتا ہے۔",
+    "beats": [
+      "بارش کے دوران، علی اپنی کھڑکی سے ایک زخمی بلی کو سڑک پر دیکھتا ہے۔",
+      "علی فوراً باہر جاتا ہے، بلی کو اٹھاتا ہے، اور اسے گھر لے آتا ہے۔",
+      "علی اور اس کی ماں بلی کا زخم صاف کرتے ہیں اور اسے گرم دودھ دیتے ہیں۔",
+      "بلی آہستہ آہستہ صحت یاب ہوتی ہے اور علی کے ساتھ کھیلنے لگتی ہے۔",
+      "علی بلی کا نام 'چاندنی' رکھتا ہے اور وہ ہمیشہ کے لیے دوست بن جاتے ہیں۔"
+    ],
+    "ending": "علی نے سیکھا کہ چھوٹی سی مدد بھی کسی کی زندگی بدل سکتی ہے۔"
+  },
+  "metadata": {
+    "requestId": "c08d1a60-ee6f-406e-b6f8-a00a29b9594c",
+    "taskType": "STORY_ARCHITECT",
+    "modelInternalId": "runware.deepseek.v4.pro",
+    "modelAir": "deepseek:v4@pro",
+    "modelDisplayName": "DeepSeek V4 Pro",
+    "transport": "openai_compatible",
+    "latencyMs": 8257,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 226,
+      "completion_tokens": 288,
+      "total_tokens": 514
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "5c2bfe9b6b56dc34e9051c38d96f92fa0454c0fac7432ecdb50193c1075c189d",
+    "promptVersion": "phase7.1",
+    "contentSha256": "2ec2e0b5a65d744c307fc3449a3fca5be90081ae18e12d5962bd893d393c8a4a",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/02_story_outline.json"
+}

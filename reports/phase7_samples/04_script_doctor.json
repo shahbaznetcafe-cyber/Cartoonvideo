@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "stage": "script_doctor",
+  "approved": false,
+  "output": {
+    "script": "[Scene: Jungle]\nAli: Main box ko dekhta hoon aur us ke paas jaata hoon.\nSara: Tum box ke paas mat jao, kyun ke yeh box ajeeb hai.\nAli: Main phir bhi box ko dekhunga.",
+    "language": "roman_urdu",
+    "changes": [
+      "Dialogue ko zyada natural Roman Urdu mein smooth kiya gaya.",
+      "'main box ke paas jaata hoon' ko 'us ke paas jaata hoon' bana kar repetition kam ki gayi.",
+      "Sara ki line mein punctuation aur flow behtar kiya gaya.",
+      "Meaning, names, scene aur cultural setting ko preserve rakha gaya."
+    ],
+    "preservedFacts": [
+      "Scene jungle mein hai.",
+      "Characters Ali aur Sara hain.",
+      "Box ajeeb hai.",
+      "Ali box ko dekhne par insist karta hai."
+    ]
+  },
+  "metadata": {
+    "requestId": "0978b897-e49a-4908-a730-a1e094e10b39",
+    "taskType": "SCRIPT_DOCTOR",
+    "modelInternalId": "runware.openai.gpt.5.4.mini",
+    "modelAir": "openai:gpt@5.4-mini",
+    "modelDisplayName": "GPT-5.4 Mini",
+    "transport": "native",
+    "latencyMs": 4404,
+    "cost": 0.00108,
+    "usage": {
+      "promptTokens": 348,
+      "completionTokens": 182,
+      "totalTokens": 530,
+      "completionTokensDetails": {
+        "reasoningTokens": 0
+      },
+      "promptTokensDetails": {
+        "cachedTokens": 0
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "miss",
+    "cacheKey": "ce20ea423b6d95bc55ed6e8a6656ece7821dbe45428c3c9d8b8d75b1b73ef2b1",
+    "promptVersion": "phase7.1",
+    "contentSha256": "18232e99d6bd07fd41cf29f7f2f7427935577b07e0dcac48e8a4105ccdcb42dd",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-proof/script_pipeline/06_script_doctor.json"
+}

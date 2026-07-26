@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "stage": "story_outline",
+  "approved": false,
+  "output": {
+    "title": "کنویں کا ہوشیار حل",
+    "logline": "ایک ذہین گاؤں کی بچی خشک کنویں کے مسئلے کا ایسا حل نکالتی ہے جس سے پورا گاؤں خوش ہو جاتا ہے۔",
+    "beats": [
+      "گاؤں کے بیچوں بیچ پرانا کنواں گرمیوں میں سوکھ جاتا ہے اور سب پریشان ہیں۔",
+      "امینہ سوچتی ہے کہ کنویں کی تہہ میں مٹی ڈال کر پانی جذب کرنے والے پودے لگائے جائیں۔",
+      "وہ گاؤں والوں کو سمجھاتی ہے اور سب مل کر کنویں کو مٹی اور پودوں سے بھر دیتے ہیں۔",
+      "پودے بڑے ہو کر زمین سے نمی کھینچتے ہیں اور کنویں میں دوبارہ پانی آنا شروع ہو جاتا ہے۔"
+    ],
+    "ending": "گاؤں والوں نے امینہ کی عقلمندی کی تعریف کی اور کنواں پھر سے پانی سے بھر گیا۔"
+  },
+  "metadata": {
+    "requestId": "d388c3cc-317c-4385-89f1-c62daa4401de",
+    "taskType": "STORY_ARCHITECT",
+    "modelInternalId": "runware.deepseek.v4.pro",
+    "modelAir": "deepseek:v4@pro",
+    "modelDisplayName": "DeepSeek V4 Pro",
+    "transport": "openai_compatible",
+    "latencyMs": 7855,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 226,
+      "completion_tokens": 293,
+      "total_tokens": 519
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "3709e2771d6a90cbdd1339ae0da4c933f31fdc0eb4dfb3f085d58ff2f06cd5f9",
+    "promptVersion": "phase7.1",
+    "contentSha256": "6c7e7d1389e015aa7d5047df6a867e1366abb84814dfddab526463bd1bbb01a0",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/02_story_outline.json"
+}

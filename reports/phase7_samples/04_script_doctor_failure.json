@@ -1,0 +1,21 @@
+{
+  "name": "04_script_doctor",
+  "stage": "script_doctor",
+  "status": "FAIL",
+  "errorType": "OutputValidationError",
+  "error": "All configured script models failed",
+  "diagnostics": [
+    {
+      "model": "runware.openai.gpt.5.4.mini",
+      "reason": "http_error",
+      "message": "Runware HTTP 400: {\n    \"errors\": [\n        {\n            \"code\": \"providerError\",\n            \"message\": \"openai responded with HTTP 400. Additional information below.\",\n            \"responseStatusCode\": 400,\n            \"responseContent\": \"Invalid schema for response_format 'sbz_structured_respons",
+      "validation": []
+    },
+    {
+      "model": "runware.zai.glm.4.7",
+      "reason": "http_error",
+      "message": "Runware HTTP 400: {\n    \"data\": [],\n    \"errors\": [\n        {\n            \"code\": \"invalidModel\",\n            \"message\": \"Invalid value for 'model'. Please select a valid text model.\",\n            \"parameter\": \"model\",\n            \"type\": \"string\",\n            \"documentation\": \"https://runware.ai/do",
+      "validation": []
+    }
+  ]
+}

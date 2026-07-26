@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "stage": "scene_breakdown",
+  "approved": false,
+  "output": {
+    "schemaVersion": 1,
+    "title": "Village well scene",
+    "language": "roman_urdu",
+    "characters": [
+      {
+        "id": "noor",
+        "name": "Noor",
+        "role": "character"
+      },
+      {
+        "id": "daniyal",
+        "name": "Daniyal",
+        "role": "character"
+      }
+    ],
+    "scenes": [
+      {
+        "id": "scene_1",
+        "location": "Village well",
+        "timeOfDay": "evening",
+        "characters": [
+          "noor",
+          "daniyal"
+        ],
+        "estimatedDuration": 5,
+        "continuityReferences": [],
+        "elements": [
+          {
+            "type": "dialogue",
+            "speaker": "noor",
+            "text": "Rassi toot rahi hai!",
+            "language": "roman_urdu",
+            "emotion": "urgent",
+            "estimatedDuration": 2,
+            "continuityReferences": []
+          },
+          {
+            "type": "dialogue",
+            "speaker": "daniyal",
+            "text": "Peechay hato, main bucket rokta hoon.",
+            "language": "roman_urdu",
+            "emotion": "urgent",
+            "estimatedDuration": 3,
+            "continuityReferences": []
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "229fa9b9-4c8a-47a3-a86f-297087664204",
+    "taskType": "FAST_PARSER",
+    "modelInternalId": "runware.openai.gpt.5.4.mini",
+    "modelAir": "openai:gpt@5.4-mini",
+    "modelDisplayName": "GPT-5.4 Mini",
+    "transport": "native",
+    "latencyMs": 4758,
+    "cost": 0.001625,
+    "usage": {
+      "promptTokens": 985,
+      "completionTokens": 197,
+      "totalTokens": 1182,
+      "completionTokensDetails": {
+        "reasoningTokens": 0
+      },
+      "promptTokensDetails": {
+        "cachedTokens": 0
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "0c391426a8d0886b3162299b3eef10059e2dc50e78c864b0080237dcbe38602c",
+    "promptVersion": "phase7.1",
+    "contentSha256": "46223e1abbe32545b2eeb563fc4bb53080b77f5a929878a874afd881c17bd0aa",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/04_scene_breakdown.json"
+}

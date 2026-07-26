@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "stage": "script_doctor",
+  "approved": false,
+  "output": {
+    "script": "[Scene: Home]\nMaya: Mera drawing contest ka result aa gaya.\nKabir: Tell me, kya hua?",
+    "language": "hinglish",
+    "changes": [
+      "Maya ke dialogue ko thoda natural aur emotional banaya gaya hai.",
+      "Original meaning, names, aur scene ko preserve kiya gaya hai.",
+      "Hindi-English mix ko maintain kiya gaya hai."
+    ],
+    "preservedFacts": [
+      "Scene Home hai.",
+      "Characters Maya aur Kabir hain.",
+      "Maya ka drawing contest result aa gaya hai.",
+      "Kabir result ke baare mein pooch raha hai."
+    ]
+  },
+  "metadata": {
+    "requestId": "23166d93-e5f3-45c1-9084-dfc617c90393",
+    "taskType": "SCRIPT_DOCTOR",
+    "modelInternalId": "runware.openai.gpt.5.4.mini",
+    "modelAir": "openai:gpt@5.4-mini",
+    "modelDisplayName": "GPT-5.4 Mini",
+    "transport": "native",
+    "latencyMs": 4070,
+    "cost": 0.000821,
+    "usage": {
+      "promptTokens": 320,
+      "completionTokens": 129,
+      "totalTokens": 449,
+      "completionTokensDetails": {
+        "reasoningTokens": 0
+      },
+      "promptTokensDetails": {
+        "cachedTokens": 0
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "6f0c3354a711e5d5803140ee39309701908e901a50c85ec43521fb25113d4a2b",
+    "promptVersion": "phase7.1",
+    "contentSha256": "5028ea0e36f4bd3363d59623d9832c26b3700172e9dbcf4ecb77a9fbdc3b824d",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/06_script_doctor.json"
+}

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "title": "SBZ Phase 7 Urdu, Hindi and Animation Benchmark",
+  "samples": [
+    {"id":"ur01","group":"urdu","stage":"story_outline","language":"urdu","prompt":"ایک بچہ بارش میں زخمی بلی کی مدد کرتا ہے۔ بچوں کے لیے امید بھری مختصر کہانی کا خاکہ بنائیں۔"},
+    {"id":"ur02","group":"urdu","stage":"story_outline","language":"urdu","prompt":"دو دوست جنگل میں گم شدہ نقشہ تلاش کرتے ہیں مگر آخر میں دوستی کو خزانے سے اہم سمجھتے ہیں۔"},
+    {"id":"ur03","group":"urdu","stage":"story_outline","language":"urdu","prompt":"گاؤں کی بچی خشک کنویں کے مسئلے کا ذہین حل تلاش کرتی ہے۔ ثقافتی ماحول محفوظ رکھیں۔"},
+    {"id":"ur04","group":"urdu","stage":"story_outline","language":"urdu","prompt":"شرارتی طوطا اسکول کی گھنٹی چھپا دیتا ہے اور پھر اپنی غلطی درست کرتا ہے۔ مزاحیہ بچوں کی کہانی۔"},
+    {"id":"ur05","group":"urdu","stage":"story_outline","language":"urdu","prompt":"ایک ننھا روبوٹ بجلی بچانے کا سبق سیکھتا ہے۔ واضح آغاز، مسئلہ، موڑ اور انجام دیں۔"},
+    {"id":"ur06","group":"urdu","stage":"character_dialogue","language":"urdu","prompt":"منظر: باغ۔ عائشہ اور بلال کو ٹوٹا ہوا پرندے کا گھونسلا ملتا ہے۔ قدرتی اردو مکالمہ لکھیں۔"},
+    {"id":"ur07","group":"urdu","stage":"character_dialogue","language":"urdu","prompt":"منظر: باورچی خانہ۔ دادی اور حسن نمک والی چائے پر ہلکا مزاحیہ مکالمہ کرتے ہیں۔"},
+    {"id":"ur08","group":"urdu","stage":"character_dialogue","language":"urdu","prompt":"منظر: جنگل۔ ثنا ایک ہلتے صندوق سے ڈرتی ہے اور علی احتیاط سے دیکھتا ہے۔"},
+    {"id":"ur09","group":"urdu","stage":"character_dialogue","language":"urdu","prompt":"منظر: کلاس روم۔ استاد اور مریم پانی ضائع ہونے سے روکنے پر بچوں کے لیے گفتگو کرتے ہیں۔"},
+    {"id":"ur10","group":"urdu","stage":"character_dialogue","language":"urdu","prompt":"منظر: بازار۔ دو بہنیں گم شدہ بٹوا مالک کو واپس کرتی ہیں۔ مختصر اور جذباتی مکالمہ۔"},
+
+    {"id":"ru01","group":"roman_urdu","stage":"character_dialogue","language":"roman_urdu","prompt":"Scene: jungle path. Ali ko hilta hua box milta hai aur Sara usay ehtiyat ka mashwara deti hai."},
+    {"id":"ru02","group":"roman_urdu","stage":"character_dialogue","language":"roman_urdu","prompt":"Scene: school yard. Hamza apna lunch bhool gaya; Mehak us ke saath share karti hai."},
+    {"id":"ru03","group":"roman_urdu","stage":"character_dialogue","language":"roman_urdu","prompt":"Scene: village well. Noor aur Daniyal pani bachane ka plan banate hain."},
+    {"id":"ru04","group":"roman_urdu","stage":"character_dialogue","language":"roman_urdu","prompt":"Scene: chai dhaba. Aloo aur Tamatar namak wali chai par funny behas karte hain."},
+    {"id":"ru05","group":"roman_urdu","stage":"character_dialogue","language":"roman_urdu","prompt":"Scene: rainy street. Zoya ek bheegi billi ko ghar le jane ki baat karti hai."},
+    {"id":"ru06","group":"roman_urdu","stage":"character_dialogue","language":"roman_urdu","prompt":"Scene: bedroom at night. Bilal andhera dekh kar darta hai; uski behen usay calm karti hai."},
+    {"id":"ru07","group":"roman_urdu","stage":"character_dialogue","language":"roman_urdu","prompt":"Scene: park. Ayan kachra uthata hai aur dost ko safai ki wajah samjhata hai."},
+    {"id":"ru08","group":"roman_urdu","stage":"character_dialogue","language":"roman_urdu","prompt":"Scene: toy shop. Robot aur teddy kaun zyada useful hai, is par child-friendly comedy."},
+    {"id":"ru09","group":"roman_urdu","stage":"character_dialogue","language":"roman_urdu","prompt":"Scene: farm. Hina zakhmi parinday ko dekhti hai aur Umar help bulata hai."},
+    {"id":"ru10","group":"roman_urdu","stage":"character_dialogue","language":"roman_urdu","prompt":"Scene: library. Sameer zor se bolta hai aur librarian pyar se rule samjhati hain."},
+
+    {"id":"hi01","group":"hindi","stage":"character_dialogue","language":"hindi","prompt":"दृश्य: गाँव का स्कूल। मीरा को घायल चिड़िया मिलती है और कबीर उसकी मदद करता है।"},
+    {"id":"hi02","group":"hindi","stage":"character_dialogue","language":"hindi","prompt":"दृश्य: जंगल। आरव को हिलता हुआ संदूक दिखता है और सिया उसे सावधान करती है।"},
+    {"id":"hi03","group":"hindi","stage":"character_dialogue","language":"hindi","prompt":"दृश्य: रसोई। दादी और मोहन नमक वाली चाय पर हल्का मज़ाक करते हैं।"},
+    {"id":"hi04","group":"hindi","stage":"character_dialogue","language":"hindi","prompt":"दृश्य: पार्क। अनाया दोस्त को कचरा डिब्बे में डालने का कारण समझाती है।"},
+    {"id":"hi05","group":"hindi","stage":"character_dialogue","language":"hindi","prompt":"दृश्य: बारिश। रोहन एक भीगे पिल्ले को देखकर माँ से मदद माँगता है।"},
+    {"id":"hi06","group":"hindi","stage":"character_dialogue","language":"hindi","prompt":"दृश्य: कक्षा। शिक्षक बच्चों को पानी बचाने की छोटी गतिविधि समझाते हैं।"},
+    {"id":"hi07","group":"hindi","stage":"character_dialogue","language":"hindi","prompt":"दृश्य: बाज़ार। दो बहनें मिला हुआ बटुआ उसके मालिक को लौटाती हैं।"},
+    {"id":"hi08","group":"hindi","stage":"character_dialogue","language":"hindi","prompt":"दृश्य: रात का कमरा। बच्चा अँधेरे से डरता है और बहन उसे शांत करती है।"},
+    {"id":"hi09","group":"hindi","stage":"character_dialogue","language":"hindi","prompt":"दृश्य: खेत। रीना और अमन टूटे घोंसले को सुरक्षित जगह रखते हैं।"},
+    {"id":"hi10","group":"hindi","stage":"character_dialogue","language":"hindi","prompt":"दृश्य: पुस्तकालय। बच्चा तेज़ बोलता है और मित्र धीरे बोलने को कहता है।"},
+
+    {"id":"mx01","group":"mixed_urdu_english","stage":"script_doctor","language":"hinglish","mode":"robotic_naturalizer","prompt":"[Scene: School]\nRavi: Main project complete karta hoon and then main teacher ko deta hoon.\nAsha: Good, lekin pehle spelling check karna."},
+    {"id":"mx02","group":"mixed_urdu_english","stage":"script_doctor","language":"hinglish","mode":"remove_repetition","prompt":"[Scene: Park]\nAman: Mujhe yeh game bahut pasand hai, really bahut pasand hai.\nNeha: Then chalo ek fair team banate hain."},
+    {"id":"mx03","group":"mixed_urdu_english","stage":"script_doctor","language":"hinglish","mode":"child_friendly","prompt":"[Scene: Jungle]\nRaju: This box is stupid, main isay tod dunga.\nSana: Stop, pehle safely check karte hain."},
+    {"id":"mx04","group":"mixed_urdu_english","stage":"script_doctor","language":"hinglish","mode":"add_emotion","prompt":"[Scene: Home]\nMaya: Mera drawing contest result aa gaya.\nKabir: Tell me, kya hua?"},
+    {"id":"mx05","group":"mixed_urdu_english","stage":"script_doctor","language":"hinglish","mode":"animation_ready","prompt":"[Scene: Market]\nAli: I found the wallet.\nSara: Chalo owner ko dhoondte hain."},
+
+    {"id":"an01","group":"script_to_animation","stage":"scene_breakdown","language":"roman_urdu","prompt":"[Scene: Forest path, day]\nNarrator: Ali raste par chalta hai.\nAli: Yeh box yahan kaise aaya?"},
+    {"id":"an02","group":"script_to_animation","stage":"scene_breakdown","language":"urdu","prompt":"[Scene: باغ، صبح]\nمریم: یہ گھونسلا نیچے کیسے گرا؟\nاحمد: میں آہستہ سے اسے اٹھاتا ہوں۔"},
+    {"id":"an03","group":"script_to_animation","stage":"scene_breakdown","language":"hindi","prompt":"[Scene: स्कूल, दिन]\nमीरा: यह आवाज़ कहाँ से आई?\nकबीर: मैं दरवाज़े की ओर देखता हूँ।"},
+    {"id":"an04","group":"script_to_animation","stage":"scene_breakdown","language":"roman_urdu","prompt":"[Scene: Village well, evening]\nNoor: Rassi toot rahi hai!\nDaniyal: Peechay hato, main bucket rokta hoon."},
+    {"id":"an05","group":"script_to_animation","stage":"scene_breakdown","language":"hinglish","prompt":"[Scene: Park, day]\nAman: Ball road ki taraf ja rahi hai!\nNeha: Stop, main guard ko call karti hoon."}
+  ]
+}

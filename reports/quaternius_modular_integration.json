@@ -1,0 +1,313 @@
+{
+  "schemaVersion": 1,
+  "status": "COMPLETE",
+  "plannedCount": 50,
+  "integratedCount": 50,
+  "skeletalBasic": 45,
+  "static": 5,
+  "failureCount": 0,
+  "characters": [
+    {
+      "id": "quaternius_bluesoldier_female",
+      "name": "BlueSoldier_Female",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/BlueSoldier_Female.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_bluesoldier_male",
+      "name": "BlueSoldier_Male",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/BlueSoldier_Male.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_casual",
+      "name": "Casual",
+      "source": "work/quaternius/Individual Characters-20260715T070937Z-1-001/Individual Characters/FBX/Casual.fbx",
+      "format": "FBX"
+    },
+    {
+      "id": "quaternius_casual2_female",
+      "name": "Casual2_Female",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Casual2_Female.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_casual2_male",
+      "name": "Casual2_Male",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Casual2_Male.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_casual3_female",
+      "name": "Casual3_Female",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Casual3_Female.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_casual3_male",
+      "name": "Casual3_Male",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Casual3_Male.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_casual_bald",
+      "name": "Casual_Bald",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Casual_Bald.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_casual_female",
+      "name": "Casual_Female",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Casual_Female.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_casual_male",
+      "name": "Casual_Male",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Casual_Male.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_chef_female",
+      "name": "Chef_Female",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Chef_Female.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_chef_male",
+      "name": "Chef_Male",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Chef_Male.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_cow",
+      "name": "Cow",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Cow.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_cowboy_female",
+      "name": "Cowboy_Female",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Cowboy_Female.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_cowboy_male",
+      "name": "Cowboy_Male",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Cowboy_Male.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_doctor_female_old",
+      "name": "Doctor_Female_Old",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Doctor_Female_Old.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_doctor_female_young",
+      "name": "Doctor_Female_Young",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Doctor_Female_Young.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_doctor_male_old",
+      "name": "Doctor_Male_Old",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Doctor_Male_Old.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_doctor_male_young",
+      "name": "Doctor_Male_Young",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Doctor_Male_Young.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_elf",
+      "name": "Elf",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Elf.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_formal",
+      "name": "Formal",
+      "source": "work/quaternius/Individual Characters-20260715T070937Z-1-001/Individual Characters/FBX/Formal.fbx",
+      "format": "FBX"
+    },
+    {
+      "id": "quaternius_goblin_female",
+      "name": "Goblin_Female",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Goblin_Female.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_goblin_male",
+      "name": "Goblin_Male",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Goblin_Male.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_kimono_female",
+      "name": "Kimono_Female",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Kimono_Female.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_kimono_male",
+      "name": "Kimono_Male",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Kimono_Male.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_knight_golden_female",
+      "name": "Knight_Golden_Female",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Knight_Golden_Female.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_knight_golden_male",
+      "name": "Knight_Golden_Male",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Knight_Golden_Male.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_knight_male",
+      "name": "Knight_Male",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Knight_Male.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_medieval",
+      "name": "Medieval",
+      "source": "work/quaternius/Individual Characters-20260715T070937Z-1-001/Individual Characters/FBX/Medieval.fbx",
+      "format": "FBX"
+    },
+    {
+      "id": "quaternius_ninja_female",
+      "name": "Ninja_Female",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Ninja_Female.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_ninja_male",
+      "name": "Ninja_Male",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Ninja_Male.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_ninja_sand",
+      "name": "Ninja_Sand",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Ninja_Sand.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_ninja_sand_female",
+      "name": "Ninja_Sand_Female",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Ninja_Sand_Female.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_oldclassy_female",
+      "name": "OldClassy_Female",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/OldClassy_Female.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_oldclassy_male",
+      "name": "OldClassy_Male",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/OldClassy_Male.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_pirate_female",
+      "name": "Pirate_Female",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Pirate_Female.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_pirate_male",
+      "name": "Pirate_Male",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Pirate_Male.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_scifi",
+      "name": "SciFi",
+      "source": "work/quaternius/Individual Characters-20260715T070937Z-1-001/Individual Characters/FBX/SciFi.fbx",
+      "format": "FBX"
+    },
+    {
+      "id": "quaternius_soldier",
+      "name": "Soldier",
+      "source": "work/quaternius/Individual Characters-20260715T070937Z-1-001/Individual Characters/FBX/Soldier.fbx",
+      "format": "FBX"
+    },
+    {
+      "id": "quaternius_soldier_female",
+      "name": "Soldier_Female",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Soldier_Female.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_soldier_male",
+      "name": "Soldier_Male",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Soldier_Male.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_suit_female",
+      "name": "Suit_Female",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Suit_Female.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_suit_male",
+      "name": "Suit_Male",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Suit_Male.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_viking_female",
+      "name": "Viking_Female",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Viking_Female.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_viking_male",
+      "name": "Viking_Male",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Viking_Male.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_witch",
+      "name": "Witch",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Witch.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_worker_female",
+      "name": "Worker_Female",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Worker_Female.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_worker_male",
+      "name": "Worker_Male",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Worker_Male.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_zombie_female",
+      "name": "Zombie_Female",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Zombie_Female.blend",
+      "format": "BLEND"
+    },
+    {
+      "id": "quaternius_zombie_male",
+      "name": "Zombie_Male",
+      "source": "work/quaternius/Blends-20260715T065905Z-1-001/Blends/Zombie_Male.blend",
+      "format": "BLEND"
+    }
+  ],
+  "failures": [],
+  "verification": "runtime and regression tests deferred by user"
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "status": "COMPLETE",
+  "plannedCount": 1,
+  "integratedCount": 1,
+  "failureCount": 0,
+  "characters": [
+    {
+      "id": "quaternius_tentacle",
+      "name": "Tentacle",
+      "pack": "Pirate Kit - Nov 2023-20260715T065953Z-1-001",
+      "source": "work/quaternius/Pirate Kit - Nov 2023-20260715T065953Z-1-001/Pirate Kit - Nov 2023/glTF/Characters_Tentacle.gltf",
+      "clips": 4
+    }
+  ],
+  "failures": [],
+  "pirateMode": "user_authorized",
+  "verification": "runtime and regression tests deferred by user"
+}

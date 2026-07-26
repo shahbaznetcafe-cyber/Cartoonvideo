@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "hi",
+    "scenes": [
+      {
+        "id": "scene_1",
+        "lines": [
+          {
+            "speaker": "Zoya",
+            "text": "Dekho tum ab kitni bhi si si karo, main tumhe aise bheegi hui is thandi sadak par nahi chhod sakti. Chalo, aaj se tum mere ghar ki mehman ho. Wahan paani bhi milega, aur kuch khaana bhi... tumhari choti si zindagi ab mushkil nahi hogi.",
+            "emotion": "sukoon aur khushi",
+            "action": "Billi ki pith par halka sa haath pherte hue"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "5da2d9ed-3119-4432-8eb7-33b7b2f07ed6",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.zai.glm.5.1",
+    "modelAir": "zai:glm@5.1",
+    "modelDisplayName": "GLM 5.1",
+    "transport": "openai_compatible",
+    "latencyMs": 26436,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 677,
+      "completion_tokens": 179,
+      "total_tokens": 856,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "retryCount": 1,
+    "repairCount": 1,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "25201bfc2569ae294cbbe048916e76fd7ac48317ec4392e1fe7a4e0cfcc1443c",
+    "promptVersion": "phase7.1",
+    "contentSha256": "d8cc8affc13cd573f2ee2e37bab1b091de47b3a8c3b7c601bafb2a3cd5d5ed1d",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

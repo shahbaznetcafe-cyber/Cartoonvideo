@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "stage": "scene_breakdown",
+  "approved": false,
+  "output": {
+    "schemaVersion": 1,
+    "title": "باغ میں گھونسلا",
+    "language": "urdu",
+    "characters": [
+      {
+        "id": "mariam",
+        "name": "مریم",
+        "role": "کردار",
+        "voiceNotes": "اردو میں فطری، سوالیہ انداز",
+        "capabilityId": null
+      },
+      {
+        "id": "ahmad",
+        "name": "احمد",
+        "role": "کردار",
+        "voiceNotes": "اردو میں نرم اور محتاط لہجہ",
+        "capabilityId": null
+      }
+    ],
+    "scenes": [
+      {
+        "id": "scene1",
+        "location": "باغ",
+        "timeOfDay": "صبح",
+        "characters": [
+          "mariam",
+          "ahmad"
+        ],
+        "estimatedDuration": 10,
+        "continuityReferences": [],
+        "elements": [
+          {
+            "type": "dialogue",
+            "speaker": "mariam",
+            "text": "یہ گھونسلا نیچے کیسے گرا؟",
+            "language": "urdu",
+            "emotion": "حیرت",
+            "physicalAction": null,
+            "actionTarget": null,
+            "prop": "گھونسلا",
+            "entranceExit": "none",
+            "cameraIntent": null,
+            "soundCue": null,
+            "environmentalEvent": null,
+            "estimatedDuration": 4,
+            "continuityReferences": []
+          },
+          {
+            "type": "dialogue",
+            "speaker": "ahmad",
+            "text": "میں آہستہ سے اسے اٹھاتا ہوں۔",
+            "language": "urdu",
+            "emotion": "احتیاط",
+            "physicalAction": "آہستہ سے اٹھاتا ہوں",
+            "actionTarget": "گھونسلا",
+            "prop": "گھونسلا",
+            "entranceExit": "none",
+            "cameraIntent": null,
+            "soundCue": null,
+            "environmentalEvent": null,
+            "estimatedDuration": 6,
+            "continuityReferences": []
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "7375a870-62de-4dff-b541-45b45347262a",
+    "taskType": "FAST_PARSER",
+    "modelInternalId": "runware.openai.gpt.5.4.mini",
+    "modelAir": "openai:gpt@5.4-mini",
+    "modelDisplayName": "GPT-5.4 Mini",
+    "transport": "native",
+    "latencyMs": 4358,
+    "cost": 0.002186,
+    "usage": {
+      "promptTokens": 983,
+      "completionTokens": 322,
+      "totalTokens": 1305,
+      "completionTokensDetails": {
+        "reasoningTokens": 0
+      },
+      "promptTokensDetails": {
+        "cachedTokens": 0
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "f2c3ebaf501b875d8cd1b4cd81b292fa9f56dabd621a81b5c22922deec8030d2",
+    "promptVersion": "phase7.1",
+    "contentSha256": "d7d9d4ee6c7ba2123f22685efc31c277789d421aab2cec6183bf5bc2ef4f4d31",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/04_scene_breakdown.json"
+}

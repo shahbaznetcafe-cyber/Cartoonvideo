@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "hindi",
+    "scenes": [
+      {
+        "id": "khet",
+        "lines": [
+          {
+            "speaker": "रीना",
+            "text": "अमन, ये घोंसला देखो... कितना टूटा हुआ है। लगता है कल रात की आँधी में पेड़ से गिर गया।",
+            "emotion": "चिंतित"
+          },
+          {
+            "speaker": "अमन",
+            "text": "हाँ, बेचारे पंछी... अंदर तो कुछ पर भी नहीं बचे। चलो, इसे सँभाल कर रख देते हैं, शायद फिर से इस्तेमाल कर सकें।",
+            "emotion": "दुखी",
+            "action": "घोंसले को ध्यान से उठाते हुए"
+          },
+          {
+            "speaker": "रीना",
+            "text": "हाँ, यहीं पास में एक सूखी जगह है, वहाँ रख देते हैं। बारिश से बचा रहेगा।",
+            "emotion": "आशावान",
+            "action": "एक सुरक्षित जगह की ओर इशारा करते हुए"
+          },
+          {
+            "speaker": "अमन",
+            "text": "ठीक है, धीरे से रख... ऐसे ही। अब चलें, खेत का काम भी तो बाकी है।",
+            "emotion": "शांत",
+            "action": "घोंसला रखते हुए"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "1ecf04f3-bb85-4528-992f-9ad373caae39",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.deepseek.v4.pro",
+    "modelAir": "deepseek:v4@pro",
+    "modelDisplayName": "DeepSeek V4 Pro",
+    "transport": "openai_compatible",
+    "latencyMs": 21817,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 290,
+      "completion_tokens": 422,
+      "total_tokens": 712,
+      "prompt_tokens_details": {
+        "cached_tokens": 256
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": true,
+    "fallbackReason": "OutputValidationError",
+    "cache": "hit",
+    "cacheKey": "27207901f547ba3773016ad2e1fccf9b57e87db7ee20835dab1baae30ea8934c",
+    "promptVersion": "phase7.1",
+    "contentSha256": "8c6068c80ad99235d06d3161c14e9382f2f32a4ebd9d56ad27fa0314798b2591",
+    "finishReason": "stop"
+  },
+  "diagnostics": [
+    {
+      "model": "runware.zai.glm.5.1",
+      "reason": "OutputValidationError",
+      "message": "Structured output failed schema validation",
+      "validation": [
+        "$.language: mandatory field is missing",
+        "$.scenes: mandatory field is missing"
+      ]
+    }
+  ],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

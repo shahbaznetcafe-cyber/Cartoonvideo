@@ -111,7 +111,7 @@ for c in CHARS:
     xoff = (slot - (NC-1)/2.0) * SPACING
     cvv = [char.matrix_world @ mathutils.Vector(v) for v in char.bound_box]
     cbot = min(v.z for v in cvv)
-    rig.location = (env_cx + xoff, env_cy + 0.6, rig.location.z + (floor-cbot) + 0.02)
+    rig.location = (env_cx + xoff, env_cy + 0.6, rig.location.z + (floor-cbot) + 0.045)
     # camera (+Y) ki taraf mooh
     rig.rotation_euler = (rig.rotation_euler.x, rig.rotation_euler.y,
                           rig.rotation_euler.z + math.radians(180))

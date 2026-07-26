@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "hindi",
+    "scenes": [
+      {
+        "id": "scene_1",
+        "lines": [
+          {
+            "speaker": "आरव",
+            "text": "अरे, वहाँ झाड़ियों के पीछे कुछ हिल रहा है।",
+            "emotion": "चौंकना",
+            "action": "वह धीरे-धीरे आगे बढ़ता है"
+          },
+          {
+            "speaker": "सिया",
+            "text": "रुको, आरव। बिना देखे मत जाओ। हो सकता है अंदर कोई खतरा हो।",
+            "emotion": "चिंतित",
+            "action": "वह उसका हाथ पकड़कर रोकती है"
+          },
+          {
+            "speaker": "आरव",
+            "text": "तुम ठीक कह रही हो। ये तो एक संदूक लग रहा है... और ये सच में हिल रहा है।",
+            "emotion": "सतर्क",
+            "action": "वह संदूक पर नज़र टिकाए रखता है"
+          },
+          {
+            "speaker": "सिया",
+            "text": "दूर रहो। पहले हम दोनों मिलकर देखें, फिर ही उसे छुएँगे।",
+            "emotion": "सावधान",
+            "action": "वह चारों तरफ़ नज़र घुमाती है"
+          },
+          {
+            "speaker": "आरव",
+            "text": "ठीक है, मैं पीछे हटता हूँ। ज़रा ध्यान से खोलते हैं।",
+            "emotion": "मामूली राहत",
+            "action": "वह एक कदम पीछे हट जाता है"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "a12a75d9-ff17-4a95-b09d-341492e6d923",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.openai.gpt.5.4.mini",
+    "modelAir": "openai:gpt@5.4-mini",
+    "modelDisplayName": "GPT-5.4 Mini",
+    "transport": "native",
+    "latencyMs": 4738,
+    "cost": 0.001506,
+    "usage": {
+      "promptTokens": 382,
+      "completionTokens": 271,
+      "totalTokens": 653,
+      "completionTokensDetails": {
+        "reasoningTokens": 0
+      },
+      "promptTokensDetails": {
+        "cachedTokens": 0
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "51dbd5fd92414398165c8bc4d0c68e3505327878ef11055bf82b749ed3133890",
+    "promptVersion": "phase7.1",
+    "contentSha256": "ddecbebd1cc6235e094fc1f8cfceb20aedc40ecf553e901fb4b546f0f0fa985b",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

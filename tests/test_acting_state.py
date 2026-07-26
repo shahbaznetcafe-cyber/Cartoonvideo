@@ -30,8 +30,16 @@ class ActingStateTests(unittest.TestCase):
         next_start = plan["lines"][1]["characters"]["hero"]["start"]
         third_start = plan["lines"][2]["characters"]["hero"]["start"]
         self.assertEqual(first_end, next_start)
-        self.assertEqual(first_end["position"]["x"], 0.34)
-        self.assertEqual(third_start["position"]["x"], 0.34)
+        self.assertEqual(first_end["position"]["x"], 0.9)
+        self.assertEqual(third_start["position"]["x"], 0.9)
+
+    def test_exit_crosses_toward_nearest_frame_edge(self):
+        timeline = [{"scene": "farm", "speaker": "hero", "text": "I leave.",
+                     "emotion": "neutral", "duration": 2.0}]
+        contexts = [{"cast": ["hero", "friend"], "action": "exit", "target": 1}]
+        plan = acting_state.build_plan(timeline, contexts, fps=24)
+        end_x = plan["lines"][0]["characters"]["hero"]["end"]["position"]["x"]
+        self.assertEqual(end_x, -2.4)
 
     def test_listeners_receive_story_motivated_reactions(self):
         timeline, contexts = self._inputs()

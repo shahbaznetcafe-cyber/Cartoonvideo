@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "ur",
+    "scenes": [
+      {
+        "id": "scene_1",
+        "lines": [
+          {
+            "speaker": "Narrator",
+            "text": "Jungle ka ek sunsaan rasta hai. Achanak, Ali ko zameen par ek ajeeb sa hilta hua dabba (box) nazar aata hai. Us ki aankhein phaili aur us ne jhuk kar us dabbay ko uthane ke liye haath badhaya.",
+            "emotion": "curious"
+          },
+          {
+            "speaker": "Sara",
+            "text": "Ali, ruko! Aise haath mat lagao. Yeh dabba aise hil raha hai, is ke andar koi janwar ya khatarnaak cheez ho sakti hai. Pehle dekho aur samjho, ehtiyat se kaam lo.",
+            "emotion": "cautious",
+            "action": "Sara foran aage badhi aur us ke haath par apna haath rakh kar usay roka. Us ke chehre par ehtiyat ka izhar tha aur us ne gaur se kaha"
+          },
+          {
+            "speaker": "Narrator",
+            "text": "Ali ne Sara ki baat suni aur apna haath wapas khincha, aur dono dabbay ko gaur se dekhne lage.",
+            "emotion": "observant"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "51443d8b-2805-4258-bf47-93eab8bdf002",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.zai.glm.5.1",
+    "modelAir": "zai:glm@5.1",
+    "modelDisplayName": "GLM 5.1",
+    "transport": "openai_compatible",
+    "latencyMs": 18168,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 420,
+      "completion_tokens": 343,
+      "total_tokens": 763,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "retryCount": 1,
+    "repairCount": 1,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "0ac1305a3cbdee217d97b9f83cc918872e0957b9d96294a277227c07ee590452",
+    "promptVersion": "phase7.1",
+    "contentSha256": "b6f9f2ad49a6a0795b4f843f7d0458893c68929d219bb24613e24c324f14f0f6",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

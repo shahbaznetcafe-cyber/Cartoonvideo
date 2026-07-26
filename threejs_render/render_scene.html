@@ -9,13 +9,15 @@
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { FacialRuntime, useJawFallback } from './facial_runtime.js';
+import { FacialRuntime, useJawFallback, ProceduralEyeBlink } from './facial_runtime.js';
 import { gestureEnvelope, listenerReaction, sampleActingState } from './acting_state_runtime.js';
 import { applyLegacyPose, captureBoneBases, jawOpenDelta } from './bone_pose_runtime.js';
+import { humanoidClipTime, isHumanoidPositionTrack, selectHumanoidClip } from './humanoid_motion_runtime.js';
 window.__error = null;
 window.addEventListener('error', e => { window.__error = String(e.message || e); });
 
 const DEG = Math.PI / 180;
+const LOOPING_BODY_ACTIONS = new Set(['none','idle','talk','listen','look','walk','run','come','go','approach','exit','retreat']);
 const loader = new GLTFLoader();
 function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g), undefined, rej)); }
 
@@ -27,6 +29,13 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
   const facialEnabled = features.facialRuntime !== false;
   const actingEnabled = features.persistentActing !== false;
   const timeOffset = actingEnabled ? (Number(spec.timeOffset) || 0) : 0;
+  const environmentMotion = spec.environmentMotion || {};
+  const direction = spec.direction || {};
+  function seededRandom(seed) {
+    let state = (Number(seed) || 20260716) >>> 0;
+    return () => { state = (1664525 * state + 1013904223) >>> 0; return state / 4294967296; };
+  }
+  const envRandom = seededRandom(environmentMotion.seed);
   const canvas = document.getElementById('c');
   canvas.width = W; canvas.height = H;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
@@ -36,45 +45,179 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
   const camera = new THREE.PerspectiveCamera(42, W / H, 0.05, 200);
 
   const sceneLook = spec.sceneLook || 'sunny';
-  const LOOK = {
+  const sceneVariant = environmentMotion.variant || sceneLook;
+  const backgroundImage = spec.backgroundImage || '';
+  // A chroma-key scene renders the cast alone on one flat, unlit colour so the
+  // clip can be background-removed (keyed) in external editors afterwards.
+  // No environment GLB, AI plate, ground texture, dressing or decoration may
+  // appear -- any of those would corrupt the key.
+  const isChroma = sceneLook === 'chroma_green' || sceneLook === 'chroma_blue';
+  const BASE_LOOK = {
+    chroma_green: { sky: 0x00ff00, ground: 0x00ff00, key: 2.2, fill: 0.85 },
+    chroma_blue:  { sky: 0x0000ff, ground: 0x0000ff, key: 2.2, fill: 0.85 },
     sunny: { sky: 0x9fd8ff, ground: 0x7dcc55, key: 2.4, fill: 0.85 },
     storm: { sky: 0x66798d, ground: 0x547051, key: 1.45, fill: 0.55 },
     mud:   { sky: 0x91abc0, ground: 0x765536, key: 1.8, fill: 0.65 },
     wash:  { sky: 0xbfe9ff, ground: 0x92d7dc, key: 2.25, fill: 0.9 },
     stage: { sky: 0x8fdcff, ground: 0x7fd65b, key: 2.6, fill: 1.0 },
+    forest:{ sky: 0x9ecbb8, ground: 0x47753d, key: 1.85, fill: 0.72 },
+    market:{ sky: 0xaed8e5, ground: 0x9a805a, key: 2.05, fill: 0.78 },
+    indoor:{ sky: 0xb8c6d8, ground: 0x8b735c, key: 1.75, fill: 0.82 },
+    night: { sky: 0x17283f, ground: 0x263b35, key: 0.78, fill: 0.52 },
+    desert:{ sky: 0xd7bd91, ground: 0xb98b51, key: 2.15, fill: 0.66 },
+    snow:  { sky: 0xbfd3df, ground: 0xdce8ec, key: 1.75, fill: 0.95 },
+    pirate:{ sky: 0x78cbe5, ground: 0xd6b66d, key: 2.25, fill: 0.76 },
+    space: { sky: 0x111a35, ground: 0x515968, key: 1.55, fill: 0.58 },
+    apocalypse:{ sky: 0x798184, ground: 0x58574e, key: 1.2, fill: 0.48 },
+    village:{ sky: 0xa8dded, ground: 0x6ba549, key: 2.3, fill: 0.84 },
+    town:  { sky: 0xb6d4e8, ground: 0x7f8a80, key: 2.1, fill: 0.8 },
+    meadow:{ sky: 0xa9e0f5, ground: 0x74be4f, key: 2.45, fill: 0.9 },
+    beach: { sky: 0x8fd9ee, ground: 0xe4cf94, key: 2.5, fill: 0.88 },
   }[sceneLook] || { sky: 0x9fd8ff, ground: 0x7dcc55, key: 2.4, fill: 0.85 };
+  const VARIANT_LOOK = {
+    village_farm: { sky:0xa8dded, ground:0x659b45, path:0xc7a06a, accent:0xe2c079 },
+    glowing_field:{ sky:0xb8e6f4, ground:0x397d4a, path:0x806846, accent:0xffd76a },
+    blooming_farm:{ sky:0xf0c9a9, ground:0x69a448, path:0xb88963, accent:0xf06ea9 },
+    forest_path:  { sky:0x9ecbb8, ground:0x47753d, path:0xaa895f, accent:0x8eb96b },
+    forest_clearing:{ sky:0xaed8c0, ground:0x5d8f4b, path:0xc4a06c, accent:0xf0d274 },
+    forest_grove: { sky:0x86b3a2, ground:0x355f3b, path:0x80684f, accent:0x7ab6a2 },
+    pirate_harbor: { sky:0x78cbe5, ground:0xd7b46c, path:0x9a6e42, accent:0xe8c76b },
+    treasure_cove: { sky:0x82d1df, ground:0xe1c87d, path:0x8c6747, accent:0xf6d45b },
+    space_outpost: { sky:0x111a35, ground:0x5a5f6b, path:0x3c465e, accent:0x79d9ff },
+    apocalypse_street: { sky:0x788080, ground:0x57564d, path:0x32343a, accent:0xd48e48 },
+    village_square:{ sky:0xa8dded, ground:0x6ba549, path:0xc7a06a, accent:0xe2c079 },
+    town_street:   { sky:0xb6d4e8, ground:0x7f8a80, path:0x4a4d52, accent:0xd9a24c },
+    night_forest:  { sky:0x17283f, ground:0x24382f, path:0x3a3226, accent:0x6f8fb5 },
+    magic_grove:   { sky:0xb8e6f4, ground:0x3f8450, path:0x7d6a48, accent:0xff9ad5 },
+    open_meadow:   { sky:0xa9e0f5, ground:0x74be4f, path:0xbfa172, accent:0xf3d867 },
+    island_beach:  { sky:0x8fd9ee, ground:0xe4cf94, path:0xcfae72, accent:0x62c9c3 },
+    rocky_desert:  { sky:0xd7bd91, ground:0xb98b51, path:0x9d7343, accent:0xdcae6a },
+  }[sceneVariant] || {};
+  const LOOK = { ...BASE_LOOK, path:0xaa895f, accent:0xe0b95e, ...VARIANT_LOOK };
 
   // lights (Blender key+fill jaisा)
   const key = new THREE.DirectionalLight(0xfff4e6, LOOK.key); key.position.set(4, 8, 6); scene.add(key);
   const fill = new THREE.DirectionalLight(0xdceaff, LOOK.fill); fill.position.set(-4, 4, 3); scene.add(fill);
   scene.add(new THREE.AmbientLight(0xffffff, 0.5));
   renderer.setClearColor(LOOK.sky, 1);
-  if (sceneLook === 'storm') scene.fog = new THREE.Fog(LOOK.sky, 7, 18);
+  if (sceneLook === 'storm' || sceneLook === 'apocalypse') scene.fog = new THREE.Fog(LOOK.sky, 7, 18);
+
+  // A generated scene plate provides distant depth while the GLB environment
+  // remains the physical foreground set. It is cached by the Python asset
+  // library and never contains people, so it cannot fight the 3D cast.
+  if (backgroundImage && !isChroma) {
+    const texture = await new THREE.TextureLoader().loadAsync(backgroundImage).catch(() => null);
+    if (texture) {
+      texture.colorSpace = THREE.SRGBColorSpace;
+      const plate = new THREE.Mesh(new THREE.PlaneGeometry(25, 14.0625),
+        new THREE.MeshBasicMaterial({ map: texture, depthWrite: false, fog: false }));
+      plate.position.set(0, 4.25, -6.8);
+      scene.add(plate);
+    }
+  }
 
   // ---- environment (ORIGIN par shift: floor y=0, horizontal center 0) ----
-  if (spec.env) {
-    const env = (await load(spec.env)).scene;
+  let environmentRoot = null;
+  if (spec.env && !isChroma) {
+    const env = (await load(spec.env)).scene; environmentRoot = env;
     let box = new THREE.Box3().setFromObject(env);
     const sz = new THREE.Vector3(); box.getSize(sz);
-    const s = 7.0 / Math.max(sz.x, sz.y, sz.z);
+    // The old 7-unit normalization made people look like giants in a toy set.
+    // Keep the character at a readable human height and give the environment a
+    // wider physical world scale for correct depth and proportion.
+    const s = 12.5 / Math.max(sz.x, sz.y, sz.z);
     env.scale.setScalar(s); env.updateMatrixWorld(true);
     box = new THREE.Box3().setFromObject(env);
     const c = new THREE.Vector3(); box.getCenter(c);
     env.position.set(-c.x, -box.min.y, -c.z);      // floor=0, center=origin
     env.updateMatrixWorld(true);
     box = new THREE.Box3().setFromObject(env);
-    // Keep all environment geometry behind the cast. This prevents an enclosing
-    // kitchen/house wall from sitting between the camera and the characters.
-    env.position.z += -0.75 - box.max.z;
+    // Outdoor sets should surround the cast and contribute real depth. Only
+    // enclosed interiors are kept fully behind the performers to avoid a wall
+    // blocking the camera.
+    if (sceneLook === 'indoor') env.position.z += -0.75 - box.max.z;
+    else env.position.z -= 2.25;
     scene.add(env);
   }
 
-  // Procedural foreground makes story conditions visible even with a small GLB library.
-  const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(14, 8),
-    new THREE.MeshStandardMaterial({ color: LOOK.ground, roughness: 0.9, metalness: 0 })
-  );
-  ground.rotation.x = -Math.PI / 2; ground.position.set(0, -0.015, 0.4); scene.add(ground);
+  if (!isChroma) {
+    // Layered ground replaces the old single flat "stage" plane.  The shared GLB
+    // can now read as a village farm, magical field, or blooming farm depending
+    // on the script-directed scene variant.
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(sceneLook === 'pirate' ? 20 : 16, sceneLook === 'pirate' ? 14 : 11),
+      new THREE.MeshStandardMaterial({ color: LOOK.ground, roughness: 0.9, metalness: 0 })
+    );
+    ground.rotation.x = -Math.PI / 2; ground.position.set(0, -0.02, -0.2); scene.add(ground);
+    const path = new THREE.Mesh(new THREE.PlaneGeometry(sceneLook === 'apocalypse' ? 3.5 : 2.15, sceneLook === 'pirate' ? 14 : 11),
+      new THREE.MeshStandardMaterial({ color:LOOK.path, roughness:.96, metalness:0 }));
+    path.rotation.x = -Math.PI/2; path.rotation.z = -.08;
+    path.position.set(.25,-.006,-.2); scene.add(path);
+    for (let i=0; i<(sceneLook === 'space' ? 8 : 14); i++) {
+      const patch = new THREE.Mesh(new THREE.CircleGeometry(.18 + envRandom()*.32, 14),
+        new THREE.MeshStandardMaterial({ color:i%2 ? LOOK.ground : 0x527c3c, roughness:1 }));
+      patch.rotation.x=-Math.PI/2; patch.scale.y=.45;
+      patch.position.set((envRandom()-.5)*7.8,.002,-3.2+envRandom()*6.4); scene.add(patch);
+    }
+    const foregroundDressing = new THREE.Group();
+    for (const side of [-1,1]) {
+      const bush = new THREE.Mesh(new THREE.DodecahedronGeometry(.42,0),
+        new THREE.MeshStandardMaterial({ color:side < 0 ? 0x315f38 : 0x3f7840, roughness:.95 }));
+      bush.scale.set(1.35,.78,.82); bush.position.set(side*3.45,.28,2.0+side*.18);
+      foregroundDressing.add(bush);
+    }
+    scene.add(foregroundDressing);
+    if (sceneVariant === 'village_farm') {
+      for (let i=0;i<7;i++) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(.08,.55,.08),
+          new THREE.MeshStandardMaterial({ color:0x765033, roughness:.92 }));
+        post.position.set(-3+i, .275, -1.7+(i%2)*.08); scene.add(post);
+      }
+    } else if (sceneVariant === 'glowing_field') {
+      for (let i=0;i<9;i++) {
+        const orb = new THREE.Mesh(new THREE.SphereGeometry(.035+(i%3)*.012,10,8),
+          new THREE.MeshBasicMaterial({ color:LOOK.accent, transparent:true, opacity:.72 }));
+        orb.position.set(-2.8+i*.7,.18+(i%4)*.16,-.8+(i%2)*.7); scene.add(orb);
+      }
+    } else if (sceneVariant === 'blooming_farm') {
+      for (let i=0;i<18;i++) {
+        const flower = new THREE.Mesh(new THREE.SphereGeometry(.045,8,6),
+          new THREE.MeshStandardMaterial({ color:i%3 ? LOOK.accent : 0xffd166, roughness:.65 }));
+        flower.position.set(-3.6+(i%9)*.9,.08,-1.3+Math.floor(i/9)*2.2); scene.add(flower);
+      }
+    } else if (sceneVariant === 'forest_clearing') {
+      const clearingRing = new THREE.Group();
+      for (let i=0;i<10;i++) {
+        const stone = new THREE.Mesh(new THREE.DodecahedronGeometry(.12+(i%3)*.035,0),
+          new THREE.MeshStandardMaterial({ color:i%2 ? 0x7a806f : 0x89917b, roughness:1 }));
+        const angle=(i/10)*Math.PI*2;
+        stone.position.set(Math.cos(angle)*2.4,.11,Math.sin(angle)*1.55-.5);
+        clearingRing.add(stone);
+      }
+      scene.add(clearingRing);
+    } else if (sceneVariant === 'forest_grove') {
+      for (let i=0;i<8;i++) {
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.11,.17,1.5,8),
+          new THREE.MeshStandardMaterial({ color:0x5a3d2a, roughness:.95 }));
+        const crown = new THREE.Mesh(new THREE.DodecahedronGeometry(.48,0),
+          new THREE.MeshStandardMaterial({ color:i%2 ? 0x2d643c : 0x3d7844, roughness:.9 }));
+        const side=i%2 ? 1 : -1;
+        trunk.position.set(side*(2.45+(i%3)*.46),.75,-2.1+Math.floor(i/2)*1.18);
+        crown.position.set(trunk.position.x,1.72,trunk.position.z);
+        scene.add(trunk,crown);
+      }
+    }
+  } else {
+    // Chroma key: ONE large, fully unlit (MeshBasicMaterial ignores scene
+    // lighting) flat plane in the exact clear-colour -- no gradient, shading,
+    // shadow or texture that a keyer could misread as part of the subject.
+    const backdrop = new THREE.Mesh(
+      new THREE.PlaneGeometry(40, 30),
+      new THREE.MeshBasicMaterial({ color: LOOK.ground, fog: false })
+    );
+    backdrop.rotation.x = -Math.PI / 2; backdrop.position.set(0, -0.02, -0.2);
+    scene.add(backdrop);
+  }
 
   if (sceneLook === 'mud') {
     for (const [x, z, s] of [[-1.8,0.7,.75],[.2,.1,.55],[1.7,.9,.65]]) {
@@ -89,9 +232,9 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
   if (sceneLook === 'storm') {
     const positions = new Float32Array(240 * 3);
     for (let i=0; i<240; i++) {
-      positions[i*3] = (Math.random()-.5)*9;
-      positions[i*3+1] = Math.random()*5;
-      positions[i*3+2] = -1 + Math.random()*5;
+      positions[i*3] = (envRandom()-.5)*9;
+      positions[i*3+1] = envRandom()*5;
+      positions[i*3+2] = -1 + envRandom()*5;
     }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -110,10 +253,134 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
   }
 
   // ---- characters (actual bbox se: feet floor par, x slot par; NO rotation — +Z pehle se camera) ----
-  const TH = 1.5, SPACING = 1.55, GROUND_CLEARANCE = 0.018, NC = spec.chars.length;
+  // Deterministic ambient life: lightweight leaves, clouds and birds selected
+  // from story context instead of decorative randomness.
+  let ambientLeaves = null;
+  const leafCount = Math.max(0, Math.min(80, Number(environmentMotion.leaves) || 0));
+  if (leafCount) {
+    const positions = new Float32Array(leafCount * 3);
+    for (let i=0; i<leafCount; i++) {
+      positions[i*3] = (envRandom() - .5) * 8;
+      positions[i*3+1] = .35 + envRandom() * 3.2;
+      positions[i*3+2] = -.8 + envRandom() * 3.8;
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    ambientLeaves = new THREE.Points(geometry, new THREE.PointsMaterial({
+      color: sceneLook === 'snow' ? 0xf4fbff : 0xd79a37, size: .055,
+      transparent: true, opacity: .78,
+    }));
+    scene.add(ambientLeaves);
+  }
+  const ambientClouds = [];
+  for (let i=0; i<Math.min(5, Number(environmentMotion.clouds) || 0); i++) {
+    const cloud = new THREE.Group();
+    for (let j=0; j<3; j++) {
+      const puff = new THREE.Mesh(new THREE.SphereGeometry(.28 + j*.05, 12, 8),
+        new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:.34 }));
+      puff.position.x = (j-1)*.28; cloud.add(puff);
+    }
+    cloud.position.set(-4 + i*2.1, 3.6 + (i%2)*.35, -3.2-i*.25);
+    scene.add(cloud); ambientClouds.push(cloud);
+  }
+  const ambientActors = [];
+  for (let i=0; i<Math.min(3, Number(environmentMotion.ambientActors) || 0); i++) {
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute([0,0,0], 3));
+    const bird = new THREE.Points(geometry,
+      new THREE.PointsMaterial({ color:0x26313d, size:.075 }));
+    bird.position.set(-3.8-i*.7, 2.8+i*.25, -1.7-i*.3);
+    scene.add(bird); ambientActors.push(bird);
+  }
+
+  // Script-directed props carry state across independently rendered line clips.
+  const directedProps = [];
+  async function makeProp(specification) {
+    const group = new THREE.Group();
+    const color = new THREE.Color(specification.color || '#8b6b4b');
+    const material = new THREE.MeshStandardMaterial({ color, roughness:.72, metalness:.02 });
+    const type = specification.type || 'box'; let lid = null; const glowMeshes = [];
+    const externalAsset = specification.asset && specification.asset.url;
+    if (externalAsset) {
+      try {
+        const gltf = await load(externalAsset);
+        const model = gltf.scene;
+        model.updateMatrixWorld(true);
+        const before = new THREE.Box3().setFromObject(model);
+        const size = before.getSize(new THREE.Vector3());
+        const height = Math.max(.001, size.y || size.length());
+        const targetHeight = Math.max(.05, Number(specification.asset.targetHeight) || 1.0);
+        model.scale.setScalar(targetHeight / height);
+        model.updateMatrixWorld(true);
+        const after = new THREE.Box3().setFromObject(model);
+        // Ground each imported asset independently; no source transform is
+        // trusted because packs use different authoring origins.
+        model.position.y -= after.min.y;
+        model.traverse(node => {
+          if (node.isMesh) { node.castShadow = true; node.receiveShadow = true; }
+        });
+        group.add(model);
+      } catch (error) {
+        console.warn('Scene asset unavailable; using procedural fallback', externalAsset, error);
+      }
+    }
+    if (!group.children.length && type === 'ball') {
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(.19, 24, 16), material);
+      mesh.position.y = .19; group.add(mesh);
+    } else if (!group.children.length && type === 'cup') {
+      const mesh = new THREE.Mesh(new THREE.CylinderGeometry(.12,.10,.28,20), material);
+      mesh.position.y = .14; group.add(mesh);
+    } else if (!group.children.length && type === 'book') {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(.34,.08,.26), material);
+      mesh.position.y = .05; group.add(mesh);
+    } else if (!group.children.length && type === 'sign') {
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(.025,.03,.62,10), material);
+      post.position.y=.31; group.add(post);
+      const board = new THREE.Mesh(new THREE.BoxGeometry(.48,.28,.05), material);
+      board.position.y=.62; group.add(board);
+    } else if (!group.children.length && type === 'rock') {
+      const mesh = new THREE.Mesh(new THREE.DodecahedronGeometry(.22,0), material);
+      mesh.scale.set(1.25,.72,1); mesh.position.y=.15; group.add(mesh);
+    } else if (!group.children.length && type === 'seed') {
+      const seedMaterial = material.clone();
+      seedMaterial.emissive = color.clone().multiplyScalar(.38); seedMaterial.emissiveIntensity=.1;
+      const seed = new THREE.Mesh(new THREE.SphereGeometry(.095,18,12), seedMaterial);
+      seed.scale.set(1,.62,.72); seed.position.y=.075; group.add(seed); glowMeshes.push(seed);
+      const halo = new THREE.Mesh(new THREE.TorusGeometry(.13,.012,8,20),
+        new THREE.MeshBasicMaterial({ color:0xffdc76, transparent:true, opacity:.46 }));
+      halo.rotation.x=Math.PI/2; halo.position.y=.08; group.add(halo); glowMeshes.push(halo);
+    } else if (!group.children.length && type === 'plant') {
+      const stemMaterial = new THREE.MeshStandardMaterial({ color:0x397d3e, roughness:.88 });
+      const stem = new THREE.Mesh(new THREE.CylinderGeometry(.025,.035,.55,10), stemMaterial);
+      stem.position.y=.275; group.add(stem);
+      for (const side of [-1,1]) {
+        const leaf = new THREE.Mesh(new THREE.SphereGeometry(.12,12,8), material.clone());
+        leaf.scale.set(1.35,.32,.68); leaf.rotation.z=side*.45;
+        leaf.position.set(side*.11,.30+side*.07,0); group.add(leaf);
+      }
+      const bloomMaterial = new THREE.MeshStandardMaterial({ color:0xff79af, roughness:.6,
+        emissive:0x8a274f, emissiveIntensity:.08 });
+      const bloom = new THREE.Mesh(new THREE.SphereGeometry(.115,12,8), bloomMaterial);
+      bloom.scale.y=.55; bloom.position.y=.59; group.add(bloom); glowMeshes.push(bloom);
+    } else if (!group.children.length) {
+      const body = new THREE.Mesh(new THREE.BoxGeometry(.46,.42,.42), material);
+      body.position.y=.21; group.add(body);
+      lid = new THREE.Mesh(new THREE.BoxGeometry(.50,.08,.46), material.clone());
+      lid.position.set(0,.46,-.18); group.add(lid);
+    }
+    const state = specification.stateStart || {};
+    group.position.set(Number(state.x)||0, Number(state.y)||0, Number(state.z)||0);
+    const growth = Number.isFinite(Number(state.growth)) ? Number(state.growth) : 1;
+    group.scale.setScalar(Math.max(.05,growth));
+    scene.add(group); directedProps.push({ specification, group, lid, glowMeshes });
+  }
+  for (const prop of (Array.isArray(spec.props) ? spec.props : [])) await makeProp(prop);
+
+  const TH = 1.18, SPACING = 1.35, GROUND_CLEARANCE = 0.045, NC = spec.chars.length;
   const chars = [];
   for (const c of spec.chars) {
-    const root = (await load(c.glb)).scene;
+    const gltf = await load(c.glb);
+    const root = gltf.scene;
     // Some legacy exports store a current skeleton pose that differs from the
     // inverse bind matrices. Three.js then folds lower-body vertices into the
     // torso even though Blender displays the GLB correctly. Restore the true
@@ -123,10 +390,23 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
     });
     root.updateMatrixWorld(true);
     root.traverse(o => {
-      if (o.isSkinnedMesh && o.skeleton) o.skeleton.update();
+      if (o.isSkinnedMesh && o.skeleton) {
+        o.skeleton.update();
+        // Mixamo geometry is commonly stored in centimetres while the rig
+        // root carries a 0.01 scale. Static geometry bounds therefore report
+        // a character roughly 100x too large. Skinned bounds evaluate the
+        // actual bind-pose vertices and give reliable height/feet placement.
+        if (typeof o.computeBoundingBox === 'function') o.computeBoundingBox();
+        if (typeof o.computeBoundingSphere === 'function') o.computeBoundingSphere();
+      }
     });
     let box = new THREE.Box3().setFromObject(root);
     const sz = new THREE.Vector3(); box.getSize(sz);
+    const placementDebug = {
+      sourceSize: [sz.x, sz.y, sz.z],
+      sourceMin: [box.min.x, box.min.y, box.min.z],
+      sourceMax: [box.max.x, box.max.y, box.max.z],
+    };
     const cs = TH / (sz.y || 1); root.scale.multiplyScalar(cs); root.updateMatrixWorld(true);
     box = new THREE.Box3().setFromObject(root);        // scale ke baad asli box
     const ctr = new THREE.Vector3(); box.getCenter(ctr);
@@ -137,7 +417,14 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
     // HOLDER group: placement (slot x, z aage) + squash-stretch yahin lagti hai.
     // Holder origin = feet, isliye squash se feet planted rehte + SkinnedMesh scale untouched.
     const holder = new THREE.Group();
-    holder.position.set((c.slot - (NC - 1) / 2) * SPACING, 0, 0.4);
+    const blocking = c.blocking || {};
+    const blockingStart = blocking.start || {};
+    const blockingEnd = blocking.end || blockingStart;
+    const defaultX = (c.slot - (NC - 1) / 2) * SPACING;
+    const startX = Number.isFinite(Number(blockingStart.x)) ? Number(blockingStart.x) : defaultX;
+    const startZ = Number.isFinite(Number(blockingStart.z)) ? Number(blockingStart.z) : .4;
+    holder.position.set(startX, 0, startZ);
+    holder.rotation.y = Number(blockingStart.yaw) || 0;
     holder.add(root);
     holder.updateMatrixWorld(true);
     scene.add(holder);
@@ -160,16 +447,86 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
           emotion: c.emotion || 'neutral', seed: stableSeed, fps })
       : { tier: 'LEGACY_JAW', canDriveVisemes: false, hasBlink: false,
           frameCount: 0, update() {} };
-    chars.push({ root, holder, bones, boneBases, mesh, facial, speaking: c.speaking, op: c.openness || [0],
+    // Morph-less rigs blink via eye-material colour blend (skinned eyes can't
+    // close geometrically). Morph-capable rigs keep FacialRuntime's blink.
+    let eyeBlink = null;
+    if (!facial.hasBlink) {
+      eyeBlink = new ProceduralEyeBlink({ root, seed: stableSeed,
+                                          emotion: c.emotion || 'neutral' });
+      if (eyeBlink.enabled) eyeBlink.attach(root); else eyeBlink = null;
+    }
+    // Body animation and facial capability are independent. The production
+    // registry is authoritative for standardized characters, while the old
+    // facial-tier check preserves previously supported Mixamo characters.
+    const registeredBodyTier = ['SKELETAL_BASIC', 'SKELETAL_INTERACTIVE', 'FACIAL_READY']
+      .includes(c.animationTier);
+    const sourceMotionClip = (registeredBodyTier || facial.tier === 'SKELETAL_BASIC')
+      ? selectHumanoidClip(gltf.animations || [], {
+          speaking: c.speaking, action: c.action, sourceClip: c.sourceClip,
+        })
+      : null;
+    const baseSourceClip = (registeredBodyTier || facial.tier === 'SKELETAL_BASIC')
+      ? selectHumanoidClip(gltf.animations || [], {
+          speaking: c.speaking, action: c.speaking ? 'talk' : 'listen', sourceClip: c.baseClip,
+        }) : null;
+    // SBZ owns skeleton rest translations and world locomotion through the
+    // grounded holder. Blender 5 exports redundant Mixamo position tracks in
+    // FBX centimetres; rotations contain the usable body performance.
+    const motionClip = sourceMotionClip ? new THREE.AnimationClip(
+      sourceMotionClip.name,
+      sourceMotionClip.duration,
+      sourceMotionClip.tracks.filter(track => !isHumanoidPositionTrack(track.name)),
+    ) : null;
+    const baseMotionClip = baseSourceClip
+      ? (sourceMotionClip && baseSourceClip.name === sourceMotionClip.name ? motionClip : new THREE.AnimationClip(
+          baseSourceClip.name,
+          baseSourceClip.duration,
+          baseSourceClip.tracks.filter(track => !isHumanoidPositionTrack(track.name)),
+        )) : null;
+    const mixer = (motionClip || baseMotionClip) ? new THREE.AnimationMixer(root) : null;
+    const baseAction = mixer && baseMotionClip ? mixer.clipAction(baseMotionClip) : null;
+    const motionAction = mixer && motionClip ? mixer.clipAction(motionClip) : null;
+    const transientAction = !LOOPING_BODY_ACTIONS.has(String(c.action||'none').toLowerCase());
+    if (baseAction) { baseAction.enabled=true; baseAction.setEffectiveWeight(1); baseAction.play(); }
+    if (motionAction && motionAction !== baseAction) {
+      if (transientAction) { motionAction.setLoop(THREE.LoopOnce,1); motionAction.clampWhenFinished=true; }
+      motionAction.enabled=true; motionAction.setEffectiveWeight(0); motionAction.play();
+    } else if (motionAction) motionAction.setEffectiveWeight(1);
+    chars.push({ root, holder, bones, boneBases, mesh, facial, eyeBlink, speaking: c.speaking, op: c.openness || [0],
                  id: c.id || `slot_${c.slot}`, emo: c.emotion || 'neutral',
                  phase: (stableSeed % 10000) / 1379, slot: c.slot,
                  baseX: holder.position.x, baseZ: holder.position.z,
+                 blockingStart, blockingEnd,
                  action: c.action || 'none', target: (c.target == null ? -1 : c.target),
+                 sourceClip: c.sourceClip || '', speechMode: c.speechMode || 'body_only',
+                 lipSyncMode: c.lipSyncMode || 'none', facialReady: !!c.facialReady,
                  acting, reaction: actingEnabled ? (acting.reaction || 'none') : 'none',
                  reactionStrength: Number(acting.reactionStrength) || 0,
-                 seed: stableSeed });
+                 seed: stableSeed, mixer, motionClip, baseMotionClip, baseAction, motionAction, transientAction,
+                 crossfadeSeconds: Math.max(.08,Math.min(.5,Number(c.crossfadeSeconds)||.22)),
+                 interaction: c.interaction || null,
+                 animationTier: c.animationTier || 'LEGACY',
+                 capabilityId: c.capabilityId || '', traits: c.traits || {},
+                 placementDebug: { ...placementDebug, scale: cs,
+                   groundedMinY: box.min.y, groundedMaxY: box.max.y } });
   }
 
+  // Resolve real body widths after normalization.  The director supplies story
+  // marks; this final pass prevents broad rigs and arms sharing physical space.
+  const spacingOrder=[...chars].sort((a,b)=>a.holder.position.x-b.holder.position.x);
+  for(let i=1;i<spacingOrder.length;i++){
+    const left=spacingOrder[i-1], right=spacingOrder[i];
+    const leftWidth=Math.max(.34,Number(left.placementDebug.sourceSize?.[0]||0)*left.placementDebug.scale*.5);
+    const rightWidth=Math.max(.34,Number(right.placementDebug.sourceSize?.[0]||0)*right.placementDebug.scale*.5);
+    const requiredGap=leftWidth+rightWidth+.34;
+    const currentGap=right.holder.position.x-left.holder.position.x;
+    if(currentGap<requiredGap){
+      const shift=requiredGap-currentGap;
+      right.holder.position.x+=shift; right.baseX+=shift;
+      right.blockingStart={...right.blockingStart,x:(Number(right.blockingStart.x)||0)+shift};
+      right.blockingEnd={...right.blockingEnd,x:(Number(right.blockingEnd.x)||0)+shift};
+    }
+  }
   // ---- camera framing: KNOWN placement se (skinned-mesh bbox reliable nahi) ----
   // chars origin par hain: feet y=0, x = ±slot offset, z=0.4
   const cc = new THREE.Vector3(0, TH * 0.5, 0.4);
@@ -198,7 +555,52 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
     }
   }
 
-  const NF = Math.max(...chars.map(c => Math.max(c.op.length, c.facial.frameCount)), 1);
+  function placeDirectedCam(f, nf) {
+    if (!direction || !Object.keys(direction).length) return placeCam(f, nf);
+    const progress = f / Math.max(1, nf);
+    const focusChar = chars[Math.max(0, Math.min(chars.length-1, focus))];
+    const liveFocusX = focusChar ? focusChar.holder.position.x : focusX;
+    const pushAmount = direction.motion === 'subtle_push' ? .06 : .025;
+    const k = 1 - progress * pushAmount;
+    const facialClose = shot === 'closeup' || shot === 'dialogue_close_up' || shot === 'facial_close_up';
+    const reaction = shot === 'body_reaction_medium_close';
+    const propDetail = shot === 'prop_detail_close' || shot === 'prop_aftermath_close';
+    const contactShot = shot === 'contact_oblique_medium' || shot === 'contact_oblique_close'
+      || shot === 'over_shoulder_prop';
+    const medium = shot === 'medium' || shot === 'dialogue_medium' || shot === 'tracking_medium'
+      || shot === 'body_medium' || shot === 'body_medium_left' || shot === 'body_medium_right'
+      || shot === 'reverse_medium' || shot === 'motivated_two_shot'
+      || contactShot || reaction;
+    const contactProp = directedProps.find(item => item.specification.id === direction.focusProp);
+    const followStrength = Math.max(0,Math.min(.7,Number(direction.followStrength) || .35));
+    const followedX = focusX + (liveFocusX-focusX)*followStrength;
+    if (propDetail && contactProp) {
+      const targetY = Math.max(.12,Number(contactProp.specification.stateStart?.y)||.18);
+      camera.position.set(contactProp.group.position.x-.42,targetY+.38,
+        contactProp.group.position.z+1.08*k);
+      camera.lookAt(contactProp.group.position.x,targetY+.08,contactProp.group.position.z);
+    } else if (facialClose) {
+      camera.position.set(liveFocusX + .08, faceY + groupH*.05, frontZ + groupH*1.25*k);
+      camera.lookAt(liveFocusX, faceY - groupH*.06, cc.z);
+    } else if (medium) {
+      const trackedX = shot === 'tracking_medium' ? followedX :
+        shot === 'motivated_two_shot' ? cc.x : liveFocusX;
+      const targetX = contactProp ? trackedX*.62 + contactProp.group.position.x*.38 : trackedX;
+      const offsetX = contactShot ? -.38 : shot === 'reverse_medium' || shot === 'body_medium_right' ? .30
+        : shot === 'body_medium_left' ? -.30 : reaction ? .18 : 0;
+      camera.position.set(targetX + offsetX, cc.y + groupH*(reaction ? .20 : .15),
+        frontZ + groupH*(reaction ? 1.52 : contactShot ? 1.48 : 1.75)*k);
+      camera.lookAt(targetX, cc.y + groupH*.05, cc.z);
+    } else {
+      const exitTrack = shot === 'tracking_exit_wide' ? (liveFocusX-focusX)*followStrength : 0;
+      const dist = (groupW*(shot === 'establishing_wide' ? 1.48 : 1.25) + .7)*k;
+      camera.position.set(cc.x + exitTrack, cc.y + groupH*.18, frontZ + dist);
+      camera.lookAt(cc.x + exitTrack*.72, cc.y + groupH*.05, cc.z);
+    }
+  }
+
+  const NF = Math.max(Number(spec.frameCount) || 0,
+    ...chars.map(c => Math.max(c.op.length, c.facial.frameCount)), 2);
   window.__nframes = NF;
   window.__debug = { cc: [cc.x, cc.y, cc.z], NC,
     tiers: chars.map(c => c.facial.tier || 'UNSUPPORTED'),
@@ -206,6 +608,19 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
       blinkMode: c.facial.blinkMode || 'none', gazeMode: c.facial.gazeMode || 'none',
       visemes: Boolean(c.facial.canDriveVisemes) })),
     animationStateSchema: spec.animationStateSchema || 0, timeOffset,
+    motionClips: chars.map(c => c.motionClip ? c.motionClip.name : null),
+    baseMotionClips: chars.map(c => c.baseMotionClip ? c.baseMotionClip.name : null),
+    crossfadeSeconds: chars.map(c => c.crossfadeSeconds),
+    blocking: chars.map(c => ({ id:c.id, start:c.blockingStart, end:c.blockingEnd })),
+    interactions: chars.map(c => c.interaction).filter(Boolean),
+    animationTiers: chars.map(c => c.animationTier),
+    capabilityIds: chars.map(c => c.capabilityId),
+    sourceClips: chars.map(c => c.sourceClip),
+    speechModes: chars.map(c => c.speechMode),
+    directedProps: directedProps.map(item => ({ id:item.specification.id,
+      type:item.specification.type, consequence:item.specification.consequence })),
+    environmentMotion, sceneVariant,
+    placements: chars.map(c => c.placementDebug),
     features: { facialRuntime: facialEnabled, persistentActing: actingEnabled } };
 
   function smooth(op, idx) {   // light ±1 (track pehle se attack/release smoothed hai)
@@ -247,6 +662,25 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
     for (const c of chars) {
       const ph = c.phase, sd = c.seed, b = c.bones, E = emoOf(c);
       const speaking = c.speaking;
+      if (c.mixer) {
+        const fadeFrames = Math.max(1,Math.round(c.crossfadeSeconds*fps));
+        const blendIn = Math.min(1,f/fadeFrames);
+        const blendOut = Math.min(1,(NF-1-f)/fadeFrames);
+        const actionWeight = c.motionAction && c.motionAction !== c.baseAction
+          ? Math.max(0,Math.min(blendIn,blendOut)) : 1;
+        if (c.baseAction) c.baseAction.setEffectiveWeight(
+          c.motionAction && c.motionAction !== c.baseAction ? 1-actionWeight : 1);
+        if (c.motionAction) c.motionAction.setEffectiveWeight(actionWeight);
+        if (c.baseAction && c.baseMotionClip) {
+          c.baseAction.time=humanoidClipTime(t,c.baseMotionClip.duration,ph);
+        }
+        if (c.motionAction && c.motionClip) {
+          c.motionAction.time=c.transientAction
+            ? Math.min(c.motionClip.duration-.0001,prog*c.motionClip.duration)
+            : humanoidClipTime(t,c.motionClip.duration,ph);
+        }
+        c.mixer.update(0);
+      }
       const op = speaking ? smooth(c.op, Math.min(f, c.op.length - 1)) : 0;
       const persistent = c.acting && c.acting.start ? sampleActingState(c.acting, prog) : {
         position: { x: 0, y: 0, z: 0 },
@@ -254,6 +688,24 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
           legL: 0, legR: 0, bodyX: E.lean, bodyY: 0, bodyZ: 0 },
         scaleY: 1 - E.crouch,
       };
+      // Clip-only bodies (aerial animals, creatures and blobs) must never receive
+      // the legacy human arm/leg pose layer. Their authored mixer owns the rig.
+      if (c.traits && c.traits.poseMode === 'clip_only') {
+        const start = c.blockingStart || {}, end = c.blockingEnd || start, mix = ease(prog);
+        const value = (key, fallback) => {
+          const a = Number.isFinite(Number(start[key])) ? Number(start[key]) : fallback;
+          const b = Number.isFinite(Number(end[key])) ? Number(end[key]) : a;
+          return a + (b - a) * mix;
+        };
+        const hover = c.traits.groundMode === 'hover'
+          ? Math.max(.08, Number(c.traits.hoverHeight) || .42) + .035 * Math.sin((t + ph) * 1.8)
+          : 0;
+        c.holder.position.set(value('x', c.baseX), Math.max(0, value('y', 0) + hover), value('z', c.baseZ));
+        c.holder.rotation.y = value('yaw', 0); c.holder.scale.set(1, 1, 1);
+        c.facial.update(f, 1 / fps, { gazeX: 0, gazeY: 0, time: t });
+        if (c.eyeBlink) c.eyeBlink.update(t);
+        continue;
+      }
       // accumulators (degrees / holder offsets)
       let aL = persistent.pose.armL, aR = persistent.pose.armR;
       let legL = persistent.pose.legL, legR = persistent.pose.legR;
@@ -296,23 +748,27 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
       const act = c.action, tgt = chars.find(x => x.slot === c.target);
       const dirT = tgt ? Math.sign(tgt.baseX - c.baseX) || 1 : 1;
       const gap = tgt ? Math.abs(tgt.baseX - c.baseX) : SPACING;
+      const directedTravel = Boolean(c.acting && c.acting.start && c.acting.end);
       if (act === 'point' || act === 'pointing') {
         const r = seg(prog, 0.12, 0.32) * (1 - seg(prog, 0.82, 1));
         aR += -55 * r; bY += dirT * 6 * r;                      // arm_R uthao target ki taraf
       } else if (act === 'wave' || act === 'greet' || act === 'hello') {
         const up = seg(prog, 0.1, 0.3) * (1 - seg(prog, 0.8, 1));
         aR += (-50 + 18 * Math.sin(t * 9)) * up;
-      } else if (act === 'reach' || act === 'reaching' || act === 'give' || act === 'offer') {
+      } else if (act === 'reach' || act === 'reaching' || act === 'give' || act === 'offer' || act === 'pickup' || act === 'interact') {
         const r = (act === 'give' || act === 'offer') ? bump(prog, 0.2, 0.9) : seg(prog, 0.15, 0.4);
         aR += -48 * r; bX += 8 * r; dx += dirT * 0.25 * r;      // haath badhao + thoda jhuko
-      } else if (act === 'walk' || act === 'run' || act === 'come' || act === 'go' || act === 'approach') {
-        const fast = (act === 'run') ? 2.0 : 1.0;
+      } else if (act === 'walk' || act === 'run' || act === 'come' || act === 'go' || act === 'approach' || act === 'exit' || act === 'retreat') {
+        const fast = (act === 'run' || act === 'exit' || act === 'retreat') ? 2.0 : 1.0;
         const wp = t * 6 * fast + ph;
         legL += 28 * Math.sin(wp); legR += 28 * Math.sin(wp + Math.PI);
         aL += -14 * Math.sin(wp); aR += 14 * Math.sin(wp);      // arm counter-swing
         dy += Math.abs(Math.sin(wp)) * 0.04 * TH;               // step bounce
-        const goDir = tgt ? dirT : (c.slot < NC / 2 ? 1 : -1);
-        dx += goDir * (gap * 0.6) * ease(prog) * fast;          // aage barho
+        const goDir = act === 'retreat' ? -(tgt ? dirT : 1) : (tgt ? dirT : (c.slot < NC / 2 ? 1 : -1));
+        // The persistent acting plan owns world displacement. Procedural travel
+        // remains only for legacy specs that predate that plan, preventing the
+        // same walk from being applied twice.
+        if (!directedTravel) dx += goDir * (gap * 0.6) * ease(prog) * fast;
         bX += 5 * fast;
       } else if (act === 'celebrate' || act === 'cheer' || act === 'win' || act === 'happy' || act === 'jump') {
         const j = Math.abs(Math.sin(t * 4));
@@ -322,6 +778,21 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
         bX += 12 * Math.sin(t * 5);                             // haan mein sar
       } else if (act === 'shake' || act === 'deny' || act === 'no') {
         bY += 16 * Math.sin(t * 5);                             // naa mein sar
+      } else if (act === 'punch') {
+        const strike = bump(prog,.18,.72); aR -= 68*strike; bY += dirT*8*strike; bX += 6*strike;
+      } else if (act === 'kick') {
+        const strike = bump(prog,.2,.76); legR -= 52*strike; bZ -= 8*strike; bX += 5*strike;
+      } else if (act === 'hit' || act === 'fall') {
+        const recoil = seg(prog,.12,.42); bX += 22*recoil; bZ += 14*recoil; aL -= 18*recoil; aR += 18*recoil;
+        if (act === 'fall') { sqExtra -= .18*recoil; dy += .02*TH*recoil; }
+      } else if (act === 'dance') {
+        const dance = bump(prog,.08,.94); bZ += 13*Math.sin(t*4)*dance; aL += 34*Math.sin(t*5)*dance; aR -= 34*Math.sin(t*5+.8)*dance;
+      } else if (act === 'sit') {
+        const settle = seg(prog,.15,.55); sqExtra -= .24*settle; legL += 24*settle; legR -= 24*settle;
+      } else if (act === 'stand') {
+        const rise = seg(prog,.12,.48); sqExtra += .06*rise; bX -= 5*rise;
+      } else if (act === 'look' || act === 'listen') {
+        bY += dirT * 9 * lineGesture; bX -= 2 * lineGesture;
       } else if (act === 'hug') {
         const r = seg(prog, 0.15, 0.45); aL += 30 * r; aR += -30 * r; dx += dirT * gap * 0.35 * r;
       } else if (act === 'wash') {
@@ -385,7 +856,14 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
         armL: aL, armR: aR, legL, legR, bodyX: bX, bodyY: bY, bodyZ: bZ, jaw,
       });
       // dy kabhi 0 se neeche nahi (feet floor par — koi animation zameen mein na dhansaye)
-      c.holder.position.set(c.baseX + dx, Math.max(0, dy), c.baseZ + dz);
+      const blockMix = ease(prog);
+      const blockValue = (key,fallback) => {
+        const start = Number.isFinite(Number(c.blockingStart?.[key])) ? Number(c.blockingStart[key]) : fallback;
+        const end = Number.isFinite(Number(c.blockingEnd?.[key])) ? Number(c.blockingEnd[key]) : start;
+        return start+(end-start)*blockMix;
+      };
+      c.holder.position.set(blockValue('x',c.baseX)+dx, Math.max(0,dy), blockValue('z',c.baseZ)+dz);
+      c.holder.rotation.y = blockValue('yaw',0);
       // breathing + emotion crouch (sqExtra) — feet holder-origin par, planted rehte
       const sy = 1 + 0.02 * Math.sin((t + ph) * 1.4) - lineGesture * op * 0.05 + sqExtra;
       const sxz = 1 + (1 - sy) * 0.6;
@@ -395,8 +873,51 @@ function load(url){ return new Promise((res, rej) => loader.load(url, g => res(g
         : Math.sin(t * .37 + sd) * .16;
       const gazeY = Math.sin(t * .23 + sd * 1.7) * .08;
       c.facial.update(f, 1 / fps, { gazeX, gazeY, time: t });
+      if (c.eyeBlink) c.eyeBlink.update(t);
     }
-    placeCam(f, NF);
+    for (const item of directedProps) {
+      const contact = chars.find(c => c.interaction?.target?.propId === item.specification.id)?.interaction;
+      const trigger = Math.max(0,Math.min(.9,Number(contact?.triggerProgress)||0));
+      const consequenceProgress = trigger > 0 ? clamp((prog-trigger)/(1-trigger),0,1) : prog;
+      const propEase = ease(consequenceProgress);
+      const start = item.specification.stateStart || {};
+      const end = item.specification.stateEnd || start;
+      const value = (source,key,fallback) => Number.isFinite(Number(source[key]))
+        ? Number(source[key]) : fallback;
+      const mix = (key, fallback=0) => value(start,key,fallback)
+        + (value(end,key,fallback) - value(start,key,fallback)) * propEase;
+      item.group.position.set(mix('x'), Math.max(0, mix('y')),
+        mix('z') + (item.specification.consequence !== 'none' ? Math.sin(consequenceProgress*Math.PI)*.025 : 0));
+      item.group.rotation.y = mix('rotationY');
+      const growth = Math.max(.05,mix('growth',1)); item.group.scale.setScalar(growth);
+      const glow = Math.max(0,mix('glow',0));
+      item.glowMeshes.forEach(mesh => {
+        if (mesh.material && 'emissiveIntensity' in mesh.material) mesh.material.emissiveIntensity=.08+glow*1.2;
+        if (mesh.material && 'opacity' in mesh.material) mesh.material.opacity=.35+glow*.55;
+      });
+      if (item.lid) item.lid.rotation.x = -mix('open') * 1.18;
+    }
+    const wind = Math.max(0, Math.min(1, Number(environmentMotion.windStrength) || 0));
+    // Never rotate the complete imported environment: large background meshes
+    // can sweep across the camera. Wind remains visible through ambient layers.
+    if (ambientLeaves) {
+      const pos = ambientLeaves.geometry.attributes.position;
+      for (let i=0; i<pos.count; i++) {
+        let x = pos.getX(i) + (.006 + wind*.014) * Math.sin(t*.9+i*.7);
+        let y = pos.getY(i) - (.002 + wind*.006);
+        if (y < .05) { y += 3.35; x -= .35; }
+        pos.setXYZ(i, x, y, pos.getZ(i));
+      }
+      pos.needsUpdate = true;
+    }
+    ambientClouds.forEach((cloud,index) => {
+      cloud.position.x = -4 + index*2.1 + ((t*.045 + index*.17) % 1.4);
+    });
+    ambientActors.forEach((bird,index) => {
+      bird.position.x = -3.8 + ((t*(.34+index*.05) + index*.9) % 7.6);
+      bird.position.y = 2.8 + index*.25 + Math.sin(t*2.1+index)*.08;
+    });
+    placeDirectedCam(f, NF);
     if (rain) {
       const pos = rain.geometry.attributes.position;
       for (let i=0; i<pos.count; i++) {

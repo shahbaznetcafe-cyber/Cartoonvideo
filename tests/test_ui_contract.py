@@ -16,27 +16,32 @@ FAVICON = ROOT / "static" / "icons" / "favicon.svg"
 REQUIRED_IDS = {
     "aspectSeg", "cap_enabled", "cap_hl", "cap_perspk", "cap_size",
     "cap_words", "charList", "chGender", "chName", "chPhrase", "chTrait",
-    "costEst", "edge_voice_group", "eleven_voice_group", "eleven_voice_status",
+    "costEst", "edge_voice_group", "edge_voice", "edge_voice_status",
+    "refresh_edge_voices", "google_voice_group", "google_tts_voice",
+    "voice_speed", "voiceSpeedValue", "eleven_voice_group", "eleven_voice_status",
     "elevenlabs_voice_id", "epBox", "epGenBtn", "epHistory", "epIdea",
     "epLenSeg", "epMsg", "errMsg", "fast_preview", "ffGenBtn", "ffGenre",
     "ffIdea", "ffLang", "ffLenSeg", "ffMsg", "ffPro", "fps", "genBtn",
     "genCard", "gpu_encode", "hlSeg", "intro_on", "lfGenBtn", "lfGenre",
-    "lfIdea", "lfLang", "lfMinSeg", "lfMsg", "lfOutline", "modeSeg",
-    "motionSeg", "multiChar", "music_volume", "newSeriesBox", "pkgPanel",
+    "lfIdea", "lfLang", "lfMinSeg", "lfMsg", "lfOutline", "multiChar", "music_volume", "newSeriesBox", "pkgPanel",
     "posSeg", "previewBtn", "previewCard", "progressCard", "projCardTop",
     "projCount", "projList", "provStatus", "pvChars", "pvGenBtn", "pvScenes",
     "pvTitle", "quality", "rDownload", "refresh_eleven_voices", "render_engine",
     "resultCard", "resumeCard", "resumeList", "rTitle", "rVideo", "script",
     "scriptCard", "scriptFeedback", "scriptTabs", "serCast", "serGenre",
     "serInfo", "serLang", "serName", "serPremise", "serSel", "steps",
-    "stopBtn", "storySeg", "style", "test_img", "testBtn", "testResult",
-    "tplChars", "tplGenBtn", "tplGrid", "tplLang", "tplLenSeg", "tplMsg",
+    "stopBtn", "style", "test_img", "testBtn", "testResult", "writeCastLibrarySeg",
+    # tplLang/tplLenSeg intentionally removed: templates share the Story basics
+    # controls (ffLang + selectedVideoDuration) instead of duplicating them.
+    "tplChars", "tplGenBtn", "tplGrid", "tplMsg",
     "tplName", "tplPanel", "tplTopic", "tts_provider", "urdu_accent",
     "vignette", "voice_volume",
 }
 
 REQUIRED_ENDPOINT_MARKERS = {
-    "/api/options", "/api/voices/elevenlabs", "/api/characters3d/validation",
+    "/api/options", "/api/voices/edge", "/api/voices/google",
+    "/api/voices/elevenlabs", "/api/characters3d/validation",
+    "/api/character-catalog", "/api/asset-catalog",
     "/api/story-templates", "/api/characters", "/api/story-templates/generate",
     "/api/freeform", "/api/longform", "/api/characters-lib", "/api/series",
     "/api/suggest-style", "/api/analyze", "/api/improve", "/api/metadata",
@@ -53,14 +58,16 @@ REQUIRED_FUNCTIONS = {
     "loadProjectsList", "openProject", "playProject", "delProject",
     "resumeProject", "genFreeform", "genLongform", "genFromTemplate",
     "analyzeScript", "improveScript", "genPackage", "testRunware",
-    "loadElevenLabsVoices", "syncVoiceProviderUI",
+    "loadElevenLabsVoices", "loadEdgeVoices", "loadGoogleVoices",
+    "syncLLMModels", "syncVoiceProviderUI",
 }
 
 REQUIRED_SETTING_KEYS = {
-    "style", "aspect", "quality", "fps", "fast_preview", "motion_preset",
-    "render_mode", "story_mode", "multi_char", "render_engine", "gpu",
+    "style", "aspect", "quality", "fps", "fast_preview",
+    "multi_char", "render_engine", "gpu",
     "vignette", "subtitles_on", "intro_on", "outro_on", "tts_provider",
-    "urdu_accent", "elevenlabs_voice_id", "voice_volume", "music_volume",
+    "urdu_accent", "edge_voice", "google_tts_voice", "elevenlabs_voice_id",
+    "voice_speed", "llm_provider", "llm_model", "voice_volume", "music_volume",
     "enabled", "words_per_group", "font_size", "position", "highlight_color",
     "highlight_style", "per_speaker_color",
 }
@@ -127,6 +134,21 @@ PHASE_SEVEN_IDS = {
     "deleteProjectDialogMessage", "confirmProjectDeleteButton",
 }
 
+CHARACTER_CATALOG_IDS = {
+    "characterCatalogGrid", "characterCatalogTabs", "characterCatalogSearch",
+    "characterCatalogCategory", "characterCatalogReadyOnly",
+    "characterCatalogSummary", "characterCatalogNotice", "sbzCatalogCount",
+    "quaterniusCatalogCount", "tplCharacterTabs", "tplCharacterSummary",
+    "assetCatalogGrid", "assetCatalogTabs", "assetCatalogSearch",
+    "assetCatalogSummary", "assetCatalogNotice", "assetBackgroundCount",
+    "assetPropCount", "assetVehicleCount", "assetWeaponCount",
+}
+
+
+SERIES_DROPDOWN_IDS = {
+    "seriesDropdown", "serDropdownButton", "serDropdownLabel",
+    "serDropdownMeta", "serOptions", "newSeriesButton",
+}
 PHASE_EIGHT_TOKENS = {
     "--bg:#090D14", "--sidebar:#0D131E", "--surface:#121A27",
     "--surface-raised:#182233", "--border:#243149", "--primary:#4F8CFF",
@@ -150,7 +172,7 @@ class UIContractTests(unittest.TestCase):
         self.assertIn("url_for('static', filename='css/studio.css')", self.template)
         self.assertIn("url_for('static', filename='js/studio.js')", self.template)
         self.assertIn("url_for('static', filename='icons/favicon.svg')", self.template)
-        self.assertIn("?v=20260714-phase10", self.template)
+        self.assertIn("?v=20260717-workflow-reliability", self.template)
         self.assertIsNone(re.search(r"<style\b", self.template, re.IGNORECASE))
         self.assertIsNone(re.search(
             r"<script(?![^>]*\bsrc=)[^>]*>", self.template, re.IGNORECASE))
@@ -240,6 +262,24 @@ class UIContractTests(unittest.TestCase):
         self.assertIn("scriptMode:STUDIO_UI.scriptMode", self.js)
         self.assertIn("aiTab:STUDIO_UI.aiTab", self.js)
 
+    def test_series_generator_uses_an_accessible_custom_dropdown(self):
+        ids = set(re.findall(r'\bid=["\']([^"\']+)["\']', self.template))
+        self.assertTrue(SERIES_DROPDOWN_IDS.issubset(ids),
+                        f"Missing series dropdown IDs: {sorted(SERIES_DROPDOWN_IDS - ids)}")
+        self.assertIn('aria-haspopup="listbox"', self.template)
+        self.assertIn('role="listbox"', self.template)
+        for function in (
+            "syncSeriesDropdownDisplay", "setSeriesDropdownOpen",
+            "toggleSeriesDropdown", "handleSeriesDropdownKeydown",
+            "handleSeriesOptionKeydown", "chooseSeries",
+        ):
+            self.assertRegex(self.js, rf"function\s+{function}\s*\(")
+        for selector in (
+            "series-dropdown-trigger", "series-dropdown-menu",
+            "series-dropdown-option", "series-option-count",
+        ):
+            self.assertIn(selector, self.css + self.js)
+
     def test_phase_four_cast_scene_editor_preserves_edited_plan_contract(self):
         ids = set(re.findall(r'\bid=["\']([^"\']+)["\']', self.template))
         self.assertTrue(PHASE_FOUR_IDS.issubset(ids),
@@ -279,7 +319,7 @@ class UIContractTests(unittest.TestCase):
         advanced_markup = drawer.group(1)
         for setting_id in (
             "render_engine", "fps", "gpu_encode", "fast_preview",
-            "motionSeg", "modeSeg", "multiChar", "vignette", "intro_on",
+            "multiChar", "vignette", "intro_on",
             "cap_words", "cap_size", "posSeg", "cap_hl", "hlSeg",
             "cap_perspk", "test_img", "testBtn", "testResult",
         ):
@@ -324,6 +364,21 @@ class UIContractTests(unittest.TestCase):
         ):
             self.assertIn(selector, self.template + self.css + self.js)
         self.assertNotIn("if(!confirm('", self.js)
+
+    def test_character_and_asset_catalogs_preserve_separate_library_contracts(self):
+        ids = set(re.findall(r'\bid=["\']([^"\']+)["\']', self.template))
+        self.assertTrue(CHARACTER_CATALOG_IDS.issubset(ids),
+                        f"Missing catalog IDs: {sorted(CHARACTER_CATALOG_IDS - ids)}")
+        for function in (
+            "loadCharacterCatalog", "setCharacterLibrary", "renderCharacterCatalog",
+            "useCatalogCharacter", "loadAssetCatalog", "setAssetCategory",
+            "renderAssetCatalog", "setTemplateCharacterLibrary",
+        ):
+            self.assertRegex(self.js, rf"function\s+{function}\s*\(")
+        self.assertIn("SBZ Originals", self.template)
+        self.assertIn("Quaternius Library", self.template)
+        self.assertIn("/api/character-catalog", self.js)
+        self.assertIn("/api/asset-catalog", self.js)
 
     def test_phase_eight_design_system_tokens_typography_and_icons_are_consistent(self):
         for token in PHASE_EIGHT_TOKENS:
@@ -385,8 +440,8 @@ class UIContractTests(unittest.TestCase):
         try:
             self.assertEqual(page.status_code, 200)
             html = page.get_data(as_text=True)
-            self.assertIn("/static/css/studio.css?v=20260714-phase10", html)
-            self.assertIn("/static/js/studio.js?v=20260714-phase10", html)
+            self.assertIn("/static/css/studio.css?v=20260722-series-dropdown", html)
+            self.assertIn("/static/js/studio.js?v=20260722-series-dropdown", html)
         finally:
             page.close()
         for asset in (

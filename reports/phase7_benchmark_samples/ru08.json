@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "roman_urdu",
+    "scenes": [
+      {
+        "id": "toy-shop-1",
+        "lines": [
+          {
+            "speaker": "Robot",
+            "text": "Arre bhai Teddy! Dekh, main to calculator bhi hoon. Tu kya kar sakta hai?",
+            "emotion": "proud",
+            "action": "chest pe haath rakh kar khara ho jata hai"
+          },
+          {
+            "speaker": "Teddy",
+            "text": "Haan haan, lekin jab bachcha rota hai toh woh mujhe gale lagata hai, teri taraf nahi dekhta.",
+            "emotion": "smug",
+            "action": "apne pet ko thapthapata hai"
+          },
+          {
+            "speaker": "Robot",
+            "text": "Oh really? Lekin main usay din ke teen waqt homework mein help karta hoon. Tu toh bas sonay ke kaam aata hai!",
+            "emotion": "sarcastic",
+            "action": "apni LED aankhein ghoomata hai"
+          },
+          {
+            "speaker": "Teddy",
+            "text": "Achha? Toh bata, kal raat jab bijli gayi thi, toh kis ne bachche ka khauf door kiya? Mera naam lo!",
+            "emotion": "triumphant",
+            "action": "apne pairon par khara ho kar jhoomta hai"
+          },
+          {
+            "speaker": "Robot",
+            "text": "Hmm... woh toh main bhi kar sakta hoon! Emergency light mode hai mere paas.",
+            "emotion": "defensive",
+            "action": "apna button daba kar light jhalakata hai"
+          },
+          {
+            "speaker": "Teddy",
+            "text": "Haha, lekin tere paas garmi aur narmi nahi hai. Bachcha mujhe chhod kar nahi sota.",
+            "emotion": "playful",
+            "action": "apne soft fur ko dikhata hai"
+          },
+          {
+            "speaker": "Robot",
+            "text": "Theek hai, theek hai. Dono ki apni value hai. Lekin agar battery low ho jaye toh?",
+            "emotion": "curious",
+            "action": "apna sir kharab karta hai"
+          },
+          {
+            "speaker": "Teddy",
+            "text": "Toh main toh hamesha ready hoon. No charging required, buddy!",
+            "emotion": "cheerful",
+            "action": "teddy bear hug karta hai"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "7ed2323d-c072-4d08-891f-35bec713ef5b",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.deepseek.v4.flash",
+    "modelAir": "deepseek:v4@flash",
+    "modelDisplayName": "DeepSeek V4 Flash",
+    "transport": "openai_compatible",
+    "latencyMs": 36365,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 280,
+      "completion_tokens": 625,
+      "total_tokens": 905,
+      "prompt_tokens_details": {
+        "cached_tokens": 256
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "507f850d1e2709ef3688aa5b80e9052be7cd16685fa9d3ccfba89a2351adb081",
+    "promptVersion": "phase7.1",
+    "contentSha256": "310802383fd8089a4192a2784f144101eca978f9d7daef9b818e533ed0af4954",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

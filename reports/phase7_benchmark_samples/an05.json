@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "stage": "scene_breakdown",
+  "approved": false,
+  "output": {
+    "schemaVersion": 1,
+    "title": "Untitled",
+    "language": "hinglish",
+    "characters": [
+      {
+        "id": "aman",
+        "name": "Aman",
+        "role": "speaker"
+      },
+      {
+        "id": "neha",
+        "name": "Neha",
+        "role": "speaker"
+      }
+    ],
+    "scenes": [
+      {
+        "id": "scene1",
+        "location": "Park",
+        "timeOfDay": "day",
+        "characters": [
+          "aman",
+          "neha"
+        ],
+        "estimatedDuration": 0.1,
+        "elements": [
+          {
+            "type": "dialogue",
+            "speaker": "aman",
+            "text": "Ball road ki taraf ja rahi hai!",
+            "language": "hinglish",
+            "emotion": null,
+            "physicalAction": null,
+            "actionTarget": null,
+            "prop": null,
+            "entranceExit": "none",
+            "cameraIntent": null,
+            "soundCue": null,
+            "environmentalEvent": null,
+            "estimatedDuration": 0.05,
+            "continuityReferences": []
+          },
+          {
+            "type": "dialogue",
+            "speaker": "neha",
+            "text": "Stop, main guard ko call karti hoon.",
+            "language": "hinglish",
+            "emotion": null,
+            "physicalAction": null,
+            "actionTarget": null,
+            "prop": null,
+            "entranceExit": "none",
+            "cameraIntent": null,
+            "soundCue": null,
+            "environmentalEvent": null,
+            "estimatedDuration": 0.05,
+            "continuityReferences": []
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "718a1e72-6b15-4202-925e-cf4c3f5059be",
+    "taskType": "FAST_PARSER",
+    "modelInternalId": "runware.deepseek.v4.flash",
+    "modelAir": "deepseek:v4@flash",
+    "modelDisplayName": "DeepSeek V4 Flash",
+    "transport": "openai_compatible",
+    "latencyMs": 41245,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 658,
+      "completion_tokens": 386,
+      "total_tokens": 1044
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": true,
+    "fallbackReason": "http_error",
+    "cache": "hit",
+    "cacheKey": "5851376a1012de799a38634644a878f79ac98f28f670e7d0183970d6d4028130",
+    "promptVersion": "phase7.1",
+    "contentSha256": "d4165236e95fbb97b6ce88b02530f3f36efbe84f244c90dd90456f6cf520200b",
+    "finishReason": "stop"
+  },
+  "diagnostics": [
+    {
+      "model": "runware.google.gemini.3.5.flash",
+      "reason": "http_error",
+      "message": "Runware HTTP 400: {\n    \"errors\": [\n        {\n            \"code\": \"tokenLimitExceeded\",\n            \"message\": \"Token limit reached during reasoning. Increase maxTokens to get a complete response.\",\n            \"taskUUID\": \"60314207-4598-4c17-995e-792c2608df74\"\n        }\n    ]\n}",
+      "validation": []
+    }
+  ],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/04_scene_breakdown.json"
+}

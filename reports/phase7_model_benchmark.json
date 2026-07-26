@@ -1,0 +1,1869 @@
+{
+  "schemaVersion": 1,
+  "title": "Phase 7 Task-Based Model Benchmark",
+  "dataset": "benchmarks/phase7_dataset.json",
+  "sampleCount": 40,
+  "comparisonExplicitlyEnabled": true,
+  "universalWinnerDeclared": false,
+  "credentialsIncluded": false,
+  "results": [
+    {
+      "id": "ur01",
+      "group": "urdu",
+      "stage": "story_outline",
+      "language": "urdu",
+      "status": "PASS",
+      "requestedModel": "runware.deepseek.v4.pro",
+      "modelInternalId": "runware.deepseek.v4.pro",
+      "modelAir": "deepseek:v4@pro",
+      "latencyMs": 8257,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.7391,
+        "expectedScriptRatio": 0.941,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ur01",
+        "naturalness": 9,
+        "grammar": 9,
+        "characterVoice": 7,
+        "storyCoherence": 9,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 9,
+        "childSuitability": 10,
+        "structuredValidity": 10,
+        "animationFeasibility": 9,
+        "notes": "Clear, natural Urdu with simple child-friendly progression. Strong emotional arc and coherent rescue story. Minor realism concern in giving warm milk to an injured cat, but overall suitable and easy to animate. Limited distinct character voice because it is an outline."
+      }
+    },
+    {
+      "id": "ur02",
+      "group": "urdu",
+      "stage": "story_outline",
+      "language": "urdu",
+      "status": "PASS",
+      "requestedModel": "runware.openai.gpt.5.4.mini",
+      "modelInternalId": "runware.openai.gpt.5.4.mini",
+      "modelAir": "openai:gpt@5.4-mini",
+      "latencyMs": 5854,
+      "cost": 0.001791,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.6628,
+        "expectedScriptRatio": 0.9706,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ur02",
+        "naturalness": 9,
+        "grammar": 9,
+        "characterVoice": 7,
+        "storyCoherence": 9,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 8,
+        "childSuitability": 10,
+        "structuredValidity": 10,
+        "animationFeasibility": 9,
+        "notes": "Well-formed adventure outline with smooth sequencing and a positive friendship message. Language is natural and age-appropriate. Slightly long beats and some familiar treasure-story phrasing, but overall coherent and visually adaptable."
+      }
+    },
+    {
+      "id": "ur03",
+      "group": "urdu",
+      "stage": "story_outline",
+      "language": "urdu",
+      "status": "PASS",
+      "requestedModel": "runware.deepseek.v4.pro",
+      "modelInternalId": "runware.deepseek.v4.pro",
+      "modelAir": "deepseek:v4@pro",
+      "latencyMs": 7855,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.7647,
+        "expectedScriptRatio": 0.9454,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ur03",
+        "naturalness": 8,
+        "grammar": 9,
+        "characterVoice": 6,
+        "storyCoherence": 4,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 9,
+        "childSuitability": 8,
+        "structuredValidity": 10,
+        "animationFeasibility": 7,
+        "notes": "Language is clear and structurally valid, but the central solution is logically weak: filling a dry well with soil and plants leading to water returning is not well supported within the story. This hurts coherence. Still culturally neutral and generally child-safe, though potentially misleading in problem-solving terms."
+      }
+    },
+    {
+      "id": "ur04",
+      "group": "urdu",
+      "stage": "story_outline",
+      "language": "urdu",
+      "status": "PASS",
+      "requestedModel": "runware.openai.gpt.5.4.mini",
+      "modelInternalId": "runware.openai.gpt.5.4.mini",
+      "modelAir": "openai:gpt@5.4-mini",
+      "latencyMs": 5979,
+      "cost": 0.001857,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.6398,
+        "expectedScriptRatio": 0.9698,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ur04",
+        "naturalness": 9,
+        "grammar": 9,
+        "characterVoice": 8,
+        "storyCoherence": 8,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 8,
+        "childSuitability": 10,
+        "structuredValidity": 10,
+        "animationFeasibility": 10,
+        "notes": "Playful, expressive outline with a strong mischievous character premise and clear resolution. Natural Urdu and good child appeal. Slight internal oddity in the parrot needing help to retrieve what it hid, but the comedic tone supports it. Highly animatable."
+      }
+    },
+    {
+      "id": "ur05",
+      "group": "urdu",
+      "stage": "story_outline",
+      "language": "urdu",
+      "status": "PASS",
+      "requestedModel": "runware.deepseek.v4.pro",
+      "modelInternalId": "runware.deepseek.v4.pro",
+      "modelAir": "deepseek:v4@pro",
+      "latencyMs": 9116,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.6961,
+        "expectedScriptRatio": 0.9525,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ur05",
+        "naturalness": 8,
+        "grammar": 8,
+        "characterVoice": 7,
+        "storyCoherence": 5,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 9,
+        "childSuitability": 9,
+        "structuredValidity": 10,
+        "animationFeasibility": 9,
+        "notes": "Cute premise and clear moral about saving electricity. However, the causal link that the small robot's behavior caused the whole city's power outage is not convincingly established, reducing coherence. Language is mostly natural, though the logline wording is slightly awkward. Strong visual potential and child-friendly tone."
+      }
+    },
+    {
+      "id": "ur06",
+      "group": "urdu",
+      "stage": "character_dialogue",
+      "language": "urdu",
+      "status": "PASS",
+      "requestedModel": "runware.deepseek.v4.pro",
+      "modelInternalId": "runware.deepseek.v4.pro",
+      "modelAir": "deepseek:v4@pro",
+      "latencyMs": 18189,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.7243,
+        "expectedScriptRatio": 0.7741,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ur06",
+        "naturalness": 8,
+        "grammar": 8,
+        "characterVoice": 8,
+        "storyCoherence": 7,
+        "culturalAppropriateness": 8,
+        "repetitionControl": 8,
+        "childSuitability": 8,
+        "structuredValidity": 9,
+        "animationFeasibility": 8,
+        "notes": "Natural Urdu dialogue with clear emotions and actions. Minor factual issue: claim about human scent causing birds to reject nest is oversimplified/misleading. One action implies moving the nest despite earlier warning, slightly weakening coherence."
+      }
+    },
+    {
+      "id": "ur07",
+      "group": "urdu",
+      "stage": "character_dialogue",
+      "language": "urdu",
+      "status": "PASS",
+      "requestedModel": "runware.zai.glm.5.1",
+      "modelInternalId": "runware.deepseek.v4.pro",
+      "modelAir": "deepseek:v4@pro",
+      "latencyMs": 45700,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": true,
+      "fallbackReason": "OutputValidationError",
+      "diagnostics": [
+        {
+          "model": "runware.zai.glm.5.1",
+          "reason": "OutputValidationError",
+          "message": "Structured output failed schema validation",
+          "validation": [
+            "$.scenes[0].lines[2].action: expected string",
+            "$.scenes[0].lines[4].action: expected string"
+          ]
+        }
+      ],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.7576,
+        "expectedScriptRatio": 0.7115,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ur07",
+        "naturalness": 8,
+        "grammar": 9,
+        "characterVoice": 8,
+        "storyCoherence": 9,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 9,
+        "childSuitability": 9,
+        "structuredValidity": 9,
+        "animationFeasibility": 8,
+        "notes": "Short, coherent kitchen exchange with distinct elder-child voice. Grammar is strong and humor is culturally familiar. Suitable for children and easy to animate."
+      }
+    },
+    {
+      "id": "ur08",
+      "group": "urdu",
+      "stage": "character_dialogue",
+      "language": "urdu",
+      "status": "PASS",
+      "requestedModel": "runware.deepseek.v4.pro",
+      "modelInternalId": "runware.deepseek.v4.pro",
+      "modelAir": "deepseek:v4@pro",
+      "latencyMs": 10190,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.7065,
+        "expectedScriptRatio": 0.6927,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ur08",
+        "naturalness": 8,
+        "grammar": 8,
+        "characterVoice": 7,
+        "storyCoherence": 8,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 9,
+        "childSuitability": 8,
+        "structuredValidity": 9,
+        "animationFeasibility": 9,
+        "notes": "Simple suspense scene that resolves safely. Dialogue is natural overall, though emotion label 'مسکراہٹ' is not an emotion in the same style as others. Clear staging supports animation."
+      }
+    },
+    {
+      "id": "ur09",
+      "group": "urdu",
+      "stage": "character_dialogue",
+      "language": "urdu",
+      "status": "PASS",
+      "requestedModel": "runware.zai.glm.5.1",
+      "modelInternalId": "runware.zai.glm.5.1",
+      "modelAir": "zai:glm@5.1",
+      "latencyMs": 54071,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 1,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.5446,
+        "expectedScriptRatio": 0.7961,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ur09",
+        "naturalness": 7,
+        "grammar": 6,
+        "characterVoice": 7,
+        "storyCoherence": 9,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 7,
+        "childSuitability": 9,
+        "structuredValidity": 8,
+        "animationFeasibility": 7,
+        "notes": "Educational classroom dialogue is coherent and culturally appropriate, but contains several language issues: 'ہماراری' should be 'ہماری', 'بے دھیانہ' is awkward, 'یقین بنانا' is unnatural, 'ضیاعی' is odd, and 'تلقیم' likely intended 'تلقین'. Some emotion labels are awkward descriptors rather than emotions. Output language field uses 'ur' instead of 'urdu'."
+      }
+    },
+    {
+      "id": "ur10",
+      "group": "urdu",
+      "stage": "character_dialogue",
+      "language": "urdu",
+      "status": "PASS",
+      "requestedModel": "runware.deepseek.v4.pro",
+      "modelInternalId": "runware.deepseek.v4.pro",
+      "modelAir": "deepseek:v4@pro",
+      "latencyMs": 9636,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.7586,
+        "expectedScriptRatio": 0.6865,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ur10",
+        "naturalness": 7,
+        "grammar": 7,
+        "characterVoice": 7,
+        "storyCoherence": 8,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 9,
+        "childSuitability": 9,
+        "structuredValidity": 9,
+        "animationFeasibility": 8,
+        "notes": "Positive moral scene with clear dialogue and child-safe content. Main issue is action text 'بھاڑ میں سے بٹوا اٹھا کر' which appears erroneous/unintended and hurts naturalness. Otherwise coherent and culturally fitting."
+      }
+    },
+    {
+      "id": "ru01",
+      "group": "roman_urdu",
+      "stage": "character_dialogue",
+      "language": "roman_urdu",
+      "status": "PASS",
+      "requestedModel": "runware.zai.glm.5.1",
+      "modelInternalId": "runware.zai.glm.5.1",
+      "modelAir": "zai:glm@5.1",
+      "latencyMs": 18168,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 1,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.7636,
+        "expectedScriptRatio": 1.0,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ru01",
+        "naturalness": 8,
+        "grammar": 8,
+        "characterVoice": 7,
+        "storyCoherence": 8,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 9,
+        "childSuitability": 9,
+        "structuredValidity": 9,
+        "animationFeasibility": 8,
+        "notes": "Clear and natural dialogue/narration with a cautious safety message. Minor mismatch with requested roman Urdu because output language is tagged 'ur' and includes more standard Urdu-style wording, but text is still readable in Roman script. Structure is valid and scene is easy to animate."
+      }
+    },
+    {
+      "id": "ru02",
+      "group": "roman_urdu",
+      "stage": "character_dialogue",
+      "language": "roman_urdu",
+      "status": "PASS",
+      "requestedModel": "runware.deepseek.v4.flash",
+      "modelInternalId": "runware.deepseek.v4.flash",
+      "modelAir": "deepseek:v4@flash",
+      "latencyMs": 28020,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.6772,
+        "expectedScriptRatio": 1.0,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ru02",
+        "naturalness": 9,
+        "grammar": 8,
+        "characterVoice": 8,
+        "storyCoherence": 9,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 9,
+        "childSuitability": 10,
+        "structuredValidity": 10,
+        "animationFeasibility": 9,
+        "notes": "Very natural child-friendly schoolyard exchange with distinct emotions and actions. Small typo in 'rot lete hue' slightly affects grammar. Strong coherence and easy visual staging."
+      }
+    },
+    {
+      "id": "ru03",
+      "group": "roman_urdu",
+      "stage": "character_dialogue",
+      "language": "roman_urdu",
+      "status": "PASS",
+      "requestedModel": "runware.zai.glm.5.1",
+      "modelInternalId": "runware.zai.glm.5.1",
+      "modelAir": "zai:glm@5.1",
+      "latencyMs": 40015,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 1,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.6143,
+        "expectedScriptRatio": 1.0,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ru03",
+        "naturalness": 6,
+        "grammar": 6,
+        "characterVoice": 7,
+        "storyCoherence": 6,
+        "culturalAppropriateness": 8,
+        "repetitionControl": 8,
+        "childSuitability": 8,
+        "structuredValidity": 9,
+        "animationFeasibility": 6,
+        "notes": "Good conservation theme and culturally grounded village setting, but several lines feel awkward or logically unclear, such as water reuse ideas around the well and wording like 'bed bana dein'. Output language tag is 'Urdu' rather than roman_urdu. Structure is valid, though some concepts may be harder to animate clearly."
+      }
+    },
+    {
+      "id": "ru04",
+      "group": "roman_urdu",
+      "stage": "character_dialogue",
+      "language": "roman_urdu",
+      "status": "PASS",
+      "requestedModel": "runware.deepseek.v4.flash",
+      "modelInternalId": "runware.deepseek.v4.flash",
+      "modelAir": "deepseek:v4@flash",
+      "latencyMs": 14162,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.5174,
+        "expectedScriptRatio": 1.0,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ru04",
+        "naturalness": 8,
+        "grammar": 8,
+        "characterVoice": 9,
+        "storyCoherence": 8,
+        "culturalAppropriateness": 8,
+        "repetitionControl": 7,
+        "childSuitability": 8,
+        "structuredValidity": 10,
+        "animationFeasibility": 9,
+        "notes": "Playful banter has strong character voice and clear back-and-forth rhythm. Repetition around namak/cheeni is intentional but somewhat heavy. Suitable and visually simple for animation."
+      }
+    },
+    {
+      "id": "ru05",
+      "group": "roman_urdu",
+      "stage": "character_dialogue",
+      "language": "roman_urdu",
+      "status": "PASS",
+      "requestedModel": "runware.zai.glm.5.1",
+      "modelInternalId": "runware.zai.glm.5.1",
+      "modelAir": "zai:glm@5.1",
+      "latencyMs": 26436,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 1,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.9138,
+        "expectedScriptRatio": 1.0,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ru05",
+        "naturalness": 7,
+        "grammar": 7,
+        "characterVoice": 8,
+        "storyCoherence": 7,
+        "culturalAppropriateness": 8,
+        "repetitionControl": 9,
+        "childSuitability": 9,
+        "structuredValidity": 8,
+        "animationFeasibility": 8,
+        "notes": "Warm, compassionate line with clear emotional intent, but it is only a single-speaker scene and the language tag is 'hi' instead of roman_urdu. Phrase 'si si karo' is somewhat awkward. Structure is mostly valid and the action is easy to animate."
+      }
+    },
+    {
+      "id": "ru06",
+      "group": "roman_urdu",
+      "stage": "character_dialogue",
+      "language": "roman_urdu",
+      "status": "PASS",
+      "requestedModel": "runware.deepseek.v4.flash",
+      "modelInternalId": "runware.deepseek.v4.flash",
+      "modelAir": "deepseek:v4@flash",
+      "latencyMs": 20832,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.7288,
+        "expectedScriptRatio": 1.0,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ru06",
+        "naturalness": 9,
+        "grammar": 8,
+        "characterVoice": 8,
+        "storyCoherence": 9,
+        "culturalAppropriateness": 10,
+        "repetitionControl": 9,
+        "childSuitability": 10,
+        "structuredValidity": 10,
+        "animationFeasibility": 9,
+        "notes": "Natural sibling dialogue with clear emotional progression. Minor Roman Urdu spelling inconsistency like 'Mein' instead of 'Main'. Strongly child-safe and easy to animate."
+      }
+    },
+    {
+      "id": "ru07",
+      "group": "roman_urdu",
+      "stage": "character_dialogue",
+      "language": "roman_urdu",
+      "status": "PASS",
+      "requestedModel": "runware.zai.glm.5.1",
+      "modelInternalId": "runware.zai.glm.5.1",
+      "modelAir": "zai:glm@5.1",
+      "latencyMs": 30975,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 1,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.6779,
+        "expectedScriptRatio": 1.0,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ru07",
+        "naturalness": 7,
+        "grammar": 6,
+        "characterVoice": 7,
+        "storyCoherence": 8,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 8,
+        "childSuitability": 9,
+        "structuredValidity": 7,
+        "animationFeasibility": 8,
+        "notes": "Message is clear and culturally appropriate, but output language field says 'ur' instead of requested Roman Urdu. Some emotion fields contain actions or odd phrases like 'Ghosla saaf karte hue', reducing structural and linguistic quality."
+      }
+    },
+    {
+      "id": "ru08",
+      "group": "roman_urdu",
+      "stage": "character_dialogue",
+      "language": "roman_urdu",
+      "status": "PASS",
+      "requestedModel": "runware.deepseek.v4.flash",
+      "modelInternalId": "runware.deepseek.v4.flash",
+      "modelAir": "deepseek:v4@flash",
+      "latencyMs": 36365,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.6498,
+        "expectedScriptRatio": 1.0,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ru08",
+        "naturalness": 8,
+        "grammar": 7,
+        "characterVoice": 9,
+        "storyCoherence": 8,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 8,
+        "childSuitability": 10,
+        "structuredValidity": 10,
+        "animationFeasibility": 10,
+        "notes": "Playful toy banter with distinct voices and strong visual actions. Some phrasing is slightly awkward or mixed-register, e.g. 'apna sir kharab karta hai', but overall lively and child-friendly."
+      }
+    },
+    {
+      "id": "ru09",
+      "group": "roman_urdu",
+      "stage": "character_dialogue",
+      "language": "roman_urdu",
+      "status": "PASS",
+      "requestedModel": "runware.zai.glm.5.1",
+      "modelInternalId": "runware.deepseek.v4.pro",
+      "modelAir": "deepseek:v4@pro",
+      "latencyMs": 24036,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": true,
+      "fallbackReason": "OutputValidationError",
+      "diagnostics": [
+        {
+          "model": "runware.zai.glm.5.1",
+          "reason": "OutputValidationError",
+          "message": "Structured output failed schema validation",
+          "validation": [
+            "$.scenes[0].lines[1].text: string is too short",
+            "$.scenes[0].lines[1].emotion: string is too short"
+          ]
+        }
+      ],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.7769,
+        "expectedScriptRatio": 1.0,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ru09",
+        "naturalness": 8,
+        "grammar": 8,
+        "characterVoice": 7,
+        "storyCoherence": 8,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 9,
+        "childSuitability": 7,
+        "structuredValidity": 10,
+        "animationFeasibility": 9,
+        "notes": "Clear rescue scene with coherent urgency and simple structure. Mentions blood and possible killing, which lowers child suitability somewhat, though the overall tone is compassionate."
+      }
+    },
+    {
+      "id": "ru10",
+      "group": "roman_urdu",
+      "stage": "character_dialogue",
+      "language": "roman_urdu",
+      "status": "PASS",
+      "requestedModel": "runware.deepseek.v4.flash",
+      "modelInternalId": "runware.deepseek.v4.flash",
+      "modelAir": "deepseek:v4@flash",
+      "latencyMs": 10451,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.9189,
+        "expectedScriptRatio": 1.0,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "ru10",
+        "naturalness": 8,
+        "grammar": 8,
+        "characterVoice": 7,
+        "storyCoherence": 7,
+        "culturalAppropriateness": 10,
+        "repetitionControl": 10,
+        "childSuitability": 10,
+        "structuredValidity": 10,
+        "animationFeasibility": 8,
+        "notes": "Very short but valid exchange. Natural correction in a library setting and fully child-appropriate, though limited length reduces character depth and narrative development."
+      }
+    },
+    {
+      "id": "hi01",
+      "group": "hindi",
+      "stage": "character_dialogue",
+      "language": "hindi",
+      "status": "PASS",
+      "requestedModel": "runware.zai.glm.5.1",
+      "modelInternalId": "runware.zai.glm.5.1",
+      "modelAir": "zai:glm@5.1",
+      "latencyMs": 68864,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 1,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.6991,
+        "expectedScriptRatio": 0.7911,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "hi01",
+        "naturalness": 7,
+        "grammar": 6,
+        "characterVoice": 8,
+        "storyCoherence": 7,
+        "culturalAppropriateness": 7,
+        "repetitionControl": 8,
+        "childSuitability": 8,
+        "structuredValidity": 10,
+        "animationFeasibility": 8,
+        "notes": "Clear compassionate dialogue with distinct sibling-like voices and a coherent rescue scenario. Some wording feels unnatural or awkward in Hindi, such as 'पेट्रोलेम जेली', 'मेरी बैग', and 'कुटिया नुमा अलमारी (स्टोर रूम)'. Also includes potentially questionable first-aid guidance, but overall remains child-safe and structurally valid."
+      }
+    },
+    {
+      "id": "hi02",
+      "group": "hindi",
+      "stage": "character_dialogue",
+      "language": "hindi",
+      "status": "PASS",
+      "requestedModel": "runware.openai.gpt.5.4.mini",
+      "modelInternalId": "runware.openai.gpt.5.4.mini",
+      "modelAir": "openai:gpt@5.4-mini",
+      "latencyMs": 4738,
+      "cost": 0.001506,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.708,
+        "expectedScriptRatio": 0.7091,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "hi02",
+        "naturalness": 8,
+        "grammar": 9,
+        "characterVoice": 7,
+        "storyCoherence": 7,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 9,
+        "childSuitability": 9,
+        "structuredValidity": 10,
+        "animationFeasibility": 8,
+        "notes": "Natural and grammatically solid short suspense exchange. Character voices are serviceable but not highly distinctive. Scene is coherent though incomplete, ending before resolution. Safe and easy to animate."
+      }
+    },
+    {
+      "id": "hi03",
+      "group": "hindi",
+      "stage": "character_dialogue",
+      "language": "hindi",
+      "status": "PASS",
+      "requestedModel": "runware.zai.glm.5.1",
+      "modelInternalId": "runware.zai.glm.5.1",
+      "modelAir": "zai:glm@5.1",
+      "latencyMs": 36982,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 1,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.6994,
+        "expectedScriptRatio": 0.793,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "hi03",
+        "naturalness": 8,
+        "grammar": 8,
+        "characterVoice": 9,
+        "storyCoherence": 8,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 8,
+        "childSuitability": 9,
+        "structuredValidity": 10,
+        "animationFeasibility": 8,
+        "notes": "Lively, humorous banter with strong grandmother-grandchild voice contrast. Mostly natural Hindi, though 'अबकल' appears incorrect and a few phrases are slightly exaggerated. Coherent and culturally fitting, with playful tea discussion suitable for children."
+      }
+    },
+    {
+      "id": "hi04",
+      "group": "hindi",
+      "stage": "character_dialogue",
+      "language": "hindi",
+      "status": "PASS",
+      "requestedModel": "runware.openai.gpt.5.4.mini",
+      "modelInternalId": "runware.openai.gpt.5.4.mini",
+      "modelAir": "openai:gpt@5.4-mini",
+      "latencyMs": 4912,
+      "cost": 0.001546,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.7353,
+        "expectedScriptRatio": 0.7156,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "hi04",
+        "naturalness": 9,
+        "grammar": 9,
+        "characterVoice": 7,
+        "storyCoherence": 9,
+        "culturalAppropriateness": 10,
+        "repetitionControl": 9,
+        "childSuitability": 10,
+        "structuredValidity": 10,
+        "animationFeasibility": 9,
+        "notes": "Simple, clear, and natural educational dialogue about cleanliness. Grammar is strong, message is coherent, culturally appropriate, and highly child-friendly. Character voices are basic but effective. Very feasible for animation."
+      }
+    },
+    {
+      "id": "hi05",
+      "group": "hindi",
+      "stage": "character_dialogue",
+      "language": "hindi",
+      "status": "PASS",
+      "requestedModel": "runware.zai.glm.5.1",
+      "modelInternalId": "runware.deepseek.v4.pro",
+      "modelAir": "deepseek:v4@pro",
+      "latencyMs": 40016,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": true,
+      "fallbackReason": "OutputValidationError",
+      "diagnostics": [
+        {
+          "model": "runware.zai.glm.5.1",
+          "reason": "OutputValidationError",
+          "message": "Structured output failed schema validation",
+          "validation": [
+            "$.language: mandatory field is missing",
+            "$.scenes: mandatory field is missing"
+          ]
+        }
+      ],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.8144,
+        "expectedScriptRatio": 0.7133,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "hi05",
+        "naturalness": 9,
+        "grammar": 9,
+        "characterVoice": 8,
+        "storyCoherence": 8,
+        "culturalAppropriateness": 10,
+        "repetitionControl": 9,
+        "childSuitability": 10,
+        "structuredValidity": 10,
+        "animationFeasibility": 9,
+        "notes": "Natural and emotionally clear family dialogue with a compassionate tone. Grammar is strong and the scenario is coherent, though brief. Highly suitable for children and straightforward to animate."
+      }
+    },
+    {
+      "id": "hi06",
+      "group": "hindi",
+      "stage": "character_dialogue",
+      "language": "hindi",
+      "status": "PASS",
+      "requestedModel": "runware.openai.gpt.5.4.mini",
+      "modelInternalId": "runware.openai.gpt.5.4.mini",
+      "modelAir": "openai:gpt@5.4-mini",
+      "latencyMs": 6180,
+      "cost": 0.00255,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.6386,
+        "expectedScriptRatio": 0.7157,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "hi06",
+        "naturalness": 9,
+        "grammar": 10,
+        "characterVoice": 9,
+        "storyCoherence": 10,
+        "culturalAppropriateness": 10,
+        "repetitionControl": 9,
+        "childSuitability": 10,
+        "structuredValidity": 10,
+        "animationFeasibility": 10,
+        "notes": "Natural classroom dialogue with clear educational flow. Grammar is strong and roles are consistent. Child-friendly, culturally appropriate, and easy to animate with explicit actions and emotions. Minor formulaic phrasing in teacher-led exchanges keeps it from a perfect naturalness/repetition score."
+      }
+    },
+    {
+      "id": "hi07",
+      "group": "hindi",
+      "stage": "character_dialogue",
+      "language": "hindi",
+      "status": "PASS",
+      "requestedModel": "runware.zai.glm.5.1",
+      "modelInternalId": "runware.deepseek.v4.pro",
+      "modelAir": "deepseek:v4@pro",
+      "latencyMs": 26591,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": true,
+      "fallbackReason": "OutputValidationError",
+      "diagnostics": [
+        {
+          "model": "runware.zai.glm.5.1",
+          "reason": "OutputValidationError",
+          "message": "Structured output failed schema validation",
+          "validation": [
+            "$.language: mandatory field is missing",
+            "$.scenes: mandatory field is missing"
+          ]
+        }
+      ],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.6859,
+        "expectedScriptRatio": 0.692,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "hi07",
+        "naturalness": 8,
+        "grammar": 9,
+        "characterVoice": 8,
+        "storyCoherence": 9,
+        "culturalAppropriateness": 10,
+        "repetitionControl": 9,
+        "childSuitability": 10,
+        "structuredValidity": 9,
+        "animationFeasibility": 9,
+        "notes": "Simple honest-found-wallet scene with clear moral lesson. Dialogue is mostly natural, though some lines feel slightly textbook-like. One line lacks an action field while others include it, so structure is not fully uniform, but overall schema-like organization is intact. Suitable for children and straightforward to animate."
+      }
+    },
+    {
+      "id": "hi08",
+      "group": "hindi",
+      "stage": "character_dialogue",
+      "language": "hindi",
+      "status": "PASS",
+      "requestedModel": "runware.openai.gpt.5.4.mini",
+      "modelInternalId": "runware.openai.gpt.5.4.mini",
+      "modelAir": "openai:gpt@5.4-mini",
+      "latencyMs": 5302,
+      "cost": 0.002096,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.6429,
+        "expectedScriptRatio": 0.7156,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "hi08",
+        "naturalness": 9,
+        "grammar": 10,
+        "characterVoice": 9,
+        "storyCoherence": 10,
+        "culturalAppropriateness": 10,
+        "repetitionControl": 9,
+        "childSuitability": 10,
+        "structuredValidity": 10,
+        "animationFeasibility": 10,
+        "notes": "Warm, reassuring sibling interaction with believable emotional progression from fear to calm. Grammar and phrasing are strong, and the scene is highly suitable for children. Clear actions and emotions support animation well. Slightly patterned comforting language but not overly repetitive."
+      }
+    },
+    {
+      "id": "hi09",
+      "group": "hindi",
+      "stage": "character_dialogue",
+      "language": "hindi",
+      "status": "PASS",
+      "requestedModel": "runware.zai.glm.5.1",
+      "modelInternalId": "runware.deepseek.v4.pro",
+      "modelAir": "deepseek:v4@pro",
+      "latencyMs": 21817,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": true,
+      "fallbackReason": "OutputValidationError",
+      "diagnostics": [
+        {
+          "model": "runware.zai.glm.5.1",
+          "reason": "OutputValidationError",
+          "message": "Structured output failed schema validation",
+          "validation": [
+            "$.language: mandatory field is missing",
+            "$.scenes: mandatory field is missing"
+          ]
+        }
+      ],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.8125,
+        "expectedScriptRatio": 0.7391,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "hi09",
+        "naturalness": 8,
+        "grammar": 9,
+        "characterVoice": 8,
+        "storyCoherence": 8,
+        "culturalAppropriateness": 10,
+        "repetitionControl": 9,
+        "childSuitability": 9,
+        "structuredValidity": 9,
+        "animationFeasibility": 8,
+        "notes": "Short rural scene is understandable and gentle, but the line about no feathers remaining and reusing the nest creates a slightly abrupt or unclear situation. Voices are serviceable but not highly distinctive. Structure is mostly valid though not every line includes action. Child-suitable overall, with simple staging for animation."
+      }
+    },
+    {
+      "id": "hi10",
+      "group": "hindi",
+      "stage": "character_dialogue",
+      "language": "hindi",
+      "status": "PASS",
+      "requestedModel": "runware.openai.gpt.5.4.mini",
+      "modelInternalId": "runware.openai.gpt.5.4.mini",
+      "modelAir": "openai:gpt@5.4-mini",
+      "latencyMs": 4245,
+      "cost": 0.001099,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.7465,
+        "expectedScriptRatio": 0.6504,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "hi10",
+        "naturalness": 9,
+        "grammar": 10,
+        "characterVoice": 8,
+        "storyCoherence": 10,
+        "culturalAppropriateness": 10,
+        "repetitionControl": 10,
+        "childSuitability": 10,
+        "structuredValidity": 10,
+        "animationFeasibility": 9,
+        "notes": "Concise and natural library etiquette exchange. Grammar is clean, story is coherent, and the behavior lesson is age-appropriate. Character voices are simple rather than distinctive, but the scene is clear and easy to animate."
+      }
+    },
+    {
+      "id": "mx01",
+      "group": "mixed_urdu_english",
+      "stage": "script_doctor",
+      "language": "hinglish",
+      "status": "PASS",
+      "requestedModel": "runware.deepseek.v4.flash",
+      "modelInternalId": "runware.deepseek.v4.flash",
+      "modelAir": "deepseek:v4@flash",
+      "latencyMs": 7651,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.9,
+        "expectedScriptRatio": 1.0,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "mx01",
+        "naturalness": 8,
+        "grammar": 8,
+        "characterVoice": 7,
+        "storyCoherence": 9,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 10,
+        "childSuitability": 10,
+        "structuredValidity": 10,
+        "animationFeasibility": 9,
+        "notes": "Clear Hinglish dialogue with natural school context. Minor stiffness in 'complete karta hoon and then main teacher ko deta hoon,' but meaning is clear and coherent."
+      }
+    },
+    {
+      "id": "mx02",
+      "group": "mixed_urdu_english",
+      "stage": "script_doctor",
+      "language": "hinglish",
+      "status": "PASS",
+      "requestedModel": "runware.openai.gpt.5.4.mini",
+      "modelInternalId": "runware.openai.gpt.5.4.mini",
+      "modelAir": "openai:gpt@5.4-mini",
+      "latencyMs": 4121,
+      "cost": 0.000944,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.8701,
+        "expectedScriptRatio": 1.0,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "mx02",
+        "naturalness": 7,
+        "grammar": 7,
+        "characterVoice": 7,
+        "storyCoherence": 8,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 6,
+        "childSuitability": 10,
+        "structuredValidity": 10,
+        "animationFeasibility": 9,
+        "notes": "Understandable and culturally fitting, but 'really bahut pasand hai' keeps noticeable repetition despite note about concision. Dialogue remains simple and animatable."
+      }
+    },
+    {
+      "id": "mx03",
+      "group": "mixed_urdu_english",
+      "stage": "script_doctor",
+      "language": "hinglish",
+      "status": "PASS",
+      "requestedModel": "runware.deepseek.v4.flash",
+      "modelInternalId": "runware.deepseek.v4.flash",
+      "modelAir": "deepseek:v4@flash",
+      "latencyMs": 10141,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 1.0,
+        "expectedScriptRatio": 1.0,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "mx03",
+        "naturalness": 7,
+        "grammar": 8,
+        "characterVoice": 7,
+        "storyCoherence": 8,
+        "culturalAppropriateness": 8,
+        "repetitionControl": 10,
+        "childSuitability": 6,
+        "structuredValidity": 10,
+        "animationFeasibility": 9,
+        "notes": "Scene is coherent and easy to stage. 'This box is stupid' sounds somewhat awkward in Hinglish, and destructive intent lowers child suitability slightly, though Sana adds a safety cue."
+      }
+    },
+    {
+      "id": "mx04",
+      "group": "mixed_urdu_english",
+      "stage": "script_doctor",
+      "language": "hinglish",
+      "status": "PASS",
+      "requestedModel": "runware.openai.gpt.5.4.mini",
+      "modelInternalId": "runware.openai.gpt.5.4.mini",
+      "modelAir": "openai:gpt@5.4-mini",
+      "latencyMs": 4070,
+      "cost": 0.000821,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.7869,
+        "expectedScriptRatio": 1.0,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "mx04",
+        "naturalness": 8,
+        "grammar": 9,
+        "characterVoice": 7,
+        "storyCoherence": 8,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 10,
+        "childSuitability": 10,
+        "structuredValidity": 10,
+        "animationFeasibility": 9,
+        "notes": "Short, clean, and natural home conversation. Emotionality is limited despite note claiming it was increased, but the exchange is coherent and child-friendly."
+      }
+    },
+    {
+      "id": "mx05",
+      "group": "mixed_urdu_english",
+      "stage": "script_doctor",
+      "language": "hinglish",
+      "status": "PASS",
+      "requestedModel": "runware.deepseek.v4.flash",
+      "modelInternalId": "runware.deepseek.v4.flash",
+      "modelAir": "deepseek:v4@flash",
+      "latencyMs": 5553,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.913,
+        "expectedScriptRatio": 1.0,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "mx05",
+        "naturalness": 8,
+        "grammar": 9,
+        "characterVoice": 6,
+        "storyCoherence": 8,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 10,
+        "childSuitability": 10,
+        "structuredValidity": 10,
+        "animationFeasibility": 9,
+        "notes": "Very simple and clear. Slightly minimal character voice, but the moral action of finding the owner is appropriate, coherent, and easy to animate."
+      }
+    },
+    {
+      "id": "an01",
+      "group": "script_to_animation",
+      "stage": "scene_breakdown",
+      "language": "roman_urdu",
+      "status": "PASS",
+      "requestedModel": "runware.google.gemini.3.5.flash",
+      "modelInternalId": "runware.google.gemini.3.5.flash",
+      "modelAir": "google:gemini@3.5-flash",
+      "latencyMs": 4268,
+      "cost": 0.00339,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.8545,
+        "expectedScriptRatio": 1.0,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "an01",
+        "naturalness": 8,
+        "grammar": 8,
+        "characterVoice": 7,
+        "storyCoherence": 8,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 9,
+        "childSuitability": 10,
+        "structuredValidity": 9,
+        "animationFeasibility": 8,
+        "notes": "Simple, natural Roman Urdu for a child scene. Coherent discovery moment with one character. Minor limitation: sparse detail and mixed language title/location labels, but structure is clear and durations are plausible."
+      }
+    },
+    {
+      "id": "an02",
+      "group": "script_to_animation",
+      "stage": "scene_breakdown",
+      "language": "urdu",
+      "status": "PASS",
+      "requestedModel": "runware.openai.gpt.5.4.mini",
+      "modelInternalId": "runware.openai.gpt.5.4.mini",
+      "modelAir": "openai:gpt@5.4-mini",
+      "latencyMs": 4358,
+      "cost": 0.002186,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.6379,
+        "expectedScriptRatio": 0.2273,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "an02",
+        "naturalness": 9,
+        "grammar": 9,
+        "characterVoice": 8,
+        "storyCoherence": 9,
+        "culturalAppropriateness": 10,
+        "repetitionControl": 9,
+        "childSuitability": 10,
+        "structuredValidity": 10,
+        "animationFeasibility": 9,
+        "notes": "Strong Urdu phrasing with clear emotional intent and actions. Scene is coherent, culturally appropriate, and well structured with detailed fields. Good for animation because actions and prop use are explicit."
+      }
+    },
+    {
+      "id": "an03",
+      "group": "script_to_animation",
+      "stage": "scene_breakdown",
+      "language": "hindi",
+      "status": "PASS",
+      "requestedModel": "runware.google.gemini.3.5.flash",
+      "modelInternalId": "runware.deepseek.v4.flash",
+      "modelAir": "deepseek:v4@flash",
+      "latencyMs": 47786,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": true,
+      "fallbackReason": "http_error",
+      "diagnostics": [
+        {
+          "model": "runware.google.gemini.3.5.flash",
+          "reason": "http_error",
+          "message": "Runware HTTP 400: {\n    \"errors\": [\n        {\n            \"code\": \"invalidProviderContent\",\n            \"message\": \"Invalid content detected. The generated content was flagged and rejected by Google Gemini's content moderation system.\",\n            \"responseContent\": \"Content blocked by Gemini safet",
+          "validation": []
+        }
+      ],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.5957,
+        "expectedScriptRatio": 0.1205,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "an03",
+        "naturalness": 8,
+        "grammar": 9,
+        "characterVoice": 6,
+        "storyCoherence": 7,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 9,
+        "childSuitability": 10,
+        "structuredValidity": 9,
+        "animationFeasibility": 5,
+        "notes": "Hindi is grammatical and understandable, but character voice is generic. Story beat is coherent though minimal. Extremely short durations reduce practical animation feasibility."
+      }
+    },
+    {
+      "id": "an04",
+      "group": "script_to_animation",
+      "stage": "scene_breakdown",
+      "language": "roman_urdu",
+      "status": "PASS",
+      "requestedModel": "runware.openai.gpt.5.4.mini",
+      "modelInternalId": "runware.openai.gpt.5.4.mini",
+      "modelAir": "openai:gpt@5.4-mini",
+      "latencyMs": 4758,
+      "cost": 0.001625,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "diagnostics": [],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.6812,
+        "expectedScriptRatio": 1.0,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "an04",
+        "naturalness": 8,
+        "grammar": 8,
+        "characterVoice": 7,
+        "storyCoherence": 8,
+        "culturalAppropriateness": 9,
+        "repetitionControl": 9,
+        "childSuitability": 9,
+        "structuredValidity": 9,
+        "animationFeasibility": 8,
+        "notes": "Urgent Roman Urdu dialogue is clear and suitable for the situation. Coherent mini-scene with actionable stakes. Some metadata is sparse, but structure is valid and animation-friendly."
+      }
+    },
+    {
+      "id": "an05",
+      "group": "script_to_animation",
+      "stage": "scene_breakdown",
+      "language": "hinglish",
+      "status": "PASS",
+      "requestedModel": "runware.google.gemini.3.5.flash",
+      "modelInternalId": "runware.deepseek.v4.flash",
+      "modelAir": "deepseek:v4@flash",
+      "latencyMs": 41245,
+      "cost": null,
+      "cache": "hit",
+      "retryCount": 0,
+      "fallbackUsed": true,
+      "fallbackReason": "http_error",
+      "diagnostics": [
+        {
+          "model": "runware.google.gemini.3.5.flash",
+          "reason": "http_error",
+          "message": "Runware HTTP 400: {\n    \"errors\": [\n        {\n            \"code\": \"tokenLimitExceeded\",\n            \"message\": \"Token limit reached during reasoning. Increase maxTokens to get a complete response.\",\n            \"taskUUID\": \"60314207-4598-4c17-995e-792c2608df74\"\n        }\n    ]\n}",
+          "validation": []
+        }
+      ],
+      "autoMetrics": {
+        "uniqueWordRatio": 0.5729,
+        "expectedScriptRatio": 1.0,
+        "childSafetyProxy": 1,
+        "structuredJsonValid": true
+      },
+      "review": {
+        "id": "an05",
+        "naturalness": 7,
+        "grammar": 7,
+        "characterVoice": 6,
+        "storyCoherence": 7,
+        "culturalAppropriateness": 8,
+        "repetitionControl": 9,
+        "childSuitability": 9,
+        "structuredValidity": 9,
+        "animationFeasibility": 3,
+        "notes": "Understandable Hinglish with a clear safety-related moment, though 'Stop' and 'guard ko call' feel slightly uneven in register. Main weakness is implausibly tiny scene and line durations, which hurt animation feasibility and realism."
+      }
+    }
+  ],
+  "reviewerRuns": [
+    {
+      "requestId": "a4261ccb-a725-4bba-834d-bfda863eb885",
+      "taskType": "QUALITY_REVIEWER",
+      "modelInternalId": "runware.openai.gpt.5.4",
+      "modelAir": "openai:gpt@5.4",
+      "modelDisplayName": "GPT-5.4",
+      "transport": "native",
+      "latencyMs": 9055,
+      "cost": 0.013423,
+      "usage": {
+        "promptTokens": 1955,
+        "completionTokens": 569,
+        "totalTokens": 2524,
+        "completionTokensDetails": {
+          "reasoningTokens": 0
+        },
+        "promptTokensDetails": {
+          "cachedTokens": 0
+        }
+      },
+      "retryCount": 0,
+      "repairCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "cache": "hit",
+      "cacheKey": "eed85a2e311c5aec0289b0e3cdb94f01e50e675d75fe5dc4f187550b45699b95",
+      "promptVersion": "phase7.1",
+      "contentSha256": "5d070d4d79a27dac9bc6026a9c92516dd6de59821d67327fd761ab957d689717",
+      "finishReason": "stop"
+    },
+    {
+      "requestId": "2b24b493-a841-4a0a-98c6-c4a70c4bebc2",
+      "taskType": "QUALITY_REVIEWER",
+      "modelInternalId": "runware.openai.gpt.5.4",
+      "modelAir": "openai:gpt@5.4",
+      "modelDisplayName": "GPT-5.4",
+      "transport": "native",
+      "latencyMs": 8750,
+      "cost": 0.01581,
+      "usage": {
+        "promptTokens": 2952,
+        "completionTokens": 562,
+        "totalTokens": 3514,
+        "completionTokensDetails": {
+          "reasoningTokens": 0
+        },
+        "promptTokensDetails": {
+          "cachedTokens": 0
+        }
+      },
+      "retryCount": 0,
+      "repairCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "cache": "hit",
+      "cacheKey": "802679d7e6f2bbc0fba73b748ef121802b7edfa175fb13afaef483f269b3e03c",
+      "promptVersion": "phase7.1",
+      "contentSha256": "7ad510ff79b00b697277563b9178351ec1b6a84090dba1c01ccb69841e47db30",
+      "finishReason": "stop"
+    },
+    {
+      "requestId": "f8c4e22c-dbbd-4aad-b2e3-269bdc5534a7",
+      "taskType": "QUALITY_REVIEWER",
+      "modelInternalId": "runware.openai.gpt.5.4",
+      "modelAir": "openai:gpt@5.4",
+      "modelDisplayName": "GPT-5.4",
+      "transport": "native",
+      "latencyMs": 7884,
+      "cost": 0.014905,
+      "usage": {
+        "promptTokens": 2626,
+        "completionTokens": 556,
+        "totalTokens": 3182,
+        "completionTokensDetails": {
+          "reasoningTokens": 0
+        },
+        "promptTokensDetails": {
+          "cachedTokens": 0
+        }
+      },
+      "retryCount": 0,
+      "repairCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "cache": "hit",
+      "cacheKey": "72998c62fe051b7ec2cf00bf0509c7d08672524433866266a3af559b9e106ae7",
+      "promptVersion": "phase7.1",
+      "contentSha256": "6407a92aed6b044910b32d10b653142c6a535c67d561e3c55aee9c9b5827fda8",
+      "finishReason": "stop"
+    },
+    {
+      "requestId": "4386daf9-e722-4b7c-95a9-a7fe00f14a47",
+      "taskType": "QUALITY_REVIEWER",
+      "modelInternalId": "runware.openai.gpt.5.4",
+      "modelAir": "openai:gpt@5.4",
+      "modelDisplayName": "GPT-5.4",
+      "transport": "native",
+      "latencyMs": 7244,
+      "cost": 0.013155,
+      "usage": {
+        "promptTokens": 2298,
+        "completionTokens": 494,
+        "totalTokens": 2792,
+        "completionTokensDetails": {
+          "reasoningTokens": 0
+        },
+        "promptTokensDetails": {
+          "cachedTokens": 0
+        }
+      },
+      "retryCount": 0,
+      "repairCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "cache": "hit",
+      "cacheKey": "1ccad70c13e5ceffe0a5aa4bd440d703f1cbb04fb2c1b397d3d3c6103fbd79f8",
+      "promptVersion": "phase7.1",
+      "contentSha256": "998a71ea2a8c4a0de09cda3fa4707a7d2903f296f1dd2d6366ab0d8a26e89254",
+      "finishReason": "stop"
+    },
+    {
+      "requestId": "3c35e570-8cd0-4821-8fbe-21817eda71f1",
+      "taskType": "QUALITY_REVIEWER",
+      "modelInternalId": "runware.openai.gpt.5.4",
+      "modelAir": "openai:gpt@5.4",
+      "modelDisplayName": "GPT-5.4",
+      "transport": "native",
+      "latencyMs": 8126,
+      "cost": 0.014515,
+      "usage": {
+        "promptTokens": 2536,
+        "completionTokens": 545,
+        "totalTokens": 3081,
+        "completionTokensDetails": {
+          "reasoningTokens": 0
+        },
+        "promptTokensDetails": {
+          "cachedTokens": 0
+        }
+      },
+      "retryCount": 0,
+      "repairCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "cache": "hit",
+      "cacheKey": "a978a650f9ad6b38fcff3ba43ac4ef3b01723ebe4a28cc8b543c392d6fa4b17c",
+      "promptVersion": "phase7.1",
+      "contentSha256": "024f3c9a9bb33b314755169cc2d9c3d5455b6cf5c81b00bf7c5764b58775ede6",
+      "finishReason": "stop"
+    },
+    {
+      "requestId": "2d74e627-6889-4854-a542-01debfbe6f10",
+      "taskType": "QUALITY_REVIEWER",
+      "modelInternalId": "runware.openai.gpt.5.4",
+      "modelAir": "openai:gpt@5.4",
+      "modelDisplayName": "GPT-5.4",
+      "transport": "native",
+      "latencyMs": 8545,
+      "cost": 0.015088,
+      "usage": {
+        "promptTokens": 2585,
+        "completionTokens": 575,
+        "totalTokens": 3160,
+        "completionTokensDetails": {
+          "reasoningTokens": 0
+        },
+        "promptTokensDetails": {
+          "cachedTokens": 0
+        }
+      },
+      "retryCount": 0,
+      "repairCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "cache": "hit",
+      "cacheKey": "03283d4c93591b1c978ac3f556e4c2ff05bfb5f88c54aa38aafe318a6662a3f5",
+      "promptVersion": "phase7.1",
+      "contentSha256": "7cd62f91066eeffbccd18ba2e1a3a22aac6c7c616b1addbabd781f150791e55f",
+      "finishReason": "stop"
+    },
+    {
+      "requestId": "7aeb045e-1374-4e69-8519-67306f3bff1c",
+      "taskType": "QUALITY_REVIEWER",
+      "modelInternalId": "runware.openai.gpt.5.4",
+      "modelAir": "openai:gpt@5.4",
+      "modelDisplayName": "GPT-5.4",
+      "transport": "native",
+      "latencyMs": 6725,
+      "cost": 0.009978,
+      "usage": {
+        "promptTokens": 1147,
+        "completionTokens": 474,
+        "totalTokens": 1621,
+        "completionTokensDetails": {
+          "reasoningTokens": 0
+        },
+        "promptTokensDetails": {
+          "cachedTokens": 0
+        }
+      },
+      "retryCount": 0,
+      "repairCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "cache": "hit",
+      "cacheKey": "289cdb36535188ac6668475c3f28a5ae85f367429bdbe4ee8614b0f65629aeaf",
+      "promptVersion": "phase7.1",
+      "contentSha256": "511108811978286bd921db02a776e87337c42658f0af04624efd8d38c160c779",
+      "finishReason": "stop"
+    },
+    {
+      "requestId": "c033746e-d01e-4cbb-8dc2-148d2fe6e64f",
+      "taskType": "QUALITY_REVIEWER",
+      "modelInternalId": "runware.openai.gpt.5.4",
+      "modelAir": "openai:gpt@5.4",
+      "modelDisplayName": "GPT-5.4",
+      "transport": "native",
+      "latencyMs": 8700,
+      "cost": 0.012665,
+      "usage": {
+        "promptTokens": 2072,
+        "completionTokens": 499,
+        "totalTokens": 2571,
+        "completionTokensDetails": {
+          "reasoningTokens": 0
+        },
+        "promptTokensDetails": {
+          "cachedTokens": 0
+        }
+      },
+      "retryCount": 0,
+      "repairCount": 0,
+      "fallbackUsed": false,
+      "fallbackReason": null,
+      "cache": "hit",
+      "cacheKey": "886702dd896b8c4db11f97b06a6e7890c94a48b5d81d74526af7833191347fda",
+      "promptVersion": "phase7.1",
+      "contentSha256": "994340ed7a10b300556aee6a02129c5ce257a7f2b4f913d672e7c4cd73db9904",
+      "finishReason": "stop"
+    }
+  ],
+  "modelSummary": {
+    "runware.deepseek.v4.pro": {
+      "samples": 11,
+      "passed": 11,
+      "failureRate": 0.0,
+      "averageLatencyMs": 20127.5455,
+      "returnedCostTotal": 0.0,
+      "costCoverage": 0,
+      "averageScores": {
+        "naturalness": 8.0909,
+        "grammar": 8.4545,
+        "characterVoice": 7.3636,
+        "storyCoherence": 7.5455,
+        "culturalAppropriateness": 9.1818,
+        "repetitionControl": 8.9091,
+        "childSuitability": 8.8182,
+        "structuredValidity": 9.4545,
+        "animationFeasibility": 8.4545
+      }
+    },
+    "runware.openai.gpt.5.4.mini": {
+      "samples": 11,
+      "passed": 11,
+      "failureRate": 0.0,
+      "averageLatencyMs": 4956.0909,
+      "returnedCostTotal": 0.018021,
+      "costCoverage": 11,
+      "averageScores": {
+        "naturalness": 8.5455,
+        "grammar": 9.0,
+        "characterVoice": 7.6364,
+        "storyCoherence": 8.7273,
+        "culturalAppropriateness": 9.4545,
+        "repetitionControl": 8.7273,
+        "childSuitability": 9.8182,
+        "structuredValidity": 9.9091,
+        "animationFeasibility": 9.0909
+      }
+    },
+    "runware.zai.glm.5.1": {
+      "samples": 7,
+      "passed": 7,
+      "failureRate": 0.0,
+      "averageLatencyMs": 39358.7143,
+      "returnedCostTotal": 0.0,
+      "costCoverage": 0,
+      "averageScores": {
+        "naturalness": 7.1429,
+        "grammar": 6.7143,
+        "characterVoice": 7.5714,
+        "storyCoherence": 7.5714,
+        "culturalAppropriateness": 8.4286,
+        "repetitionControl": 8.1429,
+        "childSuitability": 8.7143,
+        "structuredValidity": 8.7143,
+        "animationFeasibility": 7.5714
+      }
+    },
+    "runware.deepseek.v4.flash": {
+      "samples": 10,
+      "passed": 10,
+      "failureRate": 0.0,
+      "averageLatencyMs": 22220.6,
+      "returnedCostTotal": 0.0,
+      "costCoverage": 0,
+      "averageScores": {
+        "naturalness": 8.0,
+        "grammar": 8.0,
+        "characterVoice": 7.3,
+        "storyCoherence": 8.0,
+        "culturalAppropriateness": 8.9,
+        "repetitionControl": 9.1,
+        "childSuitability": 9.3,
+        "structuredValidity": 9.8,
+        "animationFeasibility": 8.0
+      }
+    },
+    "runware.google.gemini.3.5.flash": {
+      "samples": 1,
+      "passed": 1,
+      "failureRate": 0.0,
+      "averageLatencyMs": 4268.0,
+      "returnedCostTotal": 0.00339,
+      "costCoverage": 1,
+      "averageScores": {
+        "naturalness": 8.0,
+        "grammar": 8.0,
+        "characterVoice": 7.0,
+        "storyCoherence": 8.0,
+        "culturalAppropriateness": 9.0,
+        "repetitionControl": 9.0,
+        "childSuitability": 10.0,
+        "structuredValidity": 9.0,
+        "animationFeasibility": 8.0
+      }
+    }
+  },
+  "recommendations": {
+    "bestParser": "runware.openai.gpt.5.4.mini",
+    "bestUrduDialogue": "runware.deepseek.v4.pro",
+    "bestHindiDialogue": "runware.openai.gpt.5.4.mini",
+    "bestStoryPlanner": "runware.openai.gpt.5.4.mini",
+    "bestStructuredOutput": "runware.openai.gpt.5.4.mini",
+    "fastestEconomicalOption": "runware.openai.gpt.5.4.mini",
+    "fastestEconomicalEvidence": "Runware-returned cost and latency"
+  },
+  "limitations": [
+    "Models are distributed across samples rather than every model receiving every prompt.",
+    "Language scores are model-reviewed proxies and still require native-speaker human review.",
+    "Returned cost is reported only when Runware includes it; null cost is not treated as free.",
+    "Benchmark results are a routing aid, not a universal model ranking."
+  ]
+}

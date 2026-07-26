@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "ur",
+    "scenes": [
+      {
+        "id": "park",
+        "lines": [
+          {
+            "speaker": "Ali",
+            "text": "Oye Ayan, yeh kya kar raha hai? Kaam waali aayegi toh utha hi legi, iska kia faida? Hum toh bas walk par aye hain.",
+            "emotion": "Muskurate hue"
+          },
+          {
+            "speaker": "Ayan",
+            "text": "Ali bhai, yeh soch bilkul ghalat hai. Agar hum sab yahi sochein ke doosra koi utha lega toh yeh park kab ka kachre ka dher ban chuka hota.",
+            "emotion": "Ghosla saaf karte hue"
+          },
+          {
+            "speaker": "Ali",
+            "text": "Chalo maan liya, par itni choti si cheez ka itna shor?",
+            "emotion": "Kandha chaadhte hue"
+          },
+          {
+            "speaker": "Ayan",
+            "text": "Dekho, safai sirf apne ghar tak mehdood nahi honi chahiye. Yeh humara muashra hai, humara park hai. Agar hum hi ganda rakhenge toh phir kaise acha lagega? Choti si cheez bhi mahol ko kharab karti hai. Aur sab se bari baat, yeh hamari zimmadari hai.",
+            "emotion": "Tehzeeb se"
+          },
+          {
+            "speaker": "Ali",
+            "text": "Hmm... tum sahi keh rahe ho. Asal mein hum log aksar yahi sochte hain ke koi aur saaf karega.",
+            "emotion": "Sochte hue"
+          },
+          {
+            "speaker": "Ayan",
+            "text": "Bilkul! Agar har insan apna aur apne gird ka thoda sa khayal rakh le, toh yeh duniya itni gandi na hoti. Safai imaan se mukammal hoti hai, bas neeyat chahiye.",
+            "emotion": "Muskurate hue"
+          },
+          {
+            "speaker": "Ali",
+            "text": "Chalo sahi kaha tumne! Aaj se main bhi kachra apne sath utha kar dustbin mein hi dunga.",
+            "emotion": "Hans kar"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "6eefb805-8bbb-4662-a5a9-7da0da5961e2",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.zai.glm.5.1",
+    "modelAir": "zai:glm@5.1",
+    "modelDisplayName": "GLM 5.1",
+    "transport": "openai_compatible",
+    "latencyMs": 30975,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 716,
+      "completion_tokens": 574,
+      "total_tokens": 1290,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "retryCount": 1,
+    "repairCount": 1,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "9a122e84887eea42024cc5ab1fc03aab9d8d4a5d576f05846b2d2fc39dc1a652",
+    "promptVersion": "phase7.1",
+    "contentSha256": "ed3754ebb55839dac29a3f953098c8fbd10a76e4c0c223d76504dcad952b1b6a",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "hindi",
+    "scenes": [
+      {
+        "id": "scene1",
+        "lines": [
+          {
+            "speaker": "रोहन",
+            "text": "माँ, जल्दी आओ! बाहर बारिश में एक छोटा पिल्ला काँप रहा है।",
+            "emotion": "चिंतित",
+            "action": "दरवाज़े पर खड़ा होकर माँ को पुकारता है"
+          },
+          {
+            "speaker": "माँ",
+            "text": "अरे, इतनी बारिश में? कहाँ है वो?",
+            "emotion": "हैरान",
+            "action": "जल्दी से आती हैं"
+          },
+          {
+            "speaker": "रोहन",
+            "text": "वो पेड़ के नीचे छुपा है। प्लीज़ माँ, हमें उसे अंदर लाना होगा, वरना बीमार पड़ जाएगा।",
+            "emotion": "विनती करते हुए",
+            "action": "माँ की ओर उम्मीद से देखता है"
+          },
+          {
+            "speaker": "माँ",
+            "text": "हाँ बेटा, तू ठीक कह रहा है। जा, मैं एक पुराना कपड़ा लाती हूँ ताकि उसे पोंछ सकें।",
+            "emotion": "सहमत",
+            "action": "कपड़ा लेने जाती हैं"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "472e4e47-72f6-4f1f-914b-42cc78197c51",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.deepseek.v4.pro",
+    "modelAir": "deepseek:v4@pro",
+    "modelDisplayName": "DeepSeek V4 Pro",
+    "transport": "openai_compatible",
+    "latencyMs": 40016,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 293,
+      "completion_tokens": 407,
+      "total_tokens": 700
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": true,
+    "fallbackReason": "OutputValidationError",
+    "cache": "hit",
+    "cacheKey": "7f666728428b1c853c1d03a7cbf76c25449cc18a97cb19d0da85b227032c7ad2",
+    "promptVersion": "phase7.1",
+    "contentSha256": "85dc72f205c55db2c02015223fd385bdb432f62fd3dd5496f02639dea0e74297",
+    "finishReason": "stop"
+  },
+  "diagnostics": [
+    {
+      "model": "runware.zai.glm.5.1",
+      "reason": "OutputValidationError",
+      "message": "Structured output failed schema validation",
+      "validation": [
+        "$.language: mandatory field is missing",
+        "$.scenes: mandatory field is missing"
+      ]
+    }
+  ],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

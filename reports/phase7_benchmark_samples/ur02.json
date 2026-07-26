@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "stage": "story_outline",
+  "approved": false,
+  "output": {
+    "title": "گم شدہ نقشہ اور سچی دوستی",
+    "logline": "دو دوست جنگل میں ایک گم شدہ نقشہ ڈھونڈتے ہیں، لیکن کئی آزمائشوں کے بعد وہ سمجھتے ہیں کہ خزانے سے زیادہ قیمتی ان کی دوستی ہے۔",
+    "beats": [
+      "علی اور زین اپنے گاؤں کے پاس جنگل میں ایک پرانا گم شدہ نقشہ تلاش کرنے نکلتے ہیں، کیونکہ سب کہتے ہیں کہ اس نقشے میں ایک چھپے خزانے کا راستہ ہے۔",
+      "راستے میں انہیں ٹوٹی ہوئی پل، اونچی گھاس، اور ایک شرارتی گلہری کی وجہ سے مشکل پیش آتی ہے، مگر وہ ایک دوسرے کی مدد سے آگے بڑھتے رہتے ہیں۔",
+      "آخرکار انہیں نقشہ ایک درخت کے کھوکھلے حصے میں مل جاتا ہے، لیکن وہ دیکھتے ہیں کہ نقشہ صرف خزانے تک نہیں، بلکہ ایک محفوظ راستے اور ایک خوبصورت منظر تک بھی لے جاتا ہے۔",
+      "جب وہ خزانے کے مقام پر پہنچتے ہیں تو وہاں ایک چھوٹا سا صندوق ملتا ہے، مگر اس میں سونے کے بجائے دوستی کے بارے میں ایک پیارا پیغام اور کچھ پرانے سکے ہوتے ہیں۔",
+      "علی اور زین خوش ہو کر فیصلہ کرتے ہیں کہ اصل خزانہ وہ وقت تھا جو انہوں نے ساتھ مل کر گزارا، اور وہ نقشہ گاؤں کے بچوں کے لیے محفوظ کر دیتے ہیں۔"
+    ],
+    "ending": "دونوں مسکرا کر کہتے ہیں، „خزانہ اچھا تھا، مگر سچی دوستی اس سے بھی زیادہ قیمتی ہے۔“"
+  },
+  "metadata": {
+    "requestId": "72ac8f92-87b2-4f37-bfdf-9c4fe9414d51",
+    "taskType": "STORY_ARCHITECT",
+    "modelInternalId": "runware.openai.gpt.5.4.mini",
+    "modelAir": "openai:gpt@5.4-mini",
+    "modelDisplayName": "GPT-5.4 Mini",
+    "transport": "native",
+    "latencyMs": 5854,
+    "cost": 0.001791,
+    "usage": {
+      "promptTokens": 276,
+      "completionTokens": 352,
+      "totalTokens": 628,
+      "completionTokensDetails": {
+        "reasoningTokens": 0
+      },
+      "promptTokensDetails": {
+        "cachedTokens": 0
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "47fdf18dd653bcad9aa2bde9257cbf0dc22b96f2e7451add5288efc4f2e5e765",
+    "promptVersion": "phase7.1",
+    "contentSha256": "b1655357aa07da73993822c0ee18731ac1d7c6c6637d9aacdc94c093dc97903d",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/02_story_outline.json"
+}

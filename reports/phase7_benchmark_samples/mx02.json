@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "stage": "script_doctor",
+  "approved": false,
+  "output": {
+    "script": "[Scene: Park]\nAman: Mujhe yeh game bahut pasand hai, really bahut pasand hai.\nNeha: Then chalo ek fair team banate hain.",
+    "language": "hinglish",
+    "changes": [
+      "Repeated sentiment ko preserve karte hue script ko clean aur concise rakha gaya hai.",
+      "Names, scene, aur original Hinglish tone ko maintain kiya gaya hai.",
+      "Meaning aur cultural setting ko bina badle, repetition removal ke instructions ke hisaab se minimal refinement kiya gaya hai."
+    ],
+    "preservedFacts": [
+      "Scene: Park",
+      "Character names: Aman, Neha",
+      "Aman likes the game very much",
+      "Neha suggests making a fair team"
+    ]
+  },
+  "metadata": {
+    "requestId": "8d95e53f-d3fc-4a43-b6ff-6b3b03f223bf",
+    "taskType": "SCRIPT_DOCTOR",
+    "modelInternalId": "runware.openai.gpt.5.4.mini",
+    "modelAir": "openai:gpt@5.4-mini",
+    "modelDisplayName": "GPT-5.4 Mini",
+    "transport": "native",
+    "latencyMs": 4121,
+    "cost": 0.000944,
+    "usage": {
+      "promptTokens": 334,
+      "completionTokens": 154,
+      "totalTokens": 488,
+      "completionTokensDetails": {
+        "reasoningTokens": 0
+      },
+      "promptTokensDetails": {
+        "cachedTokens": 0
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "db92b8eb4231dfb717b4a65ca13610dd839ab78bc484fa83ad9b046ca54ddecc",
+    "promptVersion": "phase7.1",
+    "contentSha256": "475ba15ebfc5b57e65ab04096ff18be29271cb3713a6de7f82225848957a15c9",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/06_script_doctor.json"
+}

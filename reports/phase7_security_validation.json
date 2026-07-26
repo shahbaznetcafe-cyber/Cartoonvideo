@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-07-15T18:45:00+05:00",
+  "status": "PASS",
+  "credentialConfiguredDuringValidation": true,
+  "credentialsIncluded": false,
+  "filesScanned": 109,
+  "exactConfiguredSecretHits": 0,
+  "frontendSecretMarkers": 0,
+  "trackedEnvPemOrKeyFiles": 0,
+  "trackedTokenPatternHits": 0,
+  "controls": {
+    "backendOnlyRequests": true,
+    "authorizationRedaction": true,
+    "healthEndpointReturnsPartialKey": false,
+    "healthEndpointCredentialLabel": "[configured]",
+    "promptContentLogged": false,
+    "promptContentHashLogged": true,
+    "modelOutputTreatedAsUntrusted": true,
+    "generatedCodeExecuted": false
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "roman_urdu",
+    "scenes": [
+      {
+        "id": "scene1",
+        "lines": [
+          {
+            "speaker": "Hina",
+            "text": "Umar, idhar dekho! Is parinday ke par toot gaye hain aur khoon beh raha hai. Lagta hai kisi ne mara hai.",
+            "emotion": "worried",
+            "action": "pointing at the injured bird on the ground"
+          },
+          {
+            "speaker": "Umar",
+            "text": "Oh no, yeh to bura haal hai. Ruko, main abhi paani aur kapda laata hoon. Isko bachana hoga.",
+            "emotion": "concerned",
+            "action": "hurrying towards the farm shed"
+          },
+          {
+            "speaker": "Hina",
+            "text": "Jaldi karo, Umar! Iska saans ruk raha hai. Main isko pakadti hoon, lekin dheere se.",
+            "emotion": "anxious",
+            "action": "kneeling down carefully near the bird"
+          },
+          {
+            "speaker": "Umar",
+            "text": "Lo, main aa gaya. Paani do isko pehle, phir hum patti bandhte hain. Shukar hai tum ne dekh liya warna yeh mar jaata.",
+            "emotion": "determined",
+            "action": "handing a bowl of water to Hina"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "82424499-389b-4f2a-85a1-c4f0f0c5db95",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.deepseek.v4.pro",
+    "modelAir": "deepseek:v4@pro",
+    "modelDisplayName": "DeepSeek V4 Pro",
+    "transport": "openai_compatible",
+    "latencyMs": 24036,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 281,
+      "completion_tokens": 355,
+      "total_tokens": 636
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": true,
+    "fallbackReason": "OutputValidationError",
+    "cache": "hit",
+    "cacheKey": "5e8ea60b6f4c68e2e45e719956f26ece59d6dfde42cf0c689ff4b35e1faa47fd",
+    "promptVersion": "phase7.1",
+    "contentSha256": "0a7a25f1aee059d25d604331ebd87944945b29d3e5cfbc0fddf26e9d04b3570b",
+    "finishReason": "stop"
+  },
+  "diagnostics": [
+    {
+      "model": "runware.zai.glm.5.1",
+      "reason": "OutputValidationError",
+      "message": "Structured output failed schema validation",
+      "validation": [
+        "$.scenes[0].lines[1].text: string is too short",
+        "$.scenes[0].lines[1].emotion: string is too short"
+      ]
+    }
+  ],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

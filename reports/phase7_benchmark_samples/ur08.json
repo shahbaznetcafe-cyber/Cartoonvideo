@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "urdu",
+    "scenes": [
+      {
+        "id": "scene1",
+        "lines": [
+          {
+            "speaker": "ثنا",
+            "text": "علی! وہ دیکھو، وہ صندوق ہل رہا ہے۔ مجھے بہت ڈر لگ رہا ہے۔",
+            "emotion": "خوفزدہ",
+            "action": "علی کی بانہہ پکڑتی ہے"
+          },
+          {
+            "speaker": "علی",
+            "text": "گھبراؤ نہیں، ثنا۔ میں دیکھتا ہوں اس میں کیا ہے۔",
+            "emotion": "پرسکون",
+            "action": "آہستہ سے صندوق کے قریب جاتا ہے"
+          },
+          {
+            "speaker": "ثنا",
+            "text": "نہیں، مت جاؤ! کچھ بھی ہو سکتا ہے اس میں۔",
+            "emotion": "پریشان"
+          },
+          {
+            "speaker": "علی",
+            "text": "حوصلہ رکھو۔ میں نے ڈھکن کھول لیا ہے۔ ارے! یہ تو بس ایک پرانا کپڑا ہے جو ہوا سے ہل رہا تھا۔",
+            "emotion": "مسکراہٹ",
+            "action": "صندوق کا ڈھکن کھولتا ہے"
+          },
+          {
+            "speaker": "ثنا",
+            "text": "اوہ، شکر ہے! میں تو بے وجہ ڈر گئی تھی۔",
+            "emotion": "راحت"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "fedb090c-f2d3-4628-956f-b064a448e4e4",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.deepseek.v4.pro",
+    "modelAir": "deepseek:v4@pro",
+    "modelDisplayName": "DeepSeek V4 Pro",
+    "transport": "openai_compatible",
+    "latencyMs": 10190,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 289,
+      "completion_tokens": 403,
+      "total_tokens": 692,
+      "prompt_tokens_details": {
+        "cached_tokens": 256
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "4459fffc7d649501c94440f8e57819999b77d2b8112ab4ddb9f70b13c9d7428a",
+    "promptVersion": "phase7.1",
+    "contentSha256": "5fd57f56e8453e8d2e8207ca6d5679d5b13073eae71a60d75e1821fe71d1dee1",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

@@ -55,3 +55,10 @@ visemes/
 .DS_Store
 Thumbs.db
 *.log
+
+# Local media, backups and generated review artifacts (code-only repo)
+work/
+outputs/
+Sample Zips/
+audit-contact-sheet.jpg
+threejs_render/quaternius_poc/

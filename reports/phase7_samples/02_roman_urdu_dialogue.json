@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "hi",
+    "scenes": [
+      {
+        "id": "scene_1",
+        "lines": [
+          {
+            "speaker": "Ali",
+            "text": "Oye! Wo dibba... wo khud hil raha hai!",
+            "emotion": "surprised"
+          },
+          {
+            "speaker": "Sara",
+            "text": "Ali, ruk jao! Aise mat jao, kuch bhi ho sakta hai andar... ya shayad koi darrwaza hai.",
+            "emotion": "fearful"
+          },
+          {
+            "speaker": "Ali",
+            "text": "Kya yaar, itna darati kyun ho? Dekh, main usko khol ke dekhta hoon!",
+            "emotion": "brave"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "54aa34b1-aeb3-4e83-a6de-61db55b8e2f1",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.zai.glm.5.1",
+    "modelAir": "zai:glm@5.1",
+    "modelDisplayName": "GLM 5.1",
+    "transport": "openai_compatible",
+    "latencyMs": 24243,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 570,
+      "completion_tokens": 194,
+      "total_tokens": 764,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "retryCount": 1,
+    "repairCount": 1,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "da0290291b3f4c16f281ee1fdb6a38f04d3a044d26c4c805d419a11910d3691a",
+    "promptVersion": "phase7.1",
+    "contentSha256": "6c04b6d82b27ed104442bb8bb00bb6bf22b7488c8d6392178cfcb7a1eed17495",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-proof/script_pipeline/05_character_dialogue.json"
+}

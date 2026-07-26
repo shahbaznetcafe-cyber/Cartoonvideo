@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "phase": "REPRESENTATIVE_MULTI_CHARACTER_SUPPORT",
+  "status": "PASS",
+  "license": {
+    "status": "verified",
+    "name": "CC0 1.0",
+    "officialUrl": "https://quaternius.com/packs/ultimatemodularcharacters.html",
+    "localLicenseFilePresent": false
+  },
+  "alreadyStandardizedBeforePhase": false,
+  "characters": [
+    {
+      "id": "quaternius_casual_2",
+      "sourceSha256": "55c654d09a2a5ff6e3bd6158d4a1b462f181cd6f1e12a0f5e9d959f9c3abc438",
+      "armatures": 1,
+      "bones": 62,
+      "meshes": 5,
+      "materials": 9,
+      "authoredClips": 24,
+      "externalImages": 0
+    },
+    {
+      "id": "quaternius_farmer",
+      "sourceSha256": "46d3e85fa8d848ee479ab8e4672c16724ee4ea51f3af5733705a153937f93555",
+      "armatures": 1,
+      "bones": 62,
+      "meshes": 5,
+      "materials": 8,
+      "authoredClips": 24,
+      "externalImages": 0
+    },
+    {
+      "id": "quaternius_king",
+      "sourceSha256": "659c7d84dcea8c6331698c3430484861944c83e629389425664b782d4aecd17c",
+      "armatures": 1,
+      "bones": 62,
+      "meshes": 5,
+      "materials": 9,
+      "authoredClips": 24,
+      "externalImages": 0
+    }
+  ],
+  "sourceAssetsModified": false,
+  "inspectionProcess": "Blender read-only import into a clean temporary scene"
+}

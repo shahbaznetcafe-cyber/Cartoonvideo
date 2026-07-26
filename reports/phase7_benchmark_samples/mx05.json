@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "stage": "script_doctor",
+  "approved": false,
+  "output": {
+    "script": "[Scene: Market]\nAli: I found the wallet.\nSara: Chalo owner ko dhoondte hain.",
+    "language": "hinglish",
+    "changes": [],
+    "preservedFacts": [
+      "Ali found a wallet",
+      "Sara suggests finding the owner"
+    ]
+  },
+  "metadata": {
+    "requestId": "c9a260ca-291b-403c-8758-e0b9d4b8ae69",
+    "taskType": "SCRIPT_DOCTOR",
+    "modelInternalId": "runware.deepseek.v4.flash",
+    "modelAir": "deepseek:v4@flash",
+    "modelDisplayName": "DeepSeek V4 Flash",
+    "transport": "openai_compatible",
+    "latencyMs": 5553,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 246,
+      "completion_tokens": 69,
+      "total_tokens": 315
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "8dacd919fe07d360d7af1f1a90198a8a2fb7d02a8c727116367f15bdfaa88c19",
+    "promptVersion": "phase7.1",
+    "contentSha256": "bea843c771aeabc136b174daf8954526d96244e0d0c20ee5903a7dcb4346074c",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/06_script_doctor.json"
+}

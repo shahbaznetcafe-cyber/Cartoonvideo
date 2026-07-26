@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "hindi",
+    "scenes": [
+      {
+        "id": "park_scene",
+        "lines": [
+          {
+            "speaker": "अनाया",
+            "text": "देखो, दोस्त, कचरा हमेशा कचरा डिब्बे में ही डालना चाहिए।",
+            "emotion": "समझाने वाला",
+            "action": "कचरा डिब्बे की ओर इशारा करती है"
+          },
+          {
+            "speaker": "दोस्त",
+            "text": "क्यों? ज़मीन पर डाल देने से क्या फर्क पड़ता है?",
+            "emotion": "जिज्ञासु",
+            "action": "थोड़ा सोचते हुए पूछता है"
+          },
+          {
+            "speaker": "अनाया",
+            "text": "फर्क पड़ता है। अगर हम कचरा इधर-उधर फेंकेंगे, तो पार्क गंदा होगा, बदबू आएगी, और जानवरों को भी नुकसान हो सकता है।",
+            "emotion": "गंभीर",
+            "action": "धीरे-धीरे समझाती है"
+          },
+          {
+            "speaker": "दोस्त",
+            "text": "अच्छा, तो साफ़-सफ़ाई सबकी ज़िम्मेदारी है।",
+            "emotion": "समझदार",
+            "action": "सिर हिलाता है"
+          },
+          {
+            "speaker": "अनाया",
+            "text": "बिल्कुल। छोटा-सा सही काम मिलकर बड़ा बदलाव लाता है।",
+            "emotion": "प्रोत्साहित",
+            "action": "मुस्कुराती है"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "814f7fd1-e477-4781-81b9-7154d268f93c",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.openai.gpt.5.4.mini",
+    "modelAir": "openai:gpt@5.4-mini",
+    "modelDisplayName": "GPT-5.4 Mini",
+    "transport": "native",
+    "latencyMs": 4912,
+    "cost": 0.001546,
+    "usage": {
+      "promptTokens": 381,
+      "completionTokens": 280,
+      "totalTokens": 661,
+      "completionTokensDetails": {
+        "reasoningTokens": 0
+      },
+      "promptTokensDetails": {
+        "cachedTokens": 0
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "921e18b592a1bc73eec74b76c4710276894d74f6c7257b82746beef326c7e4ce",
+    "promptVersion": "phase7.1",
+    "contentSha256": "ef86a443b2c89d10c0d360e363a228ac89579f0c422bbe3df09bcbd57a044ed5",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

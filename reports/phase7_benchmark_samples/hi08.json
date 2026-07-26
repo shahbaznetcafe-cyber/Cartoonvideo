@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "stage": "character_dialogue",
+  "approved": false,
+  "output": {
+    "language": "hindi",
+    "scenes": [
+      {
+        "id": "scene_1",
+        "lines": [
+          {
+            "speaker": "बच्चा",
+            "text": "दीदी, कमरा बहुत अँधेरा लग रहा है। मुझे डर लग रहा है।",
+            "emotion": "डरा हुआ",
+            "action": "कंबल कसकर पकड़ता है"
+          },
+          {
+            "speaker": "बहन",
+            "text": "अरे, मैं हूँ न। कुछ नहीं होगा। मैं लाइट थोड़ी धीमी कर देती हूँ, ठीक है?",
+            "emotion": "स्नेहपूर्ण",
+            "action": "धीरे से लाइट कम करती है"
+          },
+          {
+            "speaker": "बच्चा",
+            "text": "पर अगर अँधेरे में कुछ आ गया तो?",
+            "emotion": "घबराया हुआ",
+            "action": "आस-पास देखता है"
+          },
+          {
+            "speaker": "बहन",
+            "text": "देखो, यह सिर्फ कमरा है। खिड़की से चाँदनी आ रही है, और मैं तुम्हारे पास ही बैठी हूँ।",
+            "emotion": "आश्वस्त करने वाली",
+            "action": "बच्चे के बगल में बैठती है"
+          },
+          {
+            "speaker": "बच्चा",
+            "text": "तुम सच में यहीं रहोगी?",
+            "emotion": "उम्मीद भरा",
+            "action": "धीरे से बहन की ओर देखता है"
+          },
+          {
+            "speaker": "बहन",
+            "text": "हाँ, जब तक तुम सो नहीं जाते। चलो, एक गहरी साँस लो। साथ में।",
+            "emotion": "शांत",
+            "action": "धीरे-धीरे साँस लेती है"
+          },
+          {
+            "speaker": "बच्चा",
+            "text": "ठीक है... अब थोड़ा अच्छा लग रहा है।",
+            "emotion": "आराम महसूस करता हुआ",
+            "action": "कंधे ढीले करता है"
+          },
+          {
+            "speaker": "बहन",
+            "text": "बस ऐसे ही। अब आँखें बंद करो, और मैं तुम्हें एक छोटी सी कहानी सुनाती हूँ।",
+            "emotion": "प्यार भरा",
+            "action": "मुस्कुराती है"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requestId": "c81f3d48-9fe2-4405-b0d2-59eb85689622",
+    "taskType": "DIALOGUE_WRITER",
+    "modelInternalId": "runware.openai.gpt.5.4.mini",
+    "modelAir": "openai:gpt@5.4-mini",
+    "modelDisplayName": "GPT-5.4 Mini",
+    "transport": "native",
+    "latencyMs": 5302,
+    "cost": 0.002096,
+    "usage": {
+      "promptTokens": 382,
+      "completionTokens": 402,
+      "totalTokens": 784,
+      "completionTokensDetails": {
+        "reasoningTokens": 0
+      },
+      "promptTokensDetails": {
+        "cachedTokens": 0
+      }
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "96c973c0393ab50a09af052accebcb28750562a827e0ce0b41d21049200fb1be",
+    "promptVersion": "phase7.1",
+    "contentSha256": "73473c0bfc3cea676c33698579db2373a31ed22babb60c2f845ab8dd5c9833bc",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-benchmark/script_pipeline/05_character_dialogue.json"
+}

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "stage": "story_outline",
+  "approved": false,
+  "output": {
+    "title": "جنگل کا بہادر ننھا رہنما",
+    "logline": "ایک ننھا بچہ اپنی ہمت اور مہربانی سے ایک گمشدہ پرندے کو اس کی ماں تک پہنچاتا ہے۔",
+    "beats": [
+      "صبح کے وقت، چھوٹا بلال اپنے گھر کے پاس کھیل رہا تھا کہ اُسے ایک گھبرایا ہوا چھوٹا پرندہ زمین پر ملا۔",
+      "پرندے نے کہا: 'میں اپنا گھونسلہ بھول گیا ہوں، کیا تم میری مدد کرو گے؟' بلال نے مسکرا کر کہا: 'ضرور، میں تمہیں تمہارے گھر تک پہنچاؤں گا۔'",
+      "دونوں نے مل کر اونچے درختوں، بہتی ندی اور پھولوں کے میدان سے گزرتے ہوئے پرندے کی ماں کی آواز سنی اور اُس کا پیچھا کیا۔",
+      "آخر کار، بلال نے پرندے کو اُس کے گھونسلے میں ماں کے پاس پہنچا دیا، اور ماں پرندے نے خوشی سے کہا: 'شکریہ، بہادر بچے!'"
+    ],
+    "ending": "بلال نے خوشی سے گھر واپس آتے ہوئے سوچا کہ مدد کرنے سے دل کو جتنی خوشی ملتی ہے، وہ کسی اور چیز میں نہیں۔"
+  },
+  "metadata": {
+    "requestId": "077f5fae-5d3a-4754-bc91-beb168310a96",
+    "taskType": "STORY_ARCHITECT",
+    "modelInternalId": "runware.deepseek.v4.pro",
+    "modelAir": "deepseek:v4@pro",
+    "modelDisplayName": "DeepSeek V4 Pro",
+    "transport": "openai_compatible",
+    "latencyMs": 10903,
+    "cost": null,
+    "usage": {
+      "prompt_tokens": 242,
+      "completion_tokens": 414,
+      "total_tokens": 656
+    },
+    "retryCount": 0,
+    "repairCount": 0,
+    "fallbackUsed": false,
+    "fallbackReason": null,
+    "cache": "hit",
+    "cacheKey": "347884247e571a7c35aa41616e17c65148152c417a02e993091e6e6746ffc037",
+    "promptVersion": "phase7.1",
+    "contentSha256": "04cce5c83580766458fa6b1a14877e55b9e806e926fac6e93bb038cc22ae113f",
+    "finishReason": "stop"
+  },
+  "diagnostics": [],
+  "savedAs": "projects/phase7-proof/script_pipeline/02_story_outline.json"
+}

@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "status": "INTEGRATED_AWAITING_FINAL_TESTS",
+  "sourcePack": "Quaternius licensed character packs",
+  "license": {
+    "name": "CC0 1.0",
+    "status": "verified",
+    "officialUrl": "https://quaternius.com/packs/ultimatemodularcharacters.html"
+  },
+  "runtime": {
+    "manifest": "characters3d.json",
+    "blenderDirectory": "blender/rigged/blend",
+    "threejsDirectory": "threejs_render/assets/chars",
+    "capabilityRegistry": "assets/characters/capability_registry.json"
+  },
+  "counts": {
+    "readyHumanoidsInPack": 11,
+    "registeredInSoftware": 125,
+    "skeletalInteractive": 1,
+    "skeletalBasic": 119,
+    "static": 5,
+    "licenseBlocked": 9,
+    "facialReady": 0
+  },
+  "initialReadyCharacters": [
+    {
+      "id": "quaternius_adventurer",
+      "displayName": "Quaternius Adventurer",
+      "tier": "SKELETAL_INTERACTIVE",
+      "blend": "blender/rigged/blend/quaternius_adventurer.blend",
+      "glb": "threejs_render/assets/chars/quaternius_adventurer.glb"
+    },
+    {
+      "id": "quaternius_casual_2",
+      "displayName": "Quaternius Casual 2",
+      "tier": "SKELETAL_BASIC",
+      "blend": "blender/rigged/blend/quaternius_casual_2.blend",
+      "glb": "threejs_render/assets/chars/quaternius_casual_2.glb"
+    },
+    {
+      "id": "quaternius_farmer",
+      "displayName": "Quaternius Farmer",
+      "tier": "SKELETAL_BASIC",
+      "blend": "blender/rigged/blend/quaternius_farmer.blend",
+      "glb": "threejs_render/assets/chars/quaternius_farmer.glb"
+    },
+    {
+      "id": "quaternius_king",
+      "displayName": "Quaternius King",
+      "tier": "SKELETAL_BASIC",
+      "blend": "blender/rigged/blend/quaternius_king.blend",
+      "glb": "threejs_render/assets/chars/quaternius_king.glb"
+    },
+    {
+      "id": "quaternius_beach",
+      "displayName": "Quaternius Beach",
+      "tier": "SKELETAL_BASIC",
+      "blend": "blender/rigged/blend/quaternius_beach.blend",
+      "glb": "threejs_render/assets/chars/quaternius_beach.glb"
+    },
+    {
+      "id": "quaternius_casual_hoodie",
+      "displayName": "Quaternius Casual Hoodie",
+      "tier": "SKELETAL_BASIC",
+      "blend": "blender/rigged/blend/quaternius_casual_hoodie.blend",
+      "glb": "threejs_render/assets/chars/quaternius_casual_hoodie.glb"
+    },
+    {
+      "id": "quaternius_punk",
+      "displayName": "Quaternius Punk",
+      "tier": "SKELETAL_BASIC",
+      "blend": "blender/rigged/blend/quaternius_punk.blend",
+      "glb": "threejs_render/assets/chars/quaternius_punk.glb"
+    },
+    {
+      "id": "quaternius_spacesuit",
+      "displayName": "Quaternius Spacesuit",
+      "tier": "SKELETAL_BASIC",
+      "blend": "blender/rigged/blend/quaternius_spacesuit.blend",
+      "glb": "threejs_render/assets/chars/quaternius_spacesuit.glb"
+    },
+    {
+      "id": "quaternius_suit",
+      "displayName": "Quaternius Suit",
+      "tier": "SKELETAL_BASIC",
+      "blend": "blender/rigged/blend/quaternius_suit.blend",
+      "glb": "threejs_render/assets/chars/quaternius_suit.glb"
+    },
+    {
+      "id": "quaternius_swat",
+      "displayName": "Quaternius SWAT",
+      "tier": "SKELETAL_BASIC",
+      "blend": "blender/rigged/blend/quaternius_swat.blend",
+      "glb": "threejs_render/assets/chars/quaternius_swat.glb"
+    },
+    {
+      "id": "quaternius_worker",
+      "displayName": "Quaternius Worker",
+      "tier": "SKELETAL_BASIC",
+      "blend": "blender/rigged/blend/quaternius_worker.blend",
+      "glb": "threejs_render/assets/chars/quaternius_worker.glb"
+    }
+  ],
+  "deferred": [
+    "automated runtime render",
+    "multi-character MP4 capture",
+    "performance measurement",
+    "regression test suite"
+  ],
+  "limitations": [
+    "The SKELETAL_BASIC and STATIC characters have no validated facial controls or lip-sync.",
+    "Visual grounding, materials, independent mixers and camera framing await the final test pass requested by the user."
+  ]
+}
